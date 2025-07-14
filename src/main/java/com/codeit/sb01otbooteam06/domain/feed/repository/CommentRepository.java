@@ -19,10 +19,8 @@ public interface CommentRepository extends JpaRepository<Comment, UUID> {
       FROM Comment c
       JOIN FETCH c.user u
       WHERE c.feed.id = :feedId
-        AND ( :cursor IS NULL
-              OR (c.createdAt < :cursor
-                  OR (c.createdAt = :cursor AND c.id < :idAfter))
-            )
+        AND (c.createdAt < :cursor
+             OR (c.createdAt = :cursor AND c.id < :idAfter))
       ORDER BY c.createdAt DESC, c.id DESC
       """)
   List<Comment> findCommentsByCreatedAtCursor(
@@ -31,6 +29,8 @@ public interface CommentRepository extends JpaRepository<Comment, UUID> {
       @Param("idAfter") UUID idAfter,
       Pageable pageable
   );
+
+  List<Comment> findByFeedId(UUID feedId, Pageable pageable);
 
 
   @Query("""
