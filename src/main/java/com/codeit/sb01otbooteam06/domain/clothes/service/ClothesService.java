@@ -15,6 +15,7 @@ import com.codeit.sb01otbooteam06.domain.clothes.utils.ClothesUtils;
 import com.codeit.sb01otbooteam06.domain.user.entity.User;
 import com.codeit.sb01otbooteam06.domain.user.exception.UserNotFoundException;
 import com.codeit.sb01otbooteam06.domain.user.repository.UserRepository;
+import com.codeit.sb01otbooteam06.global.s3.S3Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -29,8 +30,11 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class ClothesService {
 
+  private final S3Service s3Service;
+
   private final ClothesRepository clothesRepository;
   private final UserRepository userRepository;
+  private final ClothesAttributeRepository clothesAttributeRepository;
 
   private final ClothesAttributeService clothesAttributeService;
 
@@ -41,7 +45,6 @@ public class ClothesService {
 
   //S3 이미지 저장 디렉토리 네임
   private final String directory = "Clothes";
-  private final ClothesAttributeRepository clothesAttributeRepository;
 
 
   /**
@@ -58,9 +61,8 @@ public class ClothesService {
     User owner = userRepository.findById(clothesCreateRequest.ownerId())
         .orElseThrow(() -> new UserNotFoundException(clothesCreateRequest.ownerId()));
 
-    //TODO: S3 업로드 로직 필요
-    String imageUrl = "";
-    //String imageUrl = s3Service.upload(clothesImage, directory);
+    // S3 업로드
+    String imageUrl = s3Service.upload(clothesImage, directory);
 
     Clothes clothes = new Clothes(
         owner,
@@ -162,11 +164,11 @@ public class ClothesService {
       newType = clothes.getType();
     }
 
-    // todo: 이미지가 새로 들어온 경우에 S3에 업로드
+    //  이미지가 새로 들어온 경우에 S3에 업로드
     String imageUrl = clothes.getImageUrl();
-//    if (clothesImage != null) {
-//      imageUrl = s3Service.upload(clothesImage, directory);
-//    }
+    if (clothesImage != null) {
+      imageUrl = s3Service.upload(clothesImage, directory);
+    }
 
     //의상 정보 업데이트
     clothes.update(
