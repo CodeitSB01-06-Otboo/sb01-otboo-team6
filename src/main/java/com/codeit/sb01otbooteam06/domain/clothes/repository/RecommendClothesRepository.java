@@ -14,6 +14,7 @@ public interface RecommendClothesRepository extends JpaRepository<RecommendCloth
 
   void deleteByUserAndWeather(User user, Weather weather);
 
+  //  todo : 문제잇음.
   // weather-user 에 해당하는 추천 셋 중 랜덤 하나를 리턴
   @Query("""
       SELECT rc.clothesIds

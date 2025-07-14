@@ -39,7 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class RecommendationService {
+public class RecommendService {
 
   private final ClothesService clothesService;
   private final AuthService authService;
@@ -77,22 +77,22 @@ public class RecommendationService {
 
     List<UUID> recommendClothesIds;
 
-//    /// 추천 의상 id 리스트를 얻는다.
-//    // 추천 의상 테이블에 유저-날씨에 대한 추천 의상이 있으면 반환
-//    if (recommendClothesRepository.existsByUserAndWeather(user, weather)) {
-//      recommendClothesIds = recommendClothesRepository.findClothesIdsByUserAndWeather(user,
-//          weather);
-//    }
-//    //없으면 새로 추천 의상을 만들고 저장한다.
-//    else {
-//      recommendClothesIds = create(user, weather);
-//    }
-//
-//    // 추천 의상 id 리스트에 대한 List<OotdDto> 생성
-//    List<OotdDto> ootdDtos = getOotdDtos(recommendClothesIds);
+    /// 추천 의상 id 리스트를 얻는다.
+    // 추천 의상 테이블에 유저-날씨에 대한 추천 의상이 있으면 반환
+    if (recommendClothesRepository.existsByUserAndWeather(user, weather)) {
+      recommendClothesIds = recommendClothesRepository.findClothesIdsByUserAndWeather(user,
+          weather);
+    }
+    //없으면 새로 추천 의상을 만들고 저장한다.
+    else {
+      recommendClothesIds = create(user, weather);
+    }
+
+    // 추천 의상 id 리스트에 대한 List<OotdDto> 생성
+    List<OotdDto> ootdDtos = getOotdDtos(recommendClothesIds);
 
     //todo: 현재 임시 ootd반환이며 수정 필요.
-    return new RecommendationDto(weatherId, userId, getFakeClothes(user));
+    return new RecommendationDto(weatherId, userId, ootdDtos);
   }
 
   private List<OotdDto> getOotdDtos(List<UUID> recommendClothesIds) {
