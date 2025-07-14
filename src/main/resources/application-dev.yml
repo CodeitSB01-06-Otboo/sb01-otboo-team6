@@ -1,9 +1,15 @@
 spring:
-#  sql:
-#    init:
-#      mode: always      # 항상 schema.sql, data.sql 실행
-#      schema-locations:  classpath:schema.sql
-#      data-locations: classpath:data.sql
+  sql:
+    init:
+      mode: always      # 항상 schema.sql, data.sql 실행
+      schema-locations: classpath:schema.sql
+      data-locations: classpath:data.sql
+
+  batch:
+    jdbc:
+      initialize-schema: always
+    job:
+      enabled: false
 
   datasource:
     url: jdbc:postgresql://localhost:5432/Otboo
@@ -12,7 +18,7 @@ spring:
     password: 1234
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: validate
     database: postgresql
     properties:
       hibernate:
@@ -22,10 +28,20 @@ spring:
         generate_statistics: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
     show-sql: true
-
+kma:
+  service-key: ${KMA_KEY}
+kakao:
+  rest-key: ${KAKAO_KEY}
 logging:
   level:
     org:
       hibernate:
-        sql: debug
+        sql: warn
         type.descriptor.sql: trace
+jwt:
+  secret: ${JWT_SECRET}
+  access-expiration: ${JWT_ACCESS_EXPIRATION:3600000}
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
+file:
+  profile-image-dir: C:/Users/user/profile-images
+  profile-image-url-base: /uploads/profiles/

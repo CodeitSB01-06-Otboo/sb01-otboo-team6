@@ -25,14 +25,14 @@ public class ClothesAttribute extends BaseUpdatableEntity {
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "attribute_id", nullable = false)
-  private AttributesDef attributesDef;
+  private AttributeDef attributeDef;
 
   @Column(name = "value", nullable = false)
   private String value;
 
-  public ClothesAttribute(Clothes clothes, AttributesDef attributesDef, String value) {
+  public ClothesAttribute(Clothes clothes, AttributeDef attributeDef, String value) {
     this.clothes = clothes;
-    this.attributesDef = attributesDef;
+    this.attributeDef = attributeDef;
     this.value = value;
   }
 }
