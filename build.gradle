@@ -76,6 +76,10 @@ dependencies {
     //구글 제미나이 API
     implementation 'com.google.genai:google-genai:1.0.0'
 
+    //AWS S3 SDK 의존성
+    implementation 'software.amazon.awssdk:s3:2.31.7'
+
+
 }
 
 tasks.named('test') {
@@ -100,7 +104,7 @@ jacocoTestReport {
                             //분석 리포트에서 제외할 클래스를 설정합니다.
                             '**/Q*.class',                        // QueryDSL Q클래스
                             '**/generated/**',                   // generated 패키지 제외
-                            '**/mapper',              // 모든 mapper 패키지 제외 
+                            '**/mapper',              // 모든 mapper 패키지 제외
                             '**/entity', //entity 제외
                             '**/dto', //dto 제외
                     ])
