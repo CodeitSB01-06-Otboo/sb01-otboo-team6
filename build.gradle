@@ -102,6 +102,7 @@ jacocoTestReport {
                             '**/generated/**',                   // generated 패키지 제외
                             '**/mapper',              // 모든 mapper 패키지 제외 
                             '**/entity', //entity 제외
+                            '**/dto', //dto 제외
                     ])
                 })
         )
