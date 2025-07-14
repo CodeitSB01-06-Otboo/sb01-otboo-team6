@@ -27,7 +27,7 @@ public class RecommendClothesService {
   @Transactional
   public List<UUID> makeRecommendClothes(int[] valueData, User user, Weather weather) {
     /**
-     * 1 우선 가중치에 일치하는 의상 리스트들을 찾아옴.
+     * 1 우선 밸류에 일치하는 의상 리스트들을 찾아옴.
      * 2 이후 리스트로 상의풀 (성별에 따라 원피스)/하의풀 /신발풀 만들고   필수 + 계절에 따라 아우터
      * 3 성별에 따라 원피스 풀 생성?
      * 4 3액세서리, 양말, 모자, 가방, 스카프는 스타일이 맞으면 넣어줌.
@@ -53,22 +53,24 @@ public class RecommendClothesService {
     //List<Clothes> dressList = getClothesTypeList(clothesList, "DRESS");
     //Todo: 기타
 
-    //풀에서 하나씩 뽑아 추천 의상 세트를 만든다. (상의, 바지, 신발, +악세)
-    //의상 아이디리스트
-    List<UUID> idSet = new ArrayList<>();
-    for (int i = 0; i < 3; i++) {
-      idSet.clear();
+    //todo: 스타일 적용하기.
+    //풀에서 하나씩 랜덤으로 뽑아 추천 의상 세트를 만든다. (상의, 바지, 신발, +악세)
+    //추천 의상  아이디리스트
+    List<UUID> recoClothesIds = new ArrayList<>();
+    for (int i = 0; i < 5; i++) {
+      recoClothesIds.clear();
 
-      idSet.add(pickRandom(topList));
-      idSet.add(pickRandom(bottomList));
-      idSet.add(pickRandom(shoesList));
+      recoClothesIds.add(pickRandom(topList));
+      recoClothesIds.add(pickRandom(bottomList));
+      recoClothesIds.add(pickRandom(shoesList));
 
       // 추천 의상 셋 저장
-      recommendClothesRepository.save(recommendClothesMapper.toEntity(weather, user, idSet));
+      recommendClothesRepository.save(
+          recommendClothesMapper.toEntity(weather, user, recoClothesIds));
     }
 
     //추천 리스트 중 첫번째 추천셋 반환
-    return idSet;
+    return recoClothesIds;
   }
 
   // 의상리스트에서, 타입에 맞는 의상리스트를 반환
@@ -88,6 +90,5 @@ public class RecommendClothesService {
     int idx = ThreadLocalRandom.current().nextInt(list.size());
     return list.get(idx).getId();
   }
-
 
 }

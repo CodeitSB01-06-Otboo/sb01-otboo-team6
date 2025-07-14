@@ -4,6 +4,7 @@ package com.codeit.sb01otbooteam06.domain.clothes.service;
 import com.codeit.sb01otbooteam06.domain.auth.service.AuthService;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.Clothes;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.ClothesAttribute;
+import com.codeit.sb01otbooteam06.domain.clothes.entity.RecommendClothes;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.dto.ClothesDto;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.dto.OotdDto;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.dto.RecommendationDto;
@@ -78,10 +79,12 @@ public class RecommendService {
     List<UUID> recommendClothesIds;
 
     /// 추천 의상 id 리스트를 얻는다.
-    // 추천 의상 테이블에 유저-날씨에 대한 추천 의상이 있으면 반환
+    // 추천 의상 테이블에 유저-날씨에 대한 추천 의상이 있으면 랜덤 하나 반환
     if (recommendClothesRepository.existsByUserAndWeather(user, weather)) {
-      recommendClothesIds = recommendClothesRepository.findClothesIdsByUserAndWeather(user,
+      RecommendClothes recommendClothes = recommendClothesRepository.findRandomByUserAndWeather(
+          user,
           weather);
+      recommendClothesIds = recommendClothes.getClothesIds();
     }
     //없으면 새로 추천 의상을 만들고 저장한다.
     else {
@@ -91,7 +94,6 @@ public class RecommendService {
     // 추천 의상 id 리스트에 대한 List<OotdDto> 생성
     List<OotdDto> ootdDtos = getOotdDtos(recommendClothesIds);
 
-    //todo: 현재 임시 ootd반환이며 수정 필요.
     return new RecommendationDto(weatherId, userId, ootdDtos);
   }
 
