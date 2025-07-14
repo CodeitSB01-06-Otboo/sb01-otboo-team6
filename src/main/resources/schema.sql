@@ -2,6 +2,8 @@ DROP TABLE IF EXISTS
     attributes_defs,
     clothes,
     clothes_attributes,
+    recommend_clothes,
+    clothes_feeds,
     comments,
     direct_messages,
     feeds,
@@ -11,48 +13,65 @@ DROP TABLE IF EXISTS
     profiles,
     users,
     weather_location_names,
-    weathers
-;
-DROP TYPE IF EXISTS notification_type;
+    weathers,
+    profile_location_names,
+    user_linked_oauth_providers
+    CASCADE;
+DROP TYPE IF EXISTS notification_type CASCADE;
 
 CREATE TABLE weathers
 (
-    id                                 UUID PRIMARY KEY,
-    forecasted_at                      TIMESTAMP        NOT NULL,
-    forecast_at                        TIMESTAMP        NOT NULL,
-    latitude                           DOUBLE PRECISION NOT NULL,
-    longitude                          DOUBLE PRECISION NOT NULL,
-    x                                  INTEGER          NOT NULL,
-    y                                  INTEGER          NOT NULL,
-    sky_status                         VARCHAR(30)      NOT NULL,
-    precipitation_type                 VARCHAR(30)      NOT NULL,
-    precipitation_amount               DOUBLE PRECISION NOT NULL,
-    precipitation_probability          DOUBLE PRECISION NOT NULL,
-    humidity_current                   DOUBLE PRECISION NOT NULL,
-    humidity_compared_to_day_before    DOUBLE PRECISION NOT NULL,
-    temperature_current                DOUBLE PRECISION NOT NULL,
-    temperature_compared_to_day_before DOUBLE PRECISION NOT NULL,
-    temperature_min                    DOUBLE PRECISION NOT NULL,
-    temperature_max                    DOUBLE PRECISION NOT NULL,
-    wind_speed                         DOUBLE PRECISION NOT NULL,
-    wind_as_word                       VARCHAR(30)      NOT NULL,
-    created_at                         TIMESTAMP        NOT NULL,
-    updated_at                         TIMESTAMP        NOT NULL
+    id                        UUID PRIMARY KEY,
+    forecasted_at             TIMESTAMP        NOT NULL, -- 발표 시각(baseDate+baseTime)
+    forecast_at               TIMESTAMP        NOT NULL, -- 예보 시각(fcstDate+fcstTime)
+    lat                       DOUBLE PRECISION NOT NULL,
+    lon                       DOUBLE PRECISION NOT NULL,
+    grid_x                    INTEGER         NOT NULL,
+    grid_y                    INTEGER         NOT NULL,
+    sky_status                VARCHAR(15)      NOT NULL, -- CLEAR / MOSTLY_CLOUDY / CLOUDY
+    precipitation_type        VARCHAR(15)      NOT NULL, -- RAIN / SNOW …
+    temperature_current       DOUBLE PRECISION,
+    temperature_min           DOUBLE PRECISION,
+    temperature_max           DOUBLE PRECISION,
+    precipitation_amount      DOUBLE PRECISION,
+    precipitation_amount_text VARCHAR(20),
+    precipitation_probability DOUBLE PRECISION,
+    humidity                  DOUBLE PRECISION,
+    snow_amount               DOUBLE PRECISION,
+    lightning                 DOUBLE PRECISION,
+    wind_speed                DOUBLE PRECISION,
+    wind_level                INTEGER,
+    wind_direction            DOUBLE PRECISION,
+    wind_u                    DOUBLE PRECISION,
+    wind_v                    DOUBLE PRECISION,
+    created_at                TIMESTAMP,
+    updated_at                TIMESTAMP,
+    UNIQUE (forecast_at, grid_x, grid_y)
 );
 
+-- forecast_at 단일 컬럼 인덱스 (00:00 조건 필터용)
+CREATE INDEX IF NOT EXISTS ix_weathers_forecast_at
+    ON weathers (forecast_at);
+
+-- 격자 좌표 복합 인덱스
+CREATE INDEX IF NOT EXISTS ix_weathers_grid
+    ON weathers (grid_x, grid_y);
+
+
+/* ---------------- 행정동 이름 목록 ---------------- */
 CREATE TABLE weather_location_names
 (
     id            UUID PRIMARY KEY,
-    weather_id    UUID         NOT NULL,
+    weather_id    UUID         NOT NULL
+        REFERENCES weathers (id) ON DELETE CASCADE,
     location_name VARCHAR(100) NOT NULL,
-    created_at    TIMESTAMP    NOT NULL,
-
-    CONSTRAINT fk_locnames_weather FOREIGN KEY (weather_id) REFERENCES weathers (id) ON DELETE CASCADE
-
+    created_at    TIMESTAMP,
+    /* ── 동일 Weather-ID 내에서 중복 방지 ── */
+    UNIQUE (weather_id, location_name)
 );
 
 
---유저
+-- 유저
 CREATE TABLE users
 (
     id                     UUID PRIMARY KEY,
@@ -61,11 +80,11 @@ CREATE TABLE users
     name                   VARCHAR NOT NULL,
     role                   VARCHAR NOT NULL CHECK (role IN ('USER', 'ADMIN')),
     locked                 BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at             TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     linked_oauth_providers TEXT[]
 );
 
-
+-- 프로필
 CREATE TABLE profiles
 (
     id                      UUID PRIMARY KEY,
@@ -78,8 +97,16 @@ CREATE TABLE profiles
     y                       INT              NOT NULL,
     location_names          TEXT[],
     temperature_sensitivity INT              NOT NULL CHECK (temperature_sensitivity BETWEEN 1 AND 5),
-    profile_image_url       VARCHAR
+    profile_image_url       VARCHAR,
+    created_at              TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at              TIMESTAMP
 );
+
+-- 프로필-유저 1:1 연결
+ALTER TABLE profiles
+    ADD CONSTRAINT fk_profiles_user FOREIGN KEY (id) REFERENCES users (id);
+
+
 
 
 
@@ -163,18 +190,13 @@ ALTER TABLE notifications
     ADD CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES users (id);
 
 
---------조건
-ALTER TABLE profiles
-    ADD CONSTRAINT fk_profiles_user FOREIGN KEY (id) REFERENCES users (id);
-
-
-
 CREATE TABLE clothes
 (
     id         UUID PRIMARY KEY,
     owner_id   UUID        NOT NULL,
     name       VARCHAR(40) NOT NULL,
     type       VARCHAR(20) NOT NULL,
+    image_url  TEXT        NULL,
     created_at TIMESTAMP   NOT NULL,
     updated_at TIMESTAMP NULL
 );
@@ -199,6 +221,16 @@ CREATE TABLE clothes_attributes
     value        VARCHAR(40) NOT NULL,
     created_at   TIMESTAMP   NOT NULL,
     updated_at   TIMESTAMP NULL
+);
+
+-- 추천 의상 테이블
+CREATE TABLE recommend_clothes (
+   id UUID PRIMARY KEY,
+   weather_id UUID NOT NULL REFERENCES weathers(id),
+   user_id UUID NOT NULL REFERENCES users(id),
+   clothes_ids uuid[] NOT NULL,
+   created_at TIMESTAMP NOT NULL,
+   updated_at TIMESTAMP NULL
 );
 
 
@@ -240,3 +272,32 @@ CREATE TABLE direct_messages
     CONSTRAINT fk_dm_sender FOREIGN KEY (sender_id) REFERENCES users (id) ON DELETE CASCADE,
     CONSTRAINT fk_dm_receiver FOREIGN KEY (receiver_id) REFERENCES users (id) ON DELETE CASCADE
 );
+
+CREATE TABLE clothes_feeds
+(
+    id UUID PRIMARY KEY,
+    clothes_id UUID NOT NULL,
+    feed_id UUID NOT NULL,
+
+    CONSTRAINT fk_clothes_feeds_clothes FOREIGN KEY (clothes_id) REFERENCES clothes(id) ON DELETE CASCADE,
+    CONSTRAINT fk_clothes_feeds_feed FOREIGN KEY (feed_id) REFERENCES feeds(id) ON DELETE CASCADE,
+    CONSTRAINT uq_clothes_feed UNIQUE (clothes_id, feed_id) -- 중복 방지
+);
+
+
+CREATE TABLE profile_location_names
+(
+    profile_id UUID NOT NULL,
+    location_name VARCHAR(255),
+    FOREIGN KEY (profile_id) REFERENCES profiles (id) ON DELETE CASCADE
+);
+
+
+CREATE TABLE user_linked_oauth_providers
+(
+    user_id UUID NOT NULL,
+    provider VARCHAR(255),
+    PRIMARY KEY (user_id, provider), --주키 설정
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+)
+

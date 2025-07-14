@@ -1,6 +1,7 @@
 package com.codeit.sb01otbooteam06.domain.feed.entity;
 
 import com.codeit.sb01otbooteam06.domain.base.BaseUpdatableEntity;
+import com.codeit.sb01otbooteam06.domain.clothes.entity.Clothes;
 import com.codeit.sb01otbooteam06.domain.user.entity.User;
 import com.codeit.sb01otbooteam06.domain.weather.entity.Weather;
 import jakarta.persistence.CascadeType;
@@ -29,13 +30,13 @@ public class Feed extends BaseUpdatableEntity {
   private String content;
 
   @Column(nullable = false)
-  private Long likeCount = 0L;
+  private long likeCount = 0L;
 
   @Column(nullable = false)
-  private Integer commentCount = 0;
+  private int commentCount = 0;
 
-  @Transient
-  private boolean likedByMe;
+  @Column(nullable = false)
+  private boolean likedByMe = false;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "user_id", nullable = false)
@@ -49,18 +50,21 @@ public class Feed extends BaseUpdatableEntity {
   @OneToMany(mappedBy = "feed", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<Comment> comments = new ArrayList<>();
 
+  @OneToMany(mappedBy = "feed", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<ClothesFeed> clothesFeeds = new ArrayList<>();
 
-  public Feed(String content, Long likeCount, Integer commentCount, boolean likedByMe, User user,
-      Weather weather) {
+
+  public Feed(String content, User user, Weather weather) {
     this.content = content;
-    this.likeCount = likeCount;
-    this.commentCount = commentCount;
-    this.likedByMe = likedByMe;
     this.user = user;
     this.weather = weather;
   }
 
-  public void update(String newContent) {
+  public static Feed of(String content, User user, Weather weather) {
+    return new Feed(content, user, weather);
+  }
+
+  public void updateContent(String newContent) {
     if (newContent != null && !newContent.equals(this.content)) {
       this.content = newContent;
     }
@@ -84,6 +88,14 @@ public class Feed extends BaseUpdatableEntity {
 
   public void unlike() {
     this.likeCount--;
+  }
+
+  public void setClothesFeeds(List<Clothes> clothesList) {
+    this.clothesFeeds.clear();
+    List<ClothesFeed> associations = clothesList.stream()
+        .map(clothes -> new ClothesFeed(clothes, this))
+        .toList();
+    this.clothesFeeds.addAll(associations);
   }
 
 }

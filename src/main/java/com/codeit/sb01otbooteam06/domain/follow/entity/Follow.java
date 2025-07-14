@@ -2,8 +2,12 @@ package com.codeit.sb01otbooteam06.domain.follow.entity;
 
 
 import com.codeit.sb01otbooteam06.domain.base.BaseEntity;
+import com.codeit.sb01otbooteam06.domain.user.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.util.UUID;
@@ -22,20 +26,25 @@ import lombok.NoArgsConstructor;
 public class Follow extends BaseEntity {
 
   //아직 User 엔티티 없으므로 FK 대신 UUID
-  @Column(name = "follower_id", nullable = false, columnDefinition = "UUID")
-  private UUID followerId;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "follower_id", nullable = false)
+  private User follower;
 
-  @Column(name = "followee_id", nullable = false, columnDefinition = "UUID")
-  private UUID followeeId;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "followee_id", nullable = false)
+  private User followee;
 
-
-  private Follow(UUID followerId, UUID followeeId) {
-    this.followerId = followerId;
-    this.followeeId = followeeId;
+  private Follow(User follower, User followee) {
+    this.follower = follower;
+    this.followee = followee;
   }
 
-  public static Follow from(UUID followerId, UUID followeeId) {
-    return new Follow(followerId, followeeId);
+  public static Follow from(User follower, User followee) {
+    // 자기 자신 팔로우 방지 정도만 사전 체크
+    if (follower.equals(followee)) {
+      throw new IllegalArgumentException("자기 자신은 팔로우할 수 없습니다.");
+    }
+    return new Follow(follower, followee);
   }
 }
 

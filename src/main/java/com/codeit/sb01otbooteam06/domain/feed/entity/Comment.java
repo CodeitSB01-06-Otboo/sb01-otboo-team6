@@ -39,6 +39,10 @@ public class Comment extends BaseUpdatableEntity {
     this.feed = feed;
   }
 
+  public static Comment of(String content, String authorName, User user, Feed feed) {
+    return new Comment(content, authorName, user, feed);
+  }
+
   protected void setFeed(Feed feed) {
     this.feed = feed;
   }

@@ -1,6 +1,5 @@
 package com.codeit.sb01otbooteam06.domain.weather.entity;
 
-
 import com.codeit.sb01otbooteam06.domain.base.BaseUpdatableEntity;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
@@ -10,8 +9,10 @@ import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.Index;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,89 +22,101 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@Table(name = "weathers")
+@Table(
+    name = "weathers",
+    uniqueConstraints = @UniqueConstraint(
+        columnNames = {"forecast_at", "grid_x", "grid_y"})
+)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Weather extends BaseUpdatableEntity {
 
-  private Instant forecastedAt;
-  private Instant forecastAt;
+    /* ── 시각 ─────────────────────── */
+    @Column(name = "forecasted_at", nullable = false)
+    private Instant forecastedAt;    // 발표(baseDate+baseTime)
 
-  @Embedded
-  @AttributeOverrides({
-      @AttributeOverride(name = "latitude", column = @Column(name = "lat")),
-      @AttributeOverride(name = "longitude", column = @Column(name = "lon")),
-      @AttributeOverride(name = "x", column = @Column(name = "grid_x")),
-      @AttributeOverride(name = "y", column = @Column(name = "grid_y"))
-  })
-  private Location location;
+    @Column(name = "forecast_at", nullable = false)
+    private Instant forecastAt;      // 예보(fcstDate+fcstTime)
 
-  @Enumerated(EnumType.STRING)
-  private SkyStatus skyStatus;
+    /* ── 좌표 ─────────────────────── */
+    @Embedded
+    @AttributeOverrides({
+        @AttributeOverride(name = "latitude", column = @Column(name = "lat")),
+        @AttributeOverride(name = "longitude", column = @Column(name = "lon")),
+        @AttributeOverride(name = "x", column = @Column(name = "grid_x")),
+        @AttributeOverride(name = "y", column = @Column(name = "grid_y"))
+    })
+    private Location location;
 
-  // 강수
-  private String precipitationType;     // PTY 코드
-  private double precipitationAmount;   // RN1, PCP
-  private double precipitationProbability; // POP
+    /* ── 상태 코드 ────────────────── */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "sky_status", length = 12)
+    private SkyStatus skyStatus;           // SKY
 
-  // 습도
-  private double humidityCurrent;
-  private double humidityComparedToDayBefore;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "precipitation_type", length = 15)
+    private PrecipitationType precipitationType;          // PTY
 
-  // 온도
-  private double temperatureCurrent;
-  private double temperatureComparedToDayBefore;
-  private double temperatureMin;
-  private double temperatureMax;
+    /* ── 값 객체(Embedded) ─────────── */
+    @Embedded
+    private Temperature temperature;     // current / min / max
 
-  // 풍속
-  private double windSpeed;      // WSD
-  private String windAsWord;     // 1:WEAK,2:MODERATE,3:STRONG
+    @Embedded
+    private Precipitation precipitation; // amount / amountText / probability
 
-  /* ---- 관계 ---- */
-  @OneToMany(mappedBy = "weather", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<WeatherLocationName> locationNames = new ArrayList<>();
+    @Embedded
+    private Wind wind;                   // speed / level / direction / u / v
 
-  private Weather(Instant forecastedAt,
-      Instant forecastAt,
-      Location location,
-      SkyStatus skyStatus) {
-    this.forecastedAt = forecastedAt;
-    this.forecastAt = forecastAt;
-    this.location = location;
-    this.skyStatus = skyStatus;
-  }
+    @Column(name = "humidity")
+    private Double humidity;             // REH
+    @Column(name = "snow_amount")
+    private Double snowAmount;           // SNO
+    @Column(name = "lightning")
+    private Double lightning;            // LGT
 
-  /**
-   * 필수 값만 받는 생성자
-   */
-  public static Weather from(Instant forecastedAt,
-      Instant forecastAt, double lat, double lon, int x, int y, SkyStatus skyStatus) {
-    return new Weather(forecastedAt, forecastAt, Location.of(lat, lon, x, y), skyStatus);
-  }
+    /* ── 위치 이름 목록 ────────────── */
+    @OneToMany(mappedBy = "weather",
+        cascade = CascadeType.ALL,
+        orphanRemoval = true)
+    private List<WeatherLocationName> locationNames = new ArrayList<>();
 
-  /**
-   * 위치 이름 목록까지 한 번에 넣는 팩터리
-   */
-  public static Weather fromWithLocations(Instant forecastedAt,
-      Instant forecastAt,
-      double lat, double lon, int x, int y,
-      SkyStatus skyStatus,
-      List<String> locationNames) {
+    /* ===== 생성 ===== */
+    private Weather(Instant base, Instant fcst, Location loc) {
+        this.forecastedAt = base;
+        this.forecastAt = fcst;
+        this.location = loc;
+    }
 
-    Weather w = new Weather(
-        forecastedAt,
-        forecastAt,
-        Location.of(lat, lon, x, y),
-        skyStatus);
+    public static Weather from(Instant base, Instant fcst, Location loc) {
+        return new Weather(base, fcst, loc);
+    }
 
-    locationNames.forEach(w::addLocationName);
-    return w;
-  }
-
-  /* ---------- 편의 메서드 ---------- */
-  public void addLocationName(String name) {
-    WeatherLocationName ln = WeatherLocationName.from(this, name);
-    this.locationNames.add(ln);   // 양방향 컬렉션 동기화
-  }
+    /* ===== 편의 ===== */
+    public void addLocationName(String name) {
+        locationNames.add(WeatherLocationName.from(this, name));
+    }
+    /**
+     * 더 최신 발표 시각이 들어오면 교체합니다.
+     */
+    public void refreshBaseIfNewer(Instant newerBase) {
+        if (newerBase.isAfter(this.forecastedAt)) {
+            this.forecastedAt = newerBase;
+        }
+    }
+    public void applyMetrics(SkyStatus skyStatus,
+        PrecipitationType ptyType,
+        Temperature temp,
+        Precipitation precip,
+        Wind wind,
+        Double humidity,
+        Double snow,
+        Double lightning) {
+        this.skyStatus = skyStatus;
+        this.precipitationType = ptyType;
+        this.temperature = temp;
+        this.precipitation = precip;
+        this.wind = wind;
+        this.humidity = humidity;
+        this.snowAmount = snow;
+        this.lightning = lightning;
+    }
 }
-

@@ -3,6 +3,10 @@ spring:
     name: otboo
   profiles:
     active: dev
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB # 임의로 정한 값 입니다. 크기 조정이 필요 하다면 변경하세요. (S3에 업로드 시 용량 제한하는게 좋습니다)
 
 logging:
   level:
@@ -12,3 +16,6 @@ springdoc:
   swagger-ui:
     enabled: true
     path: /swagger-custom-ui.html
+
+gemini:
+  prompt: ${GEMINI_PROMPT}
