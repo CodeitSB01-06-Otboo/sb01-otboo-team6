@@ -79,7 +79,7 @@ jobs:
     - name: Build, tag, and push image to Amazon ECR
       env:
         ECR_REGISTRY: 681689809064.dkr.ecr.ap-northeast-2.amazonaws.com
-        ECR_REPOSITORY: obtoo
+        ECR_REPOSITORY: otboo
         IMAGE_TAG: ${{ github.sha }}
       run: |
         docker build -t obtoo .
