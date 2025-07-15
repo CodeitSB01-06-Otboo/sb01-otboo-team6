@@ -14,10 +14,13 @@ import com.codeit.sb01otbooteam06.domain.user.repository.UserRepository;
 import com.codeit.sb01otbooteam06.global.exception.ErrorCode;
 import com.codeit.sb01otbooteam06.global.exception.OtbooException;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -54,12 +57,19 @@ public class CommentServiceImpl implements CommentService {
   @Override
   public CommentDtoCursorResponse getCommentsByCursor(UUID feedId, Instant cursor, UUID idAfter,
       int limit) {
-    PageRequest pageReq = PageRequest.of(0, limit);
+    PageRequest pageReq = PageRequest.of(0, limit,
+        Sort.by(Sort.Direction.DESC, "createdAt").and(Sort.by(Sort.Direction.DESC, "id")));
 
-    List<Comment> comments = commentRepository.findCommentsByCreatedAtCursor(feedId, cursor,
-        idAfter, pageReq);
+    List<Comment> comments = (cursor == null || idAfter == null)
+        ? Optional.ofNullable(commentRepository.findByFeedId(feedId, pageReq)).orElse(Collections.emptyList())
+        : Optional.ofNullable(commentRepository.findCommentsByCreatedAtCursor(feedId, cursor, idAfter, pageReq)).orElse(Collections.emptyList());
 
-    List<CommentDto> data = comments.stream().map(CommentDto::fromEntity).toList();
+
+    List<CommentDto> data = Optional.of(comments)
+        .orElse(Collections.emptyList())
+        .stream()
+        .map(CommentDto::fromEntity)
+        .toList();
 
     boolean hasNext = data.size() == limit;
     String nextCursor = null;
@@ -67,13 +77,20 @@ public class CommentServiceImpl implements CommentService {
 
     if (hasNext) {
       Comment last = comments.get(comments.size() - 1);
-      nextCursor = last.getCreatedAt().toString();
+      nextCursor = last.getCreatedAt() != null ? last.getCreatedAt().toString() : "";
       nextIdAfter = last.getId();
     }
 
     long totalCount = commentRepository.countByFeedId(feedId);
 
-    return new CommentDtoCursorResponse(data, nextCursor, nextIdAfter, hasNext, totalCount,
-        "createdAt", "DESCENDING");
+    return new CommentDtoCursorResponse(
+        data,
+        nextCursor,
+        nextIdAfter,
+        hasNext,
+        totalCount,
+        "createdAt",
+        "DESCENDING"
+    );
   }
 }
