@@ -61,11 +61,9 @@ public class CommentServiceImpl implements CommentService {
         Sort.by(Sort.Direction.DESC, "createdAt").and(Sort.by(Sort.Direction.DESC, "id")));
 
     List<Comment> comments = (cursor == null || idAfter == null)
-        ? Optional.ofNullable(commentRepository.findByFeedId(feedId, pageReq))
-        .orElse(Collections.emptyList())
-        : Optional.ofNullable(
-                commentRepository.findCommentsByCreatedAtCursor(feedId, cursor, idAfter, pageReq))
-            .orElse(Collections.emptyList());
+        ? Optional.ofNullable(commentRepository.findByFeedId(feedId, pageReq)).orElse(Collections.emptyList())
+        : Optional.ofNullable(commentRepository.findCommentsByCreatedAtCursor(feedId, cursor, idAfter, pageReq)).orElse(Collections.emptyList());
+
 
     List<CommentDto> data = Optional.of(comments)
         .orElse(Collections.emptyList())
@@ -92,7 +90,7 @@ public class CommentServiceImpl implements CommentService {
         hasNext,
         totalCount,
         "createdAt",
-        "ASCENDING"
+        "DESCENDING"
     );
   }
 }

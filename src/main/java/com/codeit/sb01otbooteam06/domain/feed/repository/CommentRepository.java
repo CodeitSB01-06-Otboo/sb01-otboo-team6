@@ -33,6 +33,7 @@ public interface CommentRepository extends JpaRepository<Comment, UUID> {
   List<Comment> findByFeedId(UUID feedId, Pageable pageable);
 
 
+
   @Query("""
       SELECT COUNT(c)
       FROM Comment c

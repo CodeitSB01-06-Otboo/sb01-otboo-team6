@@ -19,7 +19,7 @@ public record OotdDto(
         clothesDto.name(),
         clothesDto.imageUrl(),
         clothesDto.type(),
-        Optional.ofNullable(clothesDto.attributes()).orElse(List.of()) // null 방지 처리
+        Optional.ofNullable(clothesDto.attributes()).orElse(List.of())
     );
   }
 }
