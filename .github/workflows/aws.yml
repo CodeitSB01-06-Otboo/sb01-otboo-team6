@@ -38,6 +38,7 @@ env:
   ECS_TASK_DEFINITION: .aws/obtoo-def-revision2.json # set this to the path to your Amazon ECS task definition
                                                # file, e.g. .aws/task-definition.json
   CONTAINER_NAME: obtoo          # set this to the name of the container in the
+  image: ${{ steps.build-image.outputs.image }}
 
 permissions:
   contents: read
