@@ -8,9 +8,9 @@ import com.codeit.sb01otbooteam06.domain.clothes.entity.dto.ClothesDto;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.dto.OotdDto;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.dto.RecommendationDto;
 import com.codeit.sb01otbooteam06.domain.clothes.mapper.ClothesMapper;
+import com.codeit.sb01otbooteam06.domain.clothes.mapper.CustomClothesUtils;
 import com.codeit.sb01otbooteam06.domain.clothes.repository.ClothesAttributeRepository;
 import com.codeit.sb01otbooteam06.domain.clothes.repository.ClothesRepository;
-import com.codeit.sb01otbooteam06.domain.clothes.utils.ClothesUtils;
 import com.codeit.sb01otbooteam06.domain.profile.entity.Profile;
 import com.codeit.sb01otbooteam06.domain.profile.exception.ProfileNotFoundException;
 import com.codeit.sb01otbooteam06.domain.profile.repository.ProfileRepository;
@@ -54,7 +54,7 @@ public class RecommendService {
 
   private final ClothesMapper clothesMapper;
 
-  private final ClothesUtils clothesUtils;
+  private final CustomClothesUtils customClothesUtils;
 
   @Value("${gemini.prompt}")
   private String secretPrompt;
@@ -79,7 +79,7 @@ public class RecommendService {
     // todo: 현재 매번 추천(개발용)
     recommendClothesIds = create(user, weather);
 
-    //todo:  레디스 비동기? 의상 등록시 추천 알고리즘 다시해야함.
+    //todo:  레디스 비동기??? 의상 등록시 추천 알고리즘 다시해야함.
 //
 //    // 추천 의상 테이블에 유저-날씨에 대한 추천 의상이 있으면 랜덤 하나 반환
 //    if (recommendClothesRepository.existsByUserAndWeather(user, weather)) {
@@ -114,7 +114,7 @@ public class RecommendService {
 
     // ClothesDto 리스트 만들기
     List<ClothesDto> clothesDtoList = clothesList.stream()
-        .map(clothes -> clothesUtils.makeClothesDto(
+        .map(clothes -> customClothesUtils.makeClothesDto(
             clothes,
             attributesByClothesId.getOrDefault(clothes.getId(), Collections.emptyList())))
         .toList();
@@ -213,7 +213,7 @@ public class RecommendService {
         );
 
 //    long endTime = System.currentTimeMillis();
-//
+//  TODO: 개발용 나중에 끄기
     System.out.println("response = " + response.text());
 //    System.out.println("응답 생성 시간: " + (endTime - startTime) + " ms");
 
