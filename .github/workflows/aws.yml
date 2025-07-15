@@ -32,7 +32,7 @@ on:
 
 env:
   AWS_REGION: ap-northeast-2                   # set this to your preferred AWS region, e.g. us-west-1
-  ECR_REPOSITORY: obtoo           # set this to your Amazon ECR repository name
+  ECR_REPOSITORY: otboo           # set this to your Amazon ECR repository name
   ECS_SERVICE: obtoo                # set this to your Amazon ECS service name
   ECS_CLUSTER: obtoo-ecs-cluster
   ECS_TASK_DEFINITION: .aws/obtoo-def-revision2.json # set this to the path to your Amazon ECS task definition
