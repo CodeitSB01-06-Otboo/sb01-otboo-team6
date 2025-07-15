@@ -7,7 +7,6 @@ import com.codeit.sb01otbooteam06.domain.feed.entity.Feed;
 import com.codeit.sb01otbooteam06.domain.profile.entity.Profile;
 import com.codeit.sb01otbooteam06.domain.user.dto.AuthorDto;
 import com.codeit.sb01otbooteam06.domain.user.entity.User;
-import com.codeit.sb01otbooteam06.domain.weather.dto.WeatherDto;
 import com.codeit.sb01otbooteam06.domain.weather.dto.WeatherSummaryDto;
 import com.codeit.sb01otbooteam06.domain.weather.entity.Weather;
 import com.codeit.sb01otbooteam06.domain.weather.mapper.WeatherDtoMapper;
@@ -60,7 +59,7 @@ public class FeedDto {
         .build();
 
     Weather weather = feed.getWeather();
-    WeatherSummaryDto weatherSummaryDto = weatherMapper.toSummaryDto(weather);
+    WeatherSummaryDto weatherSummaryDto = weather != null ? weatherMapper.toSummaryDto(weather) : null;
 
     List<ClothesFeed> clothesFeeds = feed.getClothesFeeds();
     List<OotdDto> ootdDtos = clothesFeeds.stream()
