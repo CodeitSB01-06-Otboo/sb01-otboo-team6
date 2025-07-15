@@ -37,12 +37,12 @@ public class FollowController {
     public FollowDto follow(@RequestBody FollowCreateRequest req,
         @RequestHeader(value = "X-USER-ID", required = false) UUID me) {
 
-        /* ① 헤더가 없으면 JWT → AuthService */
+        // 1. 헤더가 없으면 JWT → AuthService
         if (me == null) {
             me = authService.getCurrentUserId();     // throws if not logged-in
         }
 
-        /* ② 바디(followerId)와 헤더/JWT 값 불일치 → 400 */
+        // 2. 바디(followerId)와 헤더/JWT 값 불일치 → 400
         if (req.followerId() != null && !req.followerId().equals(me)) {
             throw new IllegalArgumentException("followerId가 인증 정보와 일치하지 않습니다.");
         }
@@ -52,20 +52,28 @@ public class FollowController {
     }
 
     /** 언팔로우 */
-    @DeleteMapping("/{followeeId}")
-    public void unfollow(@PathVariable UUID followeeId,
+    @DeleteMapping("/{followId}")
+    public void unfollow(@PathVariable UUID followId,
         @RequestHeader(value = "X-USER-ID", required = false) UUID me) {
-        followService.unfollow(me, followeeId);
+        if (me == null) {
+            me = authService.getCurrentUserId();   // 로그인 안 돼 있으면 AuthService가 예외 발생
+        }
+
+        followService.unfollowById(me, followId);
     }
 
-    /** 특정 사용자의 팔로우/팔로잉 요약 */
+    /**
+     * 특정 사용자의 팔로우/팔로잉 요약
+     */
     @GetMapping("/summary")
     public FollowSummaryDto summary(@RequestParam UUID userId,
         @RequestHeader(value = "X-USER-ID", required = false) UUID me) {
+        if (me == null) {
+            me = authService.getCurrentUserId();
+        }
         log.info("[HTTP] GET /summary  userId={}, me={}", userId, me);
         return followService.getSummary(me, userId);
     }
-    /* ----------------------------- */
 
     /** 팔로워 목록 (followeeId 기준) */
     @GetMapping("/followers")
