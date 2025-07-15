@@ -16,12 +16,14 @@ import org.springframework.transaction.annotation.Transactional;
 public interface FollowRepository extends JpaRepository<Follow, UUID> {
 
     boolean existsByFollowerAndFollowee(User follower, User followee);
+    boolean existsByFollowerIdAndFolloweeId(UUID followerId, UUID followeeId);
     Optional<Follow> findByFollowerAndFollowee(User follower, User followee);
+    Optional<Follow> findByFollowerIdAndFolloweeId(UUID followerId, UUID followeeId);
     @Modifying
     void deleteByFollowerAndFollowee(User follower, User followee);
 
-    long countByFollowee(User followee);  // 팔로워 수
-    long countByFollower(User follower);  // 팔로잉 수
+    long countByFollowerId(UUID followerId);
+    long countByFolloweeId(UUID followeeId);
 
 
     @Query("""

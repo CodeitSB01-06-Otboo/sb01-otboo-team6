@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.4.4'
     id 'io.spring.dependency-management' version '1.1.7'
+    id 'jacoco'
 
 }
 
@@ -12,6 +13,11 @@ java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(17)
     }
+}
+
+jacoco {
+    toolVersion = "0.8.10"
+    reportsDirectory = layout.buildDirectory.dir('jacocoReport')
 }
 
 configurations {
@@ -69,11 +75,43 @@ dependencies {
 
     //구글 제미나이 API
     implementation 'com.google.genai:google-genai:1.0.0'
-    
+
+    //AWS S3 SDK 의존성
+    implementation 'software.amazon.awssdk:s3:2.31.7'
+
+
 }
 
 tasks.named('test') {
     useJUnitPlatform()
+    finalizedBy jacocoTestReport //테스트가 끝나고 Jacoco 리포트 작성
+}
+
+
+//jacoco 리포트 설정
+jacocoTestReport {
+    dependsOn test
+
+    reports {
+        xml.required = true
+        html.required = true
+    }
+
+    afterEvaluate {
+        classDirectories.setFrom(
+                files(classDirectories.files.collect {
+                    fileTree(dir: it, excludes: [
+                            //분석 리포트에서 제외할 클래스를 설정합니다.
+                            '**/Q*.class',                        // QueryDSL Q클래스
+                            '**/generated/**',                   // generated 패키지 제외
+                            '**/mapper',              // 모든 mapper 패키지 제외
+                            '**/entity', //entity 제외
+                            '**/dto', //dto 제외
+                    ])
+                })
+        )
+    }
+    finalizedBy 'jacocoTestCoverageVerification'
 }
 
 /* ===== QueryDSL 플러그인 전용 설정 ===== */
