@@ -11,3 +11,18 @@ spring:
       hibernate:
         show_sql: true
         format_sql: true
+
+jwt:
+  secret: test-secret-key-long-enough
+  access-expiration: 3600000
+  refresh-expiration: 604800000
+
+gemini:
+  prompt: gemini-test-prompt
+
+kma:
+  service-key: kma-test-service-key
+
+kakao:
+  rest-key: kakao-test-rest-key
+
