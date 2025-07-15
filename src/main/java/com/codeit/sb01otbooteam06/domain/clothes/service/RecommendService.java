@@ -4,14 +4,12 @@ package com.codeit.sb01otbooteam06.domain.clothes.service;
 import com.codeit.sb01otbooteam06.domain.auth.service.AuthService;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.Clothes;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.ClothesAttribute;
-import com.codeit.sb01otbooteam06.domain.clothes.entity.RecommendClothes;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.dto.ClothesDto;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.dto.OotdDto;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.dto.RecommendationDto;
 import com.codeit.sb01otbooteam06.domain.clothes.mapper.ClothesMapper;
 import com.codeit.sb01otbooteam06.domain.clothes.repository.ClothesAttributeRepository;
 import com.codeit.sb01otbooteam06.domain.clothes.repository.ClothesRepository;
-import com.codeit.sb01otbooteam06.domain.clothes.repository.RecommendClothesRepository;
 import com.codeit.sb01otbooteam06.domain.clothes.utils.ClothesUtils;
 import com.codeit.sb01otbooteam06.domain.profile.entity.Profile;
 import com.codeit.sb01otbooteam06.domain.profile.exception.ProfileNotFoundException;
@@ -46,22 +44,21 @@ public class RecommendService {
   private final AuthService authService;
   private final RecommendClothesService recommendClothesService;
 
+
   //todo: 서비스? 웨더 확인해보고 추후 변경
   private final WeatherRepository weatherRepository;
   private final UserRepository userRepository;
   private final ProfileRepository profileRepository;
+  private final ClothesRepository clothesRepository;
+  private final ClothesAttributeRepository clothesAttributeRepository;
 
   private final ClothesMapper clothesMapper;
-  private final ClothesRepository clothesRepository;
 
   private final ClothesUtils clothesUtils;
-  private final ClothesAttributeRepository clothesAttributeRepository;
-  private final RecommendClothesRepository recommendClothesRepository;
 
   @Value("${gemini.prompt}")
   private String secretPrompt;
 
-  // todo:
 
   @Transactional
   public RecommendationDto recommend(UUID weatherId) {
@@ -76,20 +73,25 @@ public class RecommendService {
     Weather weather = weatherRepository.findById(weatherId)
         .orElseThrow(() -> new WeatherNotFoundException());
 
+    /// 추천 의상 id 리스트를 얻는다.
     List<UUID> recommendClothesIds;
 
-    /// 추천 의상 id 리스트를 얻는다.
-    // 추천 의상 테이블에 유저-날씨에 대한 추천 의상이 있으면 랜덤 하나 반환
-    if (recommendClothesRepository.existsByUserAndWeather(user, weather)) {
-      RecommendClothes recommendClothes = recommendClothesRepository.findRandomByUserAndWeather(
-          user,
-          weather);
-      recommendClothesIds = recommendClothes.getClothesIds();
-    }
-    //없으면 새로 추천 의상을 만들고 저장한다.
-    else {
-      recommendClothesIds = create(user, weather);
-    }
+    // todo: 현재 매번 추천(개발용)
+    recommendClothesIds = create(user, weather);
+
+    //todo:  레디스 비동기? 의상 등록시 추천 알고리즘 다시해야함.
+//
+//    // 추천 의상 테이블에 유저-날씨에 대한 추천 의상이 있으면 랜덤 하나 반환
+//    if (recommendClothesRepository.existsByUserAndWeather(user, weather)) {
+//      RecommendClothes recommendClothes = recommendClothesRepository.findRandomByUserAndWeather(
+//          user,
+//          weather);
+//      recommendClothesIds = recommendClothes.getClothesIds();
+//    }
+//    //없으면 새로 추천 의상을 만들고 저장한다.
+//    else {
+//      recommendClothesIds = create(user, weather);
+//    }
 
     // 추천 의상 id 리스트에 대한 List<OotdDto> 생성
     List<OotdDto> ootdDtos = getOotdDtos(recommendClothesIds);
@@ -106,18 +108,18 @@ public class RecommendService {
     List<ClothesAttribute> clothesAttributes = clothesAttributeRepository.findByClothesIn(
         clothesList);
 
-    // 4. 의상 ID별 속성 매핑 (Map<ClothesId, List<ClothesAttribute>>)
+    // 의상 ID별 속성 매핑 (Map<ClothesId, List<ClothesAttribute>>)
     Map<UUID, List<ClothesAttribute>> attributesByClothesId = clothesAttributes.stream()
         .collect(Collectors.groupingBy(attr -> attr.getClothes().getId()));
 
-    // 5. ClothesDto 리스트 만들기
+    // ClothesDto 리스트 만들기
     List<ClothesDto> clothesDtoList = clothesList.stream()
         .map(clothes -> clothesUtils.makeClothesDto(
             clothes,
             attributesByClothesId.getOrDefault(clothes.getId(), Collections.emptyList())))
         .toList();
 
-    // 6. OotdDto 리스트 만들기
+    // OotdDto 리스트 만들기
     return clothesDtoList.stream()
         .map(OotdDto::toDto)
         .toList();
@@ -152,39 +154,6 @@ public class RecommendService {
         weather);
 
     return RecommendClothesIds;
-
-  }
-
-  //todo: 삭제
-  private List<OotdDto> getFakeClothes(User user) {
-    //페이크 데이터
-    // 1. 의상 리스트 가져오기
-    List<Clothes> clothesList = clothesRepository.findAllByOwner(user);
-
-    // 2. 의상 ID 리스트 추출
-    List<UUID> clothesIds = clothesList.stream()
-        .map(Clothes::getId)
-        .toList();
-
-    // 3. 의상 속성들 한꺼번에 가져오기 (의상 리스트로)
-    List<ClothesAttribute> clothesAttributes = clothesAttributeRepository.findByClothesIn(
-        clothesList);
-
-    // 4. 의상 ID별 속성 매핑 (Map<ClothesId, List<ClothesAttribute>>)
-    Map<UUID, List<ClothesAttribute>> attributesByClothesId = clothesAttributes.stream()
-        .collect(Collectors.groupingBy(attr -> attr.getClothes().getId()));
-
-    // 5. ClothesDto 리스트 만들기
-    List<ClothesDto> clothesDtoList = clothesList.stream()
-        .map(clothes -> clothesUtils.makeClothesDto(
-            clothes,
-            attributesByClothesId.getOrDefault(clothes.getId(), Collections.emptyList())))
-        .toList();
-
-    // 6. OotdDto 리스트 만들기
-    return clothesDtoList.stream()
-        .map(OotdDto::toDto)
-        .toList();
 
   }
 
@@ -245,7 +214,7 @@ public class RecommendService {
 
 //    long endTime = System.currentTimeMillis();
 //
-//    System.out.println("response = " + response.text());
+    System.out.println("response = " + response.text());
 //    System.out.println("응답 생성 시간: " + (endTime - startTime) + " ms");
 
     // 반환값 변환

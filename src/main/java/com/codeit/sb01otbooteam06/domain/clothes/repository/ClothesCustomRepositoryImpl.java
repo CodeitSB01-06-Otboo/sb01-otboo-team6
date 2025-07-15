@@ -5,6 +5,7 @@ import com.codeit.sb01otbooteam06.domain.clothes.entity.Clothes;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.QAttributeDef;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.QClothes;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.QClothesAttribute;
+import com.codeit.sb01otbooteam06.domain.profile.entity.Gender;
 import com.codeit.sb01otbooteam06.domain.user.entity.User;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.OrderSpecifier;
@@ -106,15 +107,14 @@ public class ClothesCustomRepositoryImpl implements ClothesCustomRepository {
     QClothesAttribute qClothesAttribute = QClothesAttribute.clothesAttribute;
     QAttributeDef qAttributeDef = QAttributeDef.attributeDef;
 
-    // 속성 이름과 기대값 매핑 (DB에서 조회)
     Map<String, String> expectedAttributes = new HashMap<>();
     String[] attributeNames = {"계절", "두께감", "안감", "따뜻한 정도"};
 
+    // 속성명: weightData를 속성밸류문자 변환해 맵에 저장
     for (int i = 0; i < attributeNames.length; i++) {
       String attributeName = attributeNames[i];
       Integer index = weightData[i];
 
-      // attributes_defs 테이블에서 해당 속성의 selectable_values 조회
       AttributeDef attributeDef = queryFactory
           .selectFrom(qAttributeDef)
           .where(qAttributeDef.name.eq(attributeName))
@@ -128,28 +128,37 @@ public class ClothesCustomRepositoryImpl implements ClothesCustomRepository {
       }
     }
 
-    // 조건식들을 OR로 연결 (하나라도 일치하지 않으면 제외)
+    // 조건식 생성(일치하지 않는 경우 찾기) , 기대값과 다른 옷들을 제외시킬 것임.
     BooleanExpression mismatchCondition = null;
 
     for (Map.Entry<String, String> entry : expectedAttributes.entrySet()) {
       BooleanExpression attrMismatch = qAttributeDef.name.eq(entry.getKey())
           .and(qClothesAttribute.value.ne(entry.getValue()));
 
-      if (mismatchCondition == null) {
-        mismatchCondition = attrMismatch;
-      } else {
-        mismatchCondition = mismatchCondition.or(attrMismatch);
-      }
+      mismatchCondition =
+          (mismatchCondition == null) ? attrMismatch : mismatchCondition.or(attrMismatch);
     }
 
-    // 불일치하는 속성을 가진 의상 ID들
+    // 성별 조건 추가, 남성이면여성옷 제외, 여성이면 남성옷 제외, 기타이면 필터제외 -> ex) 여성: 여성, 기타 가능. / 기타: 남성,여성,기타 모두 가능.
+    Gender userGender = user.getProfile().getGender();
+    if (userGender != Gender.OTHER) {
+      String oppositeGenderStr = (userGender == Gender.FEMALE) ? "남성" : "여성";
+
+      BooleanExpression genderMismatch = qClothesAttribute.attributeDef.name.eq("성별")
+          .and(qClothesAttribute.value.eq(oppositeGenderStr));
+
+      mismatchCondition = (mismatchCondition == null)
+          ? genderMismatch
+          : mismatchCondition.or(genderMismatch);
+    }
+
+    // missmatch 의상리스트 제외하여 반환.
     JPQLQuery<UUID> invalidClothesIds = JPAExpressions
         .select(qClothesAttribute.clothes.id)
         .from(qClothesAttribute)
         .join(qAttributeDef).on(qClothesAttribute.attributeDef.eq(qAttributeDef))
         .where(mismatchCondition);
 
-    // 최종 결과 반환
     return queryFactory
         .selectFrom(qClothes)
         .where(
