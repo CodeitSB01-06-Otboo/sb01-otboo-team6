@@ -85,6 +85,7 @@ jobs:
         docker build -t obtoo .
         docker tag obtoo:latest $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
 
     - name: Fill in the new image ID in the Amazon ECS task definition
