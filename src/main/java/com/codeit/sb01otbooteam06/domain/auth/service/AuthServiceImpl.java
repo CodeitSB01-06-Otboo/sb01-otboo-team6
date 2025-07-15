@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
@@ -31,30 +33,52 @@ public class AuthServiceImpl implements AuthService {
      * 로그인 - accessToken, refreshToken 발급
      */
     @Override
+    @Transactional
     public TokenResponse signIn(SignInRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new UserNotFoundException(request.getEmail()));
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+        boolean matchesMain = passwordEncoder.matches(request.getPassword(), user.getPassword());
+        boolean matchesTemp = user.getTemporaryPassword() != null &&
+                passwordEncoder.matches(request.getPassword(), user.getTemporaryPassword());
+
+        if (!matchesMain && !matchesTemp) {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
 
-        // [추후 구현] 계정 잠금 상태 확인 로직
-        /*
-        if (user.isLocked()) {
-            throw new IllegalStateException("해당 계정은 잠금 상태입니다.");
+        if (matchesTemp) {
+            if (user.getTemporaryPasswordExpiration() == null ||
+                    user.getTemporaryPasswordExpiration().isBefore(LocalDateTime.now())) {
+                throw new IllegalStateException("임시 비밀번호가 만료되었습니다.");
+            }
         }
-        */
+
+        if (matchesMain) {
+            user.clearTemporaryPassword();
+        }
 
         String accessToken = jwtTokenProvider.generateAccessToken(user.getId());
         String refreshToken = jwtTokenProvider.generateRefreshToken(user.getId());
 
-        return new TokenResponse(accessToken, refreshToken);
+        return new TokenResponse(accessToken, refreshToken, user.isMustChangePassword());
     }
 
-    /**
-     * 리프레시 토큰으로 액세스 토큰 재발급
-     */
+    @Override
+    @Transactional
+    public void resetPassword(ResetPasswordRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new UserNotFoundException(request.getEmail()));
+
+        String tempPassword = UUID.randomUUID().toString().substring(0, 8);
+        String encodedTempPassword = passwordEncoder.encode(tempPassword);
+        LocalDateTime expiration = LocalDateTime.now().plusMinutes(15);
+
+        user.changePassword(encodedTempPassword);
+        user.setTemporaryPassword(encodedTempPassword, expiration);
+
+        System.out.println("임시 비밀번호 발급됨: " + tempPassword);
+    }
+
     @Override
     public String refreshAccessToken(String refreshToken) {
         validateRefreshToken(refreshToken);
@@ -70,33 +94,6 @@ public class AuthServiceImpl implements AuthService {
         return refreshAccessToken(refreshToken);
     }
 
-    /**
-     * 비밀번호 초기화 (임시 비밀번호 발급)
-     */
-    @Override
-    @Transactional
-    public void resetPassword(ResetPasswordRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new UserNotFoundException(request.getEmail()));
-
-        user.changePassword(passwordEncoder.encode("temporary-password"));
-
-        //  [추후 구현] 이메일 전송 로직
-        /*
-        String tempPassword = "temporary-password";
-        emailService.sendResetPasswordEmail(user.getEmail(), tempPassword);
-        */
-    }
-
-    /**
-     * 내부 메서드 - 리프레시 토큰 검증
-     */
-    private void validateRefreshToken(String refreshToken) {
-        if (!jwtTokenProvider.validateToken(refreshToken)) {
-            throw new IllegalArgumentException("유효하지 않은 리프레시 토큰입니다.");
-        }
-    }
-
     @Override
     public UUID getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -106,5 +103,11 @@ public class AuthServiceImpl implements AuthService {
         }
 
         return (UUID) authentication.getPrincipal();
+    }
+
+    private void validateRefreshToken(String refreshToken) {
+        if (!jwtTokenProvider.validateToken(refreshToken)) {
+            throw new IllegalArgumentException("유효하지 않은 리프레시 토큰입니다.");
+        }
     }
 }
