@@ -2,10 +2,12 @@ package com.codeit.sb01otbooteam06.domain.dm.controller;
 
 import com.codeit.sb01otbooteam06.domain.dm.dto.DirectMessageCreateRequest;
 import com.codeit.sb01otbooteam06.domain.dm.dto.DirectMessageDto;
+import com.codeit.sb01otbooteam06.domain.dm.dto.DirectMessageListResponse;
 import com.codeit.sb01otbooteam06.domain.dm.service.DirectMessageService;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Slice;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/direct-messages")
 @RequiredArgsConstructor
@@ -31,12 +34,13 @@ public class DirectMessageController {
         return ResponseEntity.ok(id);
     }
 
-    /** 채팅 페이징 조회 */
-    @GetMapping("/{withUserId}")
-    public Slice<DirectMessageDto> chat(@PathVariable UUID withUserId,
+    /** DM 목록 */
+    @GetMapping
+    public DirectMessageListResponse list(@RequestParam UUID userId,
         @RequestParam(required = false) UUID cursor,
-        @RequestParam(defaultValue = "20") int size,
-        @RequestHeader("X-USER-ID") UUID me) {
-        return dmService.chat(me, withUserId, cursor, size);
+        @RequestParam(defaultValue = "15") int size) {
+        log.info("[HTTP] GET /api/direct-messages  userId={}, cursor={}, size={}",
+            userId, cursor, size);
+        return dmService.list(userId, cursor, size);
     }
 }

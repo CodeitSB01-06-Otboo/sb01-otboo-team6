@@ -65,11 +65,12 @@ public class GlobalExceptionHandler {
            PROFILE_NOT_FOUND,
            FEED_NOT_FOUND,
            UNAUTHORIZED_FEED_ACCESS,
-           WEATHER_NOT_FOUND-> HttpStatus.BAD_REQUEST;
-
+           WEATHER_NOT_FOUND,
+           FILE_NAME_MISSING -> HttpStatus.BAD_REQUEST;
 
       //500 Internal Server Error
-      case INTERNAL_SERVER_ERROR -> HttpStatus.INTERNAL_SERVER_ERROR;
+      case INTERNAL_SERVER_ERROR,
+           S3_UPLOAD_ERROR -> HttpStatus.INTERNAL_SERVER_ERROR;
     };
   }
 
