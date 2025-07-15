@@ -1,8 +1,9 @@
 spring:
   datasource:
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
+    url: ${ secrets.RDS_URL }
+    username: ${ secrets.RDS_USERNAME }
+    password: ${ secrets.RDS_PASSWORD }
 
   jpa:
     hibernate:
