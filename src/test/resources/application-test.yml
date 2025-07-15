@@ -1,0 +1,28 @@
+spring:
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+      data-locations: classpath:data.sql
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+
+jwt:
+  secret: test-secret-key-long-enough
+  access-expiration: 3600000
+  refresh-expiration: 604800000
+
+gemini:
+  prompt: gemini-test-prompt
+
+kma:
+  service-key: kma-test-service-key
+
+kakao:
+  rest-key: kakao-test-rest-key
+
