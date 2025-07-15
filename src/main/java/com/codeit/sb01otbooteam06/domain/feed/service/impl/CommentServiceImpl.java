@@ -90,7 +90,7 @@ public class CommentServiceImpl implements CommentService {
         hasNext,
         totalCount,
         "createdAt",
-        "ASCENDING"
+        "DESCENDING"
     );
   }
 }

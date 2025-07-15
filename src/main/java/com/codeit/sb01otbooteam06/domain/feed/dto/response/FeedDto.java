@@ -60,7 +60,7 @@ public class FeedDto {
         .build();
 
     Weather weather = feed.getWeather();
-    WeatherSummaryDto weatherSummaryDtoDto = weatherMapper.toSummaryDto(weather);
+    WeatherSummaryDto weatherSummaryDto = weatherMapper.toSummaryDto(weather);
 
     List<ClothesFeed> clothesFeeds = feed.getClothesFeeds();
     List<OotdDto> ootdDtos = clothesFeeds.stream()
@@ -74,7 +74,7 @@ public class FeedDto {
         feed.getCreatedAt(),
         feed.getUpdatedAt(),
         authorDto,
-        weatherSummaryDtoDto,
+        weatherSummaryDto,
         ootdDtos,
         feed.getContent(),
         feed.getLikeCount(),
