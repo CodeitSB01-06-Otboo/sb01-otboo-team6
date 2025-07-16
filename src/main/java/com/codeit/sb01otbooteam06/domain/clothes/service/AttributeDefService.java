@@ -123,4 +123,25 @@ public class AttributeDefService {
     return clothesAttributeDefDto;
   }
 
+
+  /**
+   * 의상 속성의 "스타일" 의 값을 반환한다.
+   *
+   * @return 스타일의 속성값 리스트
+   */
+  @Transactional(readOnly = true)
+  public List<String> getStyleValues() {
+    List<String> styleValues = attributeDefRepository.findSelectableValuesByName("스타일");
+    if (styleValues == null || styleValues.isEmpty()) {
+      throw new AttributeDefNotFoundException();
+    }
+
+    // styleValues가 여러 요소인 경우 분리 처리
+    if (styleValues.size() == 1) {
+      return List.of(styleValues.get(0).split(","));
+    }
+
+    return styleValues;
+  }
+
 }

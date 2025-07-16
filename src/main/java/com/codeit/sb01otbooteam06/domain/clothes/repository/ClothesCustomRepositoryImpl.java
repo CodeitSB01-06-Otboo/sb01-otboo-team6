@@ -115,6 +115,7 @@ public class ClothesCustomRepositoryImpl implements ClothesCustomRepository {
       String attributeName = attributeNames[i];
       Integer index = weightData[i];
 
+      //todo: 중복 호출 문제 발생.
       AttributeDef attributeDef = queryFactory
           .selectFrom(qAttributeDef)
           .where(qAttributeDef.name.eq(attributeName))

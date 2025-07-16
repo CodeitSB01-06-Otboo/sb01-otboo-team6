@@ -212,7 +212,7 @@ CREATE TABLE clothes
 CREATE TABLE attributes_defs
 (
     id                UUID PRIMARY KEY,
-    name              VARCHAR(40) NOT NULL,
+name              VARCHAR(40) NOT NULL,
     selectable_values TEXT[] NOT NULL,
     created_at        TIMESTAMP   NOT NULL,
     updated_at        TIMESTAMP NULL

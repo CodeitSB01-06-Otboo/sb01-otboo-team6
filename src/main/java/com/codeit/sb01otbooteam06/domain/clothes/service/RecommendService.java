@@ -104,10 +104,15 @@ public class RecommendService {
     // 추천 의상 ids에 대한 의상 엔티티 리스트를 가져온다.
     List<Clothes> clothesList = clothesRepository.findAllById(recommendClothesIds);
 
+    //todo: n+1문제 해결.
+
     // 의상 속성들 한꺼번에 가져오기 (의상 리스트로)
     List<ClothesAttribute> clothesAttributes = clothesAttributeRepository.findByClothesIn(
         clothesList);
 
+//    List<ClothesAttribute> clothesAttributes = clothesAttributeService.findAttributesByClothesIds(
+//        recommendClothesIds);
+//
     // 의상 ID별 속성 매핑 (Map<ClothesId, List<ClothesAttribute>>)
     Map<UUID, List<ClothesAttribute>> attributesByClothesId = clothesAttributes.stream()
         .collect(Collectors.groupingBy(attr -> attr.getClothes().getId()));
@@ -214,7 +219,7 @@ public class RecommendService {
 
 //    long endTime = System.currentTimeMillis();
 //  TODO: 개발용 나중에 끄기
-    System.out.println("response = " + response.text());
+    System.out.println("gemini response = " + response.text());
 //    System.out.println("응답 생성 시간: " + (endTime - startTime) + " ms");
 
     // 반환값 변환

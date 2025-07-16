@@ -8,11 +8,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface ClothesAttributeRepository extends JpaRepository<ClothesAttribute, UUID> {
+public interface ClothesAttributeRepository extends JpaRepository<ClothesAttribute, UUID>,
+    ClothesAttributeCustomRepository {
 
   void deleteByClothes(Clothes clothes);
 
   List<ClothesAttribute> findByClothes(Clothes clothes);
 
   List<ClothesAttribute> findByClothesIn(List<Clothes> clothesList);
+
 }

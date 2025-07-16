@@ -1,14 +1,19 @@
 package com.codeit.sb01otbooteam06.domain.clothes.service;
 
 import com.codeit.sb01otbooteam06.domain.clothes.entity.Clothes;
+import com.codeit.sb01otbooteam06.domain.clothes.entity.ClothesAttribute;
 import com.codeit.sb01otbooteam06.domain.clothes.mapper.RecommendClothesMapper;
+import com.codeit.sb01otbooteam06.domain.clothes.repository.ClothesAttributeRepository;
 import com.codeit.sb01otbooteam06.domain.clothes.repository.ClothesRepository;
 import com.codeit.sb01otbooteam06.domain.clothes.repository.RecommendClothesRepository;
 import com.codeit.sb01otbooteam06.domain.profile.entity.Gender;
 import com.codeit.sb01otbooteam06.domain.user.entity.User;
 import com.codeit.sb01otbooteam06.domain.weather.entity.Weather;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
@@ -20,47 +25,83 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class RecommendClothesService {
 
+  private final AttributeDefService attributeDefService;
+
   private final RecommendClothesRepository recommendClothesRepository;
   private final ClothesRepository clothesRepository;
 
   private final RecommendClothesMapper recommendClothesMapper;
+  private final ClothesAttributeService clothesAttributeService;
+  private final ClothesAttributeRepository clothesAttributeRepository;
 
+  //todo 책임이 많아서 저장과 가져오기 분리하면 좋을듯.
+
+  /**
+   * 날씨와 사용자 취향을 고려해 추천 의상을 생성해 DB에 저장한다.
+   *
+   * @param valueData
+   * @param user
+   * @param weather
+   * @return 추천의상 셋 중 하나의 의상 아이디리스트
+   */
   @Transactional
   public List<UUID> makeRecommendClothes(int[] valueData, User user, Weather weather) {
     /**
+     * 추천 로직. 
      * 1 우선 밸류 및 성별에 일치하는 의상 리스트들을 찾아옴.
-     * 2 이후 리스트로 상의풀 / (성별에 따라 원피스)/하의풀 /신발풀 만들고   3요소는 필수
-     * 3 아우터, 액세서리, 양말, 모자, 가방, 스카프는 스타일이 맞으면 랜덤으로 넣어줌. 다 합쳐버리자
-     * 4 그 풀에서 하나씩 랜덤 or 스타일 매칭으로 뽑아서, 의상 추천 코디 셋을 만든다.
+     * 2 이후 의상 종류에 따른 상의/원피스/바텀/신발/나머지 리스트를 만들고
+     * 3 (상의+바텀 or 원피스 / 바지/ 슈즈) 리스트에서 필수 하나씩 + 랜덤으로 스타일에 맞는 기타 의상을 하나의 추천 의상 셋으로 만듦.
+     * 4 추천의상 (테이블에 날씨:유저:추천의상ids리스트)를 n개 저장한다.
      */
 
-    //db에 있는 유저-날씨에 대한 추천 데이터 삭제
+    ///db에 있는 유저-날씨에 대한 추천 데이터 삭제
     recommendClothesRepository.deleteByUserAndWeather(user, weather);
 
-    //유저에 대한 의상을 속성값에 일치하는 것을 모두겟
+    /// 속성값에 일치하는 유저 의상을 모두겟
     // [계절, 두께감, 안감, 따뜻한 정도]
+    // 의상리스트
     List<Clothes> clothesList = clothesRepository.findAllByOwnerWithValue(user, valueData);
 
+    // todo:  굳이 필요 x
+    //의상 id 리스트
+    List<UUID> clothesIds = clothesList.stream()
+        .map(Clothes::getId)
+        .collect(Collectors.toList());
+    //의상 id 리스트에 해당하는 의상속성 중간테이블 로드 (쿼리릍 통해 한번에 가져와 n+1문제 해결)
+    List<ClothesAttribute> clothesAttributeList = clothesAttributeRepository.findByClothesIn(
+        clothesList);
+//        clothesAttributeService.findAttributesByClothesIds(clothesIds);
+
     /// 추천 의상 세트를 만듦.
-    // 의상 목록 풀만들기. 상의/하의/원피스/신발    +기타(모두
-    List<Clothes> topList = getClothesTypeList(clothesList, "TOP");
-    List<Clothes> bottomList = getClothesTypeList(clothesList, "BOTTOM");
-    List<Clothes> shoesList = getClothesTypeList(clothesList, "SHOES");
-    List<Clothes> dressList = getClothesTypeList(clothesList, "DRESS");
 
-    //Todo: 기타 악세등
-
-    //todo: 스타일 적용하기.
-    //풀에서 하나씩 랜덤으로 뽑아 추천 의상 세트를 만든다. (상의, 바지, 신발, +악세)
-    //추천 의상  아이디리스트
-
+    //유저 성별
     Gender gender = user.getProfile().getGender();
 
+    //빈 추천 의상 아이디리스트 선언
     List<UUID> recoClothesIds = new ArrayList<>();
+
+    // 의상 속성 테이블에서 "스타일" 속성의 값을 리스트로 가져옴.
+    List<String> styleValues = attributeDefService.getStyleValues();
+
+    //의상 추천 셋 생성
     for (int i = 0; i < 5; i++) {
       recoClothesIds.clear();
 
-      //성별에 따른 의상 추천
+      //매 세트마다 스타일을 랜덤 하나 선정
+      Random random = new Random();
+      String style = styleValues.get(random.nextInt(styleValues.size()));
+
+      //스타일에 맞는 의상리스트 필터링
+      List<Clothes> clothesListWithStyle = getClothesByStyle(style, clothesList,
+          clothesAttributeList);
+
+      // 의상 목록 풀만들기. 상의/하의/원피스/신발/나머지
+      List<Clothes> topList = getClothesTypeList(clothesListWithStyle, "TOP");
+      List<Clothes> bottomList = getClothesTypeList(clothesListWithStyle, "BOTTOM");
+      List<Clothes> shoesList = getClothesTypeList(clothesListWithStyle, "SHOES");
+      List<Clothes> dressList = getClothesTypeList(clothesListWithStyle, "DRESS");
+
+      ///성별에 따른 의상 추천
       // 여자면 랜덤으로 원피스 or 상의+바지 조합
       if (gender == Gender.FEMALE) {
         boolean useDress = ThreadLocalRandom.current().nextBoolean(); // true/false 랜덤 결정
@@ -77,9 +118,13 @@ public class RecommendClothesService {
         recoClothesIds.add(pickRandom(bottomList));
       }
 
+      //신발선택
       recoClothesIds.add(pickRandom(shoesList));
 
-      // 추천 의상 셋 저장
+      //나머지 의상에서는, 타입별로 랜덤 하나를 뽑거나 뽑지 않아 의상 아이디 리스트를 만들어, 추천 의상 아이디리스트에 추가해준다.
+      recoClothesIds.addAll(getExtraClothes(clothesListWithStyle));
+
+      // 추천 의상 셋 DB 저장
       recommendClothesRepository.save(
           recommendClothesMapper.toEntity(weather, user, recoClothesIds));
     }
@@ -88,7 +133,30 @@ public class RecommendClothesService {
     return recoClothesIds;
   }
 
-  // 의상리스트에서, 타입에 맞는 의상리스트를 반환
+  private List<Clothes> getClothesByStyle(String style, List<Clothes> clothesList,
+      List<ClothesAttribute> attributeList) {
+    // 스타일에 해당하는 의상 아이디 집합 구하기
+    Set<UUID> styleMatchedIds = attributeList.stream()
+        .filter(
+            attr -> "스타일".equals(attr.getAttributeDef().getName()) && style.equals(attr.getValue()))
+        .map(attr -> attr.getClothes().getId())
+        .collect(Collectors.toSet());
+
+    // clothesList에서 styleMatchedIds에 포함된 의상과 스타일 속성 없는 의상만 필터링
+    //todo: 의상이 많아지면, 스타일 속성 없는 것을 제거할수도 있음.
+    return clothesList.stream()
+        .filter(clothes -> {
+          boolean hasStyleAttr = attributeList.stream()
+              .anyMatch(attr -> attr.getClothes().getId().equals(clothes.getId()) && "스타일".equals(
+                  attr.getAttributeDef().getName()));
+          // 스타일 속성 없거나, 스타일 값 일치하는 경우 통과
+          return !hasStyleAttr || styleMatchedIds.contains(clothes.getId());
+        })
+        .collect(Collectors.toList());
+
+  }
+
+  // 의상리스트에서, 타입과에 맞는 의상리스트를 반환
   private List<Clothes> getClothesTypeList(List<Clothes> clothesList, String type) {
 
     return clothesList.stream()
@@ -97,7 +165,7 @@ public class RecommendClothesService {
 
   }
 
-  // 의상 리스트에서 랜덤 하나 clothes 의 id를 반환하는 헬퍼 함수
+  // 의상 리스트에서 랜덤 하나 clothes 의 id를 반환하는 함수
   private UUID pickRandom(List<Clothes> list) {
     if (list == null || list.isEmpty()) {
       return null;
@@ -105,5 +173,45 @@ public class RecommendClothesService {
     int idx = ThreadLocalRandom.current().nextInt(list.size());
     return list.get(idx).getId();
   }
+
+  // 의상 리스트에서 랜덤 하나 clothes 의 id를 뽑거나 뽑지않고 반환하는 함수
+  private UUID pickRandomOrNot(List<Clothes> list) {
+    if (list == null || list.isEmpty()) {
+      return null;
+    }
+    // 50% 확률로 뽑지 않음
+    if (ThreadLocalRandom.current().nextBoolean()) {
+      return null;
+    }
+    // 50% 확률로 뽑음.
+    int idx = ThreadLocalRandom.current().nextInt(list.size());
+    return list.get(idx).getId();
+  }
+
+  /**
+   * 상의/바지/원피스/신발 제외 의상리스트에서 랜덤한 의상의 id리스트를 반환한다.
+   *
+   * @param clothesList 나머지의상리스트
+   * @return 나머지 의상리스트에서 랜덤
+   */
+  private List<UUID> getExtraClothes(List<Clothes> clothesList) {
+    //나머지 타입 목록 선언
+    List<String> typeList = Arrays.asList("OUTER", "UNDERWEAR", "ACCESSORY", "SOCKS", "HAT", "BAG",
+        "SCARF", "ETC");
+    List<UUID> extraClothesIds = new ArrayList<>();
+
+    // 나머지 타입 의상 리스트에서 의상을 뽑거나 뽑지 않는다.
+    for (String type : typeList) {
+      UUID id = pickRandomOrNot(getClothesTypeList(clothesList, type));
+      //null 방어
+      if (id != null) {
+        extraClothesIds.add(id);
+      }
+    }
+
+    return extraClothesIds;
+
+  }
+
 
 }

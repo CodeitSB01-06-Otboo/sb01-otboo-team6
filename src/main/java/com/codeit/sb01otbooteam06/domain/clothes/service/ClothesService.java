@@ -62,7 +62,10 @@ public class ClothesService {
         .orElseThrow(() -> new UserNotFoundException(clothesCreateRequest.ownerId()));
 
     // S3 업로드
-    String imageUrl = s3Service.upload(clothesImage, directory);
+    String imageUrl = null;
+    if (clothesImage != null && !clothesImage.isEmpty()) {
+      imageUrl = s3Service.upload(clothesImage, directory);
+    }
 
     Clothes clothes = new Clothes(
         owner,

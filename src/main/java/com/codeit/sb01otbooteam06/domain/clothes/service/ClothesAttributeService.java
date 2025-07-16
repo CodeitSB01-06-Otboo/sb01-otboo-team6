@@ -65,4 +65,8 @@ public class ClothesAttributeService {
     return this.create(clothes, attributes);
 
   }
+
+  public List<ClothesAttribute> findAttributesByClothesIds(List<UUID> clothesIds) {
+    return clothesAttributeRepository.findAttributesByClothesIds(clothesIds);
+  }
 }
