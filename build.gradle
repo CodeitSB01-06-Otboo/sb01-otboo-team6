@@ -79,6 +79,8 @@ dependencies {
     //AWS S3 SDK 의존성
     implementation 'software.amazon.awssdk:s3:2.31.7'
 
+    //웹크롤링 jsoup
+    implementation 'org.jsoup:jsoup:1.21.1'
 
 }
 
