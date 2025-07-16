@@ -32,17 +32,18 @@ public class Profile extends BaseUpdatableEntity {
   @Column(nullable = false)
   private LocalDate birthDate;
 
-  @Column(nullable = false)
-  private double latitude;
+  @Column(nullable = true)
+  private Double latitude;
 
-  @Column(nullable = false)
-  private double longitude;
+  @Column(nullable = true)
+  private Double longitude;
 
-  @Column(nullable = false)
-  private int x;
+  @Column(nullable = true)
+  private Integer x;
 
-  @Column(nullable = false)
-  private int y;
+  @Column(nullable = true)
+  private Integer y;
+
 
   @ElementCollection
   @CollectionTable(name = "profile_location_names", joinColumns = @JoinColumn(name = "profile_id"))
@@ -60,10 +61,10 @@ public class Profile extends BaseUpdatableEntity {
           String name,
           Gender gender,
           LocalDate birthDate,
-          double latitude,
-          double longitude,
-          int x,
-          int y,
+          Double latitude,
+          Double longitude,
+          Integer x,
+          Integer y,
           List<String> locationNames,
           int temperatureSensitivity,
           String profileImageUrl
@@ -85,10 +86,10 @@ public class Profile extends BaseUpdatableEntity {
           String name,
           Gender gender,
           LocalDate birthDate,
-          double latitude,
-          double longitude,
-          int x,
-          int y,
+          Double latitude,
+          Double longitude,
+          Integer x,
+          Integer y,
           List<String> locationNames,
           int temperatureSensitivity,
           String profileImageUrl
