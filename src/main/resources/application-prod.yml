@@ -7,7 +7,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update # 초기 배포 확인용으로 update 사용.
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
