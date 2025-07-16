@@ -1,18 +1,16 @@
-package com.codeit.sb01otbooteam06.domain.clothes.utils;
+package com.codeit.sb01otbooteam06.domain.clothes.mapper;
 
 import com.codeit.sb01otbooteam06.domain.clothes.entity.Clothes;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.ClothesAttribute;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.dto.ClothesAttributeWithDefDto;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.dto.ClothesDto;
-import com.codeit.sb01otbooteam06.domain.clothes.mapper.ClothesAttributeWithDefDtoMapper;
-import com.codeit.sb01otbooteam06.domain.clothes.mapper.ClothesMapper;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class ClothesUtils {
+public class CustomClothesUtils {
 
   private final ClothesAttributeWithDefDtoMapper clothesAttributeWithDefDtoMapper;
   private final ClothesMapper clothesMapper;

@@ -8,10 +8,9 @@ import com.codeit.sb01otbooteam06.domain.clothes.entity.dto.ClothesDto;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.dto.OotdDto;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.dto.RecommendationDto;
 import com.codeit.sb01otbooteam06.domain.clothes.mapper.ClothesMapper;
+import com.codeit.sb01otbooteam06.domain.clothes.mapper.CustomClothesUtils;
 import com.codeit.sb01otbooteam06.domain.clothes.repository.ClothesAttributeRepository;
 import com.codeit.sb01otbooteam06.domain.clothes.repository.ClothesRepository;
-import com.codeit.sb01otbooteam06.domain.clothes.repository.RecommendClothesRepository;
-import com.codeit.sb01otbooteam06.domain.clothes.utils.ClothesUtils;
 import com.codeit.sb01otbooteam06.domain.profile.entity.Profile;
 import com.codeit.sb01otbooteam06.domain.profile.exception.ProfileNotFoundException;
 import com.codeit.sb01otbooteam06.domain.profile.repository.ProfileRepository;
@@ -39,28 +38,27 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class RecommendationService {
+public class RecommendService {
 
   private final ClothesService clothesService;
   private final AuthService authService;
   private final RecommendClothesService recommendClothesService;
 
+
   //todo: 서비스? 웨더 확인해보고 추후 변경
   private final WeatherRepository weatherRepository;
   private final UserRepository userRepository;
   private final ProfileRepository profileRepository;
+  private final ClothesRepository clothesRepository;
+  private final ClothesAttributeRepository clothesAttributeRepository;
 
   private final ClothesMapper clothesMapper;
-  private final ClothesRepository clothesRepository;
 
-  private final ClothesUtils clothesUtils;
-  private final ClothesAttributeRepository clothesAttributeRepository;
-  private final RecommendClothesRepository recommendClothesRepository;
+  private final CustomClothesUtils customClothesUtils;
 
   @Value("${gemini.prompt}")
   private String secretPrompt;
 
-  // todo:
 
   @Transactional
   public RecommendationDto recommend(UUID weatherId) {
@@ -75,24 +73,30 @@ public class RecommendationService {
     Weather weather = weatherRepository.findById(weatherId)
         .orElseThrow(() -> new WeatherNotFoundException());
 
+    /// 추천 의상 id 리스트를 얻는다.
     List<UUID> recommendClothesIds;
 
-//    /// 추천 의상 id 리스트를 얻는다.
-//    // 추천 의상 테이블에 유저-날씨에 대한 추천 의상이 있으면 반환
+    // todo: 현재 매번 추천(개발용)
+    recommendClothesIds = create(user, weather);
+
+    //todo:  레디스 비동기??? 의상 등록시 추천 알고리즘 다시해야함.
+//
+//    // 추천 의상 테이블에 유저-날씨에 대한 추천 의상이 있으면 랜덤 하나 반환
 //    if (recommendClothesRepository.existsByUserAndWeather(user, weather)) {
-//      recommendClothesIds = recommendClothesRepository.findClothesIdsByUserAndWeather(user,
+//      RecommendClothes recommendClothes = recommendClothesRepository.findRandomByUserAndWeather(
+//          user,
 //          weather);
+//      recommendClothesIds = recommendClothes.getClothesIds();
 //    }
 //    //없으면 새로 추천 의상을 만들고 저장한다.
 //    else {
 //      recommendClothesIds = create(user, weather);
 //    }
-//
-//    // 추천 의상 id 리스트에 대한 List<OotdDto> 생성
-//    List<OotdDto> ootdDtos = getOotdDtos(recommendClothesIds);
 
-    //todo: 현재 임시 ootd반환이며 수정 필요.
-    return new RecommendationDto(weatherId, userId, getFakeClothes(user));
+    // 추천 의상 id 리스트에 대한 List<OotdDto> 생성
+    List<OotdDto> ootdDtos = getOotdDtos(recommendClothesIds);
+
+    return new RecommendationDto(weatherId, userId, ootdDtos);
   }
 
   private List<OotdDto> getOotdDtos(List<UUID> recommendClothesIds) {
@@ -104,18 +108,18 @@ public class RecommendationService {
     List<ClothesAttribute> clothesAttributes = clothesAttributeRepository.findByClothesIn(
         clothesList);
 
-    // 4. 의상 ID별 속성 매핑 (Map<ClothesId, List<ClothesAttribute>>)
+    // 의상 ID별 속성 매핑 (Map<ClothesId, List<ClothesAttribute>>)
     Map<UUID, List<ClothesAttribute>> attributesByClothesId = clothesAttributes.stream()
         .collect(Collectors.groupingBy(attr -> attr.getClothes().getId()));
 
-    // 5. ClothesDto 리스트 만들기
+    // ClothesDto 리스트 만들기
     List<ClothesDto> clothesDtoList = clothesList.stream()
-        .map(clothes -> clothesUtils.makeClothesDto(
+        .map(clothes -> customClothesUtils.makeClothesDto(
             clothes,
             attributesByClothesId.getOrDefault(clothes.getId(), Collections.emptyList())))
         .toList();
 
-    // 6. OotdDto 리스트 만들기
+    // OotdDto 리스트 만들기
     return clothesDtoList.stream()
         .map(OotdDto::toDto)
         .toList();
@@ -150,39 +154,6 @@ public class RecommendationService {
         weather);
 
     return RecommendClothesIds;
-
-  }
-
-  //todo: 삭제
-  private List<OotdDto> getFakeClothes(User user) {
-    //페이크 데이터
-    // 1. 의상 리스트 가져오기
-    List<Clothes> clothesList = clothesRepository.findAllByOwner(user);
-
-    // 2. 의상 ID 리스트 추출
-    List<UUID> clothesIds = clothesList.stream()
-        .map(Clothes::getId)
-        .toList();
-
-    // 3. 의상 속성들 한꺼번에 가져오기 (의상 리스트로)
-    List<ClothesAttribute> clothesAttributes = clothesAttributeRepository.findByClothesIn(
-        clothesList);
-
-    // 4. 의상 ID별 속성 매핑 (Map<ClothesId, List<ClothesAttribute>>)
-    Map<UUID, List<ClothesAttribute>> attributesByClothesId = clothesAttributes.stream()
-        .collect(Collectors.groupingBy(attr -> attr.getClothes().getId()));
-
-    // 5. ClothesDto 리스트 만들기
-    List<ClothesDto> clothesDtoList = clothesList.stream()
-        .map(clothes -> clothesUtils.makeClothesDto(
-            clothes,
-            attributesByClothesId.getOrDefault(clothes.getId(), Collections.emptyList())))
-        .toList();
-
-    // 6. OotdDto 리스트 만들기
-    return clothesDtoList.stream()
-        .map(OotdDto::toDto)
-        .toList();
 
   }
 
@@ -242,8 +213,8 @@ public class RecommendationService {
         );
 
 //    long endTime = System.currentTimeMillis();
-//
-//    System.out.println("response = " + response.text());
+//  TODO: 개발용 나중에 끄기
+    System.out.println("response = " + response.text());
 //    System.out.println("응답 생성 시간: " + (endTime - startTime) + " ms");
 
     // 반환값 변환

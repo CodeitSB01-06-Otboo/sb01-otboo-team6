@@ -9,9 +9,9 @@ import com.codeit.sb01otbooteam06.domain.clothes.entity.dto.PageResponse;
 import com.codeit.sb01otbooteam06.domain.clothes.exception.ClothesNotFoundException;
 import com.codeit.sb01otbooteam06.domain.clothes.mapper.ClothesAttributeWithDefDtoMapper;
 import com.codeit.sb01otbooteam06.domain.clothes.mapper.ClothesMapper;
+import com.codeit.sb01otbooteam06.domain.clothes.mapper.CustomClothesUtils;
 import com.codeit.sb01otbooteam06.domain.clothes.repository.ClothesAttributeRepository;
 import com.codeit.sb01otbooteam06.domain.clothes.repository.ClothesRepository;
-import com.codeit.sb01otbooteam06.domain.clothes.utils.ClothesUtils;
 import com.codeit.sb01otbooteam06.domain.user.entity.User;
 import com.codeit.sb01otbooteam06.domain.user.exception.UserNotFoundException;
 import com.codeit.sb01otbooteam06.domain.user.repository.UserRepository;
@@ -41,7 +41,7 @@ public class ClothesService {
   private final ClothesMapper clothesMapper;
   private final ClothesAttributeWithDefDtoMapper clothesAttributeWithDefDtoMapper;
 
-  private final ClothesUtils clothesUtils;
+  private final CustomClothesUtils customClothesUtils;
 
   //S3 이미지 저장 디렉토리 네임
   private final String directory = "Clothes";
@@ -77,7 +77,7 @@ public class ClothesService {
     List<ClothesAttribute> clothesAttributes = clothesAttributeService.create(clothes,
         clothesCreateRequest.attributes());
 
-    return clothesUtils.makeClothesDto(clothes, clothesAttributes);
+    return customClothesUtils.makeClothesDto(clothes, clothesAttributes);
   }
 
 
@@ -117,7 +117,7 @@ public class ClothesService {
       //의상에 대한 속성
       List<ClothesAttribute> clothesAttributes = clothesAttributeRepository.findByClothes(clothes);
       //결과리스트에 clothesdto추가
-      clothesDtos.add(clothesUtils.makeClothesDto(clothes, clothesAttributes)
+      clothesDtos.add(customClothesUtils.makeClothesDto(clothes, clothesAttributes)
       );
     }
     ///
@@ -181,7 +181,7 @@ public class ClothesService {
     List<ClothesAttribute> clothesAttributes =
         clothesAttributeService.update(clothes, clothesUpdateRequest.attributes());
 
-    return clothesUtils.makeClothesDto(clothes, clothesAttributes);
+    return customClothesUtils.makeClothesDto(clothes, clothesAttributes);
 
 
   }
