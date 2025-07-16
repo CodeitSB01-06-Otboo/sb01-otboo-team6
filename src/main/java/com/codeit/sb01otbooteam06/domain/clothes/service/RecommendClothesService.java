@@ -107,21 +107,21 @@ public class RecommendClothesService {
         boolean useDress = ThreadLocalRandom.current().nextBoolean(); // true/false 랜덤 결정
         // 원피스 있으면 원피스 넣기
         if (useDress && !dressList.isEmpty()) {
-          recoClothesIds.add(pickRandom(dressList));
+          addClothesIdIfNotNull(recoClothesIds, pickRandom(dressList));
         } else {
-          recoClothesIds.add(pickRandom(topList));
-          recoClothesIds.add(pickRandom(bottomList));
+          addClothesIdIfNotNull(recoClothesIds, pickRandom(topList));
+          addClothesIdIfNotNull(recoClothesIds, pickRandom(bottomList));
         }
       } else {
         // 여자 아니면 그냥 top + bottom 조합
-        recoClothesIds.add(pickRandom(topList));
-        recoClothesIds.add(pickRandom(bottomList));
+        addClothesIdIfNotNull(recoClothesIds, pickRandom(topList));
+        addClothesIdIfNotNull(recoClothesIds, pickRandom(bottomList));
       }
 
       //신발선택
-      recoClothesIds.add(pickRandom(shoesList));
+      addClothesIdIfNotNull(recoClothesIds, pickRandom(shoesList));
 
-      //나머지 의상에서는, 타입별로 랜덤 하나를 뽑거나 뽑지 않아 의상 아이디 리스트를 만들어, 추천 의상 아이디리스트에 추가해준다.
+      //나머지 의상에서는, 타입별로 랜덤 하나를 뽑거나 뽑지 않아 추천 의상 아이디리스트에 추가해준다.
       recoClothesIds.addAll(getExtraClothes(clothesListWithStyle));
 
       // 추천 의상 셋 DB 저장
@@ -133,6 +133,26 @@ public class RecommendClothesService {
     return recoClothesIds;
   }
 
+  /**
+   * 타겟 의상아이디리스트에 id가 null이 아니면 추가한다.
+   *
+   * @param targetList
+   * @param id
+   */
+  private void addClothesIdIfNotNull(List<UUID> targetList, UUID id) {
+    if (id != null) {
+      targetList.add(id);
+    }
+  }
+
+  /**
+   * 의상리스트에서 스타일에 맞는 의상을 필터링한다.
+   *
+   * @param style
+   * @param clothesList
+   * @param attributeList
+   * @return 스타일과 일치하는 의상리스트
+   */
   private List<Clothes> getClothesByStyle(String style, List<Clothes> clothesList,
       List<ClothesAttribute> attributeList) {
     // 스타일에 해당하는 의상 아이디 집합 구하기
@@ -156,7 +176,13 @@ public class RecommendClothesService {
 
   }
 
-  // 의상리스트에서, 타입과에 맞는 의상리스트를 반환
+  /**
+   * 의상리스트에서 의상 타입(분류)과 일치하는 의상을 필터링한다.
+   *
+   * @param clothesList
+   * @param type
+   * @return 타입과 일치하는 의상 리스트
+   */
   private List<Clothes> getClothesTypeList(List<Clothes> clothesList, String type) {
 
     return clothesList.stream()
@@ -203,10 +229,7 @@ public class RecommendClothesService {
     // 나머지 타입 의상 리스트에서 의상을 뽑거나 뽑지 않는다.
     for (String type : typeList) {
       UUID id = pickRandomOrNot(getClothesTypeList(clothesList, type));
-      //null 방어
-      if (id != null) {
-        extraClothesIds.add(id);
-      }
+      addClothesIdIfNotNull(extraClothesIds, id);
     }
 
     return extraClothesIds;
