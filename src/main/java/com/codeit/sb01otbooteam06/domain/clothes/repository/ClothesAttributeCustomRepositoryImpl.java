@@ -4,6 +4,7 @@ import com.codeit.sb01otbooteam06.domain.clothes.entity.ClothesAttribute;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.QAttributeDef;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.QClothesAttribute;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,10 @@ public class ClothesAttributeCustomRepositoryImpl implements ClothesAttributeCus
    */
   @Override
   public List<ClothesAttribute> findAttributesByClothesIds(List<UUID> clothesIds) {
+    if (clothesIds == null || clothesIds.isEmpty()) {
+      return Collections.emptyList();
+    }
+    
     QClothesAttribute qClothesAttribute = QClothesAttribute.clothesAttribute;
     QAttributeDef qAttributeDef = QAttributeDef.attributeDef;
 

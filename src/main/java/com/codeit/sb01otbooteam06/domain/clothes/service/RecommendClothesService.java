@@ -12,8 +12,8 @@ import com.codeit.sb01otbooteam06.domain.weather.entity.Weather;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
@@ -33,6 +33,11 @@ public class RecommendClothesService {
   private final RecommendClothesMapper recommendClothesMapper;
   private final ClothesAttributeService clothesAttributeService;
   private final ClothesAttributeRepository clothesAttributeRepository;
+
+  //의상 타입 extra 목록 선언
+  private final List<String> typeList = Arrays.asList("OUTER", "UNDERWEAR", "ACCESSORY", "SOCKS",
+      "HAT", "BAG",
+      "SCARF", "ETC");
 
   //todo 책임이 많아서 저장과 가져오기 분리하면 좋을듯.
 
@@ -155,22 +160,20 @@ public class RecommendClothesService {
    */
   private List<Clothes> getClothesByStyle(String style, List<Clothes> clothesList,
       List<ClothesAttribute> attributeList) {
-    // 스타일에 해당하는 의상 아이디 집합 구하기
-    Set<UUID> styleMatchedIds = attributeList.stream()
-        .filter(
-            attr -> "스타일".equals(attr.getAttributeDef().getName()) && style.equals(attr.getValue()))
-        .map(attr -> attr.getClothes().getId())
-        .collect(Collectors.toSet());
+    // 의상별 스타일 속성 맵 생성 (성능 개선)
+    Map<UUID, String> clothesStyleMap = attributeList.stream()
+        .filter(attr -> "스타일".equals(attr.getAttributeDef().getName()))
+        .collect(Collectors.toMap(
+            attr -> attr.getClothes().getId(),
+            ClothesAttribute::getValue,
+            (v1, v2) -> v1 // 중복 시 첫 번째 값 사용
+        ));
 
-    // clothesList에서 styleMatchedIds에 포함된 의상과 스타일 속성 없는 의상만 필터링
-    //todo: 의상이 많아지면, 스타일 속성 없는 것을 제거할수도 있음.
     return clothesList.stream()
         .filter(clothes -> {
-          boolean hasStyleAttr = attributeList.stream()
-              .anyMatch(attr -> attr.getClothes().getId().equals(clothes.getId()) && "스타일".equals(
-                  attr.getAttributeDef().getName()));
-          // 스타일 속성 없거나, 스타일 값 일치하는 경우 통과
-          return !hasStyleAttr || styleMatchedIds.contains(clothes.getId());
+          String clothesStyle = clothesStyleMap.get(clothes.getId());
+          // 스타일 속성이 없거나, 스타일이 일치하는 경우
+          return clothesStyle == null || style.equals(clothesStyle);
         })
         .collect(Collectors.toList());
 
@@ -221,9 +224,6 @@ public class RecommendClothesService {
    * @return 나머지 의상리스트에서 랜덤
    */
   private List<UUID> getExtraClothes(List<Clothes> clothesList) {
-    //나머지 타입 목록 선언
-    List<String> typeList = Arrays.asList("OUTER", "UNDERWEAR", "ACCESSORY", "SOCKS", "HAT", "BAG",
-        "SCARF", "ETC");
     List<UUID> extraClothesIds = new ArrayList<>();
 
     // 나머지 타입 의상 리스트에서 의상을 뽑거나 뽑지 않는다.

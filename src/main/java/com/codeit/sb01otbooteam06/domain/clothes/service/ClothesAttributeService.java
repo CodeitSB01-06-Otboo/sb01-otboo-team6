@@ -65,7 +65,8 @@ public class ClothesAttributeService {
     return this.create(clothes, attributes);
 
   }
-
+  
+  @Transactional(readOnly = true)
   public List<ClothesAttribute> findAttributesByClothesIds(List<UUID> clothesIds) {
     return clothesAttributeRepository.findAttributesByClothesIds(clothesIds);
   }
