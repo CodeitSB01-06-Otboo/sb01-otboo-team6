@@ -12,8 +12,30 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
     open-in-view: false
-
-
   sql:
     init:
       mode: always
+      schema-locations: classpath:schema.sql
+      data-locations: classpath:data.sql
+  batch:
+    jdbc:
+      initialize-schema: always
+    job:
+      enabled: false
+kma:
+  service-key: ${KMA_KEY}
+kakao:
+  rest-key: ${KAKAO_KEY}
+logging:
+  level:
+    org:
+      hibernate:
+        sql: warn
+        type.descriptor.sql: trace
+jwt:
+  secret: ${JWT_SECRET}
+  access-expiration: ${JWT_ACCESS_EXPIRATION:3600000}
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
+file:
+  profile-image-dir: C:/Users/user/profile-images
+  profile-image-url-base: /uploads/profiles/
