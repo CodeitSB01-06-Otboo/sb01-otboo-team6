@@ -1,4 +1,4 @@
-package com.codeit.sb01otbooteam06.domain.feeds.service;
+package com.codeit.sb01otbooteam06.domain.feed.service;
 
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -84,7 +84,6 @@ public class FeedServiceImplTest {
   Weather mockWeather = mock(Weather.class);
   Clothes mockClothes = mock(Clothes.class);
   ClothesDto mockClothesDto = mock(ClothesDto.class);
-  Feed mockFeed = mock(Feed.class);
 
   @Nested
   @DisplayName("피드 생성 메서드 테스트")

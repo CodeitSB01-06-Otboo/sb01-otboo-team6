@@ -3,13 +3,11 @@ package com.codeit.sb01otbooteam06.domain.feed.dto.request;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
-import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+
 
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CommentCreateRequest {
 
   @NotNull(message = "피드 ID는 필수입니다")
@@ -21,4 +19,10 @@ public class CommentCreateRequest {
   @NotBlank(message = "댓글 내용은 필수 입니다.")
   private String content;
 
+  @Builder
+  public CommentCreateRequest(UUID feedId, UUID authorId, String content) {
+    this.feedId = feedId;
+    this.authorId = authorId;
+    this.content = content;
+  }
 }
