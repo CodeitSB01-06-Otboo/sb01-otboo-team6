@@ -1,6 +1,8 @@
 package com.codeit.sb01otbooteam06.util;
 
+import com.codeit.sb01otbooteam06.domain.clothes.entity.AttributeDef;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.Clothes;
+import com.codeit.sb01otbooteam06.domain.clothes.entity.ClothesAttribute;
 import com.codeit.sb01otbooteam06.domain.profile.entity.Gender;
 import com.codeit.sb01otbooteam06.domain.profile.entity.Profile;
 import com.codeit.sb01otbooteam06.domain.user.entity.Role;
@@ -34,14 +36,24 @@ public class EntityProvider {
         127,       // y
         List.of("서울특별시", "중구"),
         5,         // temperatureSensitivity
-        null
+        "profile.url"
     );
   }
-  
+
   public static Clothes createTestClothes(User user) {
     return new Clothes(
         user, "상의", "TOP", "image.url"
     );
+  }
+
+  public static AttributeDef createTestAttributeDef(String name, List<String> values) {
+    return new AttributeDef(name, values);
+  }
+
+  public static ClothesAttribute createTestClothesAttribute(Clothes clothes,
+      AttributeDef attributeDef, String value
+  ) {
+    return new ClothesAttribute(clothes, attributeDef, value);
   }
 
 
