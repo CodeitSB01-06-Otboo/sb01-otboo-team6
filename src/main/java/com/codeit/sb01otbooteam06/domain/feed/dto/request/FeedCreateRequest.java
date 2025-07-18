@@ -4,12 +4,11 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.UUID;
-import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 @Getter
-@NoArgsConstructor()
+@Builder
 public class FeedCreateRequest {
 
   @NotNull(message = "작성자 ID는 필수입니다")
@@ -20,5 +19,4 @@ public class FeedCreateRequest {
   private List<UUID> clothesIds;
   @NotBlank
   private String content;
-
 }
