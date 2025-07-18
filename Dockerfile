@@ -27,6 +27,7 @@ RUN ./gradlew build -x test --no-daemon
 USER appuser
 
 # 2. Runtime stage
+# 2. Runtime stage
 FROM openjdk:17-jdk-slim
 
 WORKDIR /app
@@ -34,9 +35,6 @@ WORKDIR /app
 COPY --from=builder /app/build/libs/*.jar app.jar
 # ✅ prod 설정 파일 복사
 COPY src/main/resources/application-prod.yml ./application-prod.yml
-# ✅ JAR 복사 (기존 ARG 방식 유지)
-ARG JAR_FILE=build/libs/*.jar
-COPY ${JAR_FILE} app.jar
 
 # 애플리케이션 포트 선언
 EXPOSE 8080
