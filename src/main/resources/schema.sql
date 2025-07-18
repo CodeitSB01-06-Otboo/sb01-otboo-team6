@@ -231,12 +231,12 @@ CREATE TABLE clothes_attributes
 
 -- 추천 의상 테이블
 CREATE TABLE recommend_clothes (
-                                   id UUID PRIMARY KEY,
-                                   weather_id UUID NOT NULL REFERENCES weathers(id),
-                                   user_id UUID NOT NULL REFERENCES users(id),
-                                   clothes_ids uuid[] NOT NULL,
-                                   created_at TIMESTAMP NOT NULL,
-                                   updated_at TIMESTAMP NULL
+   id UUID PRIMARY KEY,
+   weather_id UUID NOT NULL REFERENCES weathers(id),
+   user_id UUID NOT NULL REFERENCES users(id),
+   clothes_ids uuid[] NOT NULL,
+   created_at TIMESTAMP NOT NULL,
+   updated_at TIMESTAMP NULL
 );
 
 

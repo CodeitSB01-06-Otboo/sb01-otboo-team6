@@ -35,7 +35,8 @@ public class RecommendClothesService {
   private final ClothesAttributeRepository clothesAttributeRepository;
 
   //의상 타입 extra 목록 선언
-  private final List<String> typeList = Arrays.asList("OUTER", "UNDERWEAR", "ACCESSORY", "SOCKS",
+  private static final List<String> TYPE_LIST = Arrays.asList("OUTER", "UNDERWEAR", "ACCESSORY",
+      "SOCKS",
       "HAT", "BAG",
       "SCARF", "ETC");
 
@@ -227,7 +228,7 @@ public class RecommendClothesService {
     List<UUID> extraClothesIds = new ArrayList<>();
 
     // 나머지 타입 의상 리스트에서 의상을 뽑거나 뽑지 않는다.
-    for (String type : typeList) {
+    for (String type : TYPE_LIST) {
       UUID id = pickRandomOrNot(getClothesTypeList(clothesList, type));
       addClothesIdIfNotNull(extraClothesIds, id);
     }
