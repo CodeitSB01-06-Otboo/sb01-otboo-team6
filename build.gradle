@@ -132,3 +132,10 @@ sourceSets {
 clean {
     delete file('build/generated/querydsl')
 }
+
+processResources {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    from('src/main/resources') {
+        include '**/*.sql'
+    }
+}
