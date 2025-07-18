@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +32,7 @@ public class AttributeDefService {
   private final AttributeDefMapper attributeDefMapper;
 
 
+  @PreAuthorize("hasRole('ADMIN')")
   @Transactional
   public ClothesAttributeDefDto create(
       ClothesAttributeDefCreateRequest clothesAttributeDefCreateRequest) {
@@ -89,6 +91,7 @@ public class AttributeDefService {
   }
 
 
+  @PreAuthorize("hasRole('ADMIN')")
   @Transactional
   public ClothesAttributeDefDto update(UUID definitionId,
       ClothesAttributeDefUpdateRequest updateRequest) {
@@ -107,6 +110,7 @@ public class AttributeDefService {
     return attributeDefMapper.toDto(attributeDefRepository.save(attributeDef));
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @Transactional
   public ClothesAttributeDefDto delete(UUID attributeDefId) {
 
@@ -117,8 +121,6 @@ public class AttributeDefService {
 
     //의상 속성 삭제
     attributeDefRepository.deleteById(attributeDefId);
-
-    //TODO: 삭제시 중간테이블 정보 삭제 -> CASCADE?
 
     return clothesAttributeDefDto;
   }
