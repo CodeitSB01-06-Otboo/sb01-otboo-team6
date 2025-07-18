@@ -3,16 +3,16 @@ package com.codeit.sb01otbooteam06.domain.user.entity;
 import com.codeit.sb01otbooteam06.domain.base.BaseEntity;
 import com.codeit.sb01otbooteam06.domain.profile.entity.Profile;
 import jakarta.persistence.*;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 @Entity
 @Getter
@@ -97,24 +97,26 @@ public class User extends BaseEntity {
             now.isBefore(this.temporaryPasswordExpiration);
   }
 
-  // Oauth 부분 일단 주석 처리
+  /**
+   * 소셜 로그인 회원가입용 생성자 (정적 팩토리 메서드)
+   */
+  public static User createSocialUser(String email, String name) {
+    return User.builder()
+            .email(email)
+            .password("SOCIAL") // 소셜 로그인은 비밀번호 사용하지 않음
+            .name(name)
+            .role(Role.USER)
+            .locked(false)
+            .linkedOAuthProviders(new ArrayList<>(List.of("SOCIAL")))
+            .build();
+  }
 
-  /* //  소셜 로그인 연동 provider 추가
+  /**
+   * 소셜 로그인 연동 provider 추가
+   */
   public void addOAuthProvider(String provider) {
     if (!this.linkedOAuthProviders.contains(provider)) {
       this.linkedOAuthProviders.add(provider);
     }
-  }/*
-
-  /*소셜 로그인 회원가입용 생성자
-  public static User ofSocial(String email, String name, String provider) {
-    return User.builder()
-            .email(email)
-            .password("SOCIAL") // 실제 로그인은 패스워드 사용 안 함
-            .name(name)
-            .role(Role.USER)
-            .locked(false)
-            .linkedOAuthProviders(new ArrayList<>(List.of(provider)))
-            .build(); */
   }
-
+}
