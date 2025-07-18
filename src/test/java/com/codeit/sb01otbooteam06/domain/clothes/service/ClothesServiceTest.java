@@ -5,12 +5,9 @@ import static org.mockito.Mockito.verify;
 
 import com.codeit.sb01otbooteam06.domain.clothes.entity.Clothes;
 import com.codeit.sb01otbooteam06.domain.clothes.repository.ClothesRepository;
-import com.codeit.sb01otbooteam06.domain.profile.entity.Gender;
 import com.codeit.sb01otbooteam06.domain.profile.entity.Profile;
-import com.codeit.sb01otbooteam06.domain.user.entity.Role;
 import com.codeit.sb01otbooteam06.domain.user.entity.User;
-import java.time.LocalDate;
-import java.util.List;
+import com.codeit.sb01otbooteam06.util.EntityProvider;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,39 +32,15 @@ public class ClothesServiceTest {
   private ClothesService clothesService;
 
   // User 생성
-  User user = User.builder()
-      .email("test@example.com")
-      .password("securePassword123!")
-      .name("테스트유저")
-      .role(Role.USER)
-      .linkedOAuthProviders(List.of())
-      .locked(false)
-      .build();
-
+  User user = EntityProvider.createTestUser();
   // Profile 생성
-  Profile profile = new Profile(
-      user,
-      "테스트프로필",
-      Gender.MALE,
-      LocalDate.of(1995, 5, 20),
-      37.5665,   // latitude (예: 서울 좌표)
-      126.9780,  // longitude
-      60,        // x
-      127,       // y
-      List.of("서울특별시", "중구"),
-      5,         // temperatureSensitivity
-      null
-  );
+  Profile profile = EntityProvider.createTestProfile(user);
 
-  Clothes clothes = new Clothes(
-      user, "상의", "TOP", null
-  );
-
+  Clothes clothes = EntityProvider.createTestClothes(user);
+  
   @BeforeEach
   void setUp() {
 
-    // User와 Profile 연결
-    user.setProfile(profile);
   }
 
 
