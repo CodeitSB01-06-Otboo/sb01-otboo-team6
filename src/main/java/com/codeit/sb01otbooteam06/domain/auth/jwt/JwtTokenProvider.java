@@ -5,10 +5,15 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.WeakKeyException;
+import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.security.InvalidKeyException;
 import java.security.Key;
+import java.util.Base64;
 import java.util.Date;
 import java.util.UUID;
 
@@ -16,18 +21,42 @@ import java.util.UUID;
  * JWT 토큰 생성 및 검증을 담당하는 클래스 (액세스 토큰, 리프레시 토큰 분리 발급)
  */
 @Component
+@Slf4j
 public class JwtTokenProvider {
 
     private final Key key;
     private final long accessTokenValidityInMillis;
     private final long refreshTokenValidityInMillis;
 
+    @PostConstruct
+    public void logSecretEnv() {
+        String jwtSecret = System.getenv("JWT_SECRET");
+        log.info("🔐 JWT_SECRET from env: {}", jwtSecret != null ? "[REDACTED]" : "NULL (Not Set)");
+    }
+
     public JwtTokenProvider(
             @Value("${jwt.secret}") String secret,
             @Value("${jwt.access-expiration}") long accessExpiration,
-            @Value("${jwt.refresh-expiration}") long refreshExpiration
+            @Value("${jwt.refresh-expiration}") long refreshExpiration,
+            @Value("${spring.profiles.active:}") String activeProfile
     ) {
-        this.key = Keys.hmacShaKeyFor(secret.getBytes());
+        try{
+            log.info("JWT_SECRET: {}", secret);
+            if ("dev".equals(activeProfile)) {
+                this.key = Keys.hmacShaKeyFor(secret.getBytes());
+            }
+            else if ("prod".equals(activeProfile)) {
+                this.key = Keys.hmacShaKeyFor(Base64.getUrlDecoder().decode(secret));
+            }
+            else {
+                log.info("JwtToeknProcider 부분의 apring active Profile 부분 오류 발생.");
+            }
+        } catch (IllegalArgumentException | WeakKeyException e){
+            log.info("JWT Secret Key 오류 발생 : {}", e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
+
         this.accessTokenValidityInMillis = accessExpiration;
         this.refreshTokenValidityInMillis = refreshExpiration;
     }

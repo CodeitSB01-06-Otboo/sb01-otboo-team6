@@ -24,11 +24,13 @@
 #    See the documentation for each action used below for the recommended IAM policies for this IAM user,
 #    and best practices on handling the access key credentials.
 
-name: Deploy to Amazon ECS
+name: Deploy to Amazon ECS..
 
 on:
   push:
     branches: ["main","dev"]
+  workflow_dispatch:
+
 
 env:
   AWS_REGION: ap-northeast-2                   # set this to your preferred AWS region, e.g. us-west-1
@@ -38,6 +40,7 @@ env:
   ECS_TASK_DEFINITION: .aws/obtoo-def-revision2.json # set this to the path to your Amazon ECS task definition
                                                # file, e.g. .aws/task-definition.json
   CONTAINER_NAME: obtoo          # set this to the name of the container in the
+  JWT_SECRET: ${{ secrets.JWT_SECRET }}
 
 permissions:
   contents: read
@@ -101,10 +104,23 @@ jobs:
           SPRING_DATASOURCE_USERNAME=${{ secrets.RDS_USERNAME }}
           SPRING_DATASOURCE_PASSWORD=${{ secrets.RDS_PASSWORD }}
 
+    - name: Inject secrets into ECS task definition
+      run: |
+        sed -i "s|JWT_SECRET|${{ secrets.JWT_SECRET }}|g" .aws/obtoo-def-revision2.json
+        sed -i "s|RDS_URL|${{ secrets.RDS_URL }}|g" .aws/obtoo-def-revision2.json
+        sed -i "s|RDS_USERNAME|${{ secrets.RDS_USERNAME }}|g" .aws/obtoo-def-revision2.json
+        sed -i "s|RDS_PASSWORD|${{ secrets.RDS_PASSWORD }}|g" .aws/obtoo-def-revision2.json
+
+    - name: Injected task definition
+      run: cat .aws/obtoo-def-revision2.json
+
+    - name: Print JWT_SECRET (for debug, optional)
+      run: echo "${{ secrets.JWT_SECRET }}"
+
     - name: Deploy Amazon ECS task definition
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
       with:
-        task-definition: ${{ steps.task-def.outputs.task-definition }}
+        task-definition: .aws/obtoo-def-revision2.json
         service: ${{ env.ECS_SERVICE }}
         cluster: ${{ env.ECS_CLUSTER }}
         wait-for-service-stability: true
