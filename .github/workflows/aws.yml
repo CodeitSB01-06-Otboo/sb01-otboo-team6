@@ -109,7 +109,7 @@ jobs:
         { "name": "RDS_URL", "value": "${{ secrets.RDS_URL }}" },
         { "name": "RDS_USERNAME", "value": "${{ secrets.RDS_USERNAME }}" },
         { "name": "RDS_PASSWORD", "value": "${{ secrets.RDS_PASSWORD }}" }
-        ]' obtoo-def-revision2.json > temp.json && mv temp.json obtoo-def-revision2.json
+        ]' .aws/obtoo-def-revision2.json > temp.json && mv temp.json .aws/obtoo-def-revision2.json
 
     - name: Deploy Amazon ECS task definition
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
