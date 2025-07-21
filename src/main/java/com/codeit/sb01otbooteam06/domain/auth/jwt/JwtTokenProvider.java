@@ -36,7 +36,15 @@ public class JwtTokenProvider {
             @Value("${jwt.access-expiration}") long accessExpiration,
             @Value("${jwt.refresh-expiration}") long refreshExpiration
     ) {
-        this.key = Keys.hmacShaKeyFor(secret.getBytes());
+        try{
+            log.info("JWT_SECRET: {}", secret);
+            this.key = Keys.hmacShaKeyFor(secret.getBytes());
+        } catch (Exception e){
+            log.info("JWT Secret Key 오류 발생 : {}", e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
+
         this.accessTokenValidityInMillis = accessExpiration;
         this.refreshTokenValidityInMillis = refreshExpiration;
     }
