@@ -16,7 +16,7 @@ public interface RecommendClothesRepository extends JpaRepository<RecommendCloth
 
   @Query(value = "SELECT * FROM recommend_clothes WHERE user_id = :userId AND weather_id = :weatherId ORDER BY RANDOM() LIMIT 1", nativeQuery = true)
   RecommendClothes findRandomByUserAndWeather(@Param("userId") UUID userId,
-      @Param("weather") UUID weatherId);
+      @Param("weatherId") UUID weatherId);
 
   ;
 }

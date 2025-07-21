@@ -44,6 +44,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class RecommendService {
 
   private final ClothesService clothesService;
+  private final ClothesCacheService clothesCacheService;
   private final AuthService authService;
   private final RecommendClothesService recommendClothesService;
 
@@ -81,7 +82,7 @@ public class RecommendService {
     Integer cachedClothesCount = cacheManager.getCache("userClothesCount")
         .get(userId, Integer.class);
 
-    int currentClothesCount = clothesService.getUserClothesCount(userId);
+    int currentClothesCount = clothesCacheService.getUserClothesCount(userId);
     System.out.println("currentClothesCount  " + currentClothesCount);
 
     /// 추천 의상 id 리스트를 얻는다.
@@ -91,7 +92,6 @@ public class RecommendService {
     // 추천 이전 시점과 현재 유저의 옷 개수를 비교한다.
     // 개수 동일하면 DB 추천 의상 테이블에서 랜덤 하나 반환
     if (cachedClothesCount != null && cachedClothesCount.equals(currentClothesCount)) {
-      System.out.println("ㅗㅑ");
       RecommendClothes recommendClothes = recommendClothesRepository.findRandomByUserAndWeather(
           user.getId(),
           weather.getId());
@@ -102,8 +102,8 @@ public class RecommendService {
       recommendClothesIds = create(user, weather);
     }
     // 현재 유저 의상 개수 캐시 저장
-    cacheManager.getCache("userClothesCount").put(userId, currentClothesCount);
-
+    clothesCacheService.saveCache(userId, currentClothesCount);
+    
     // 추천 의상 id 리스트에 대한 List<OotdDto> 생성
     List<OotdDto> ootdDtos = getOotdDtos(recommendClothesIds);
 
