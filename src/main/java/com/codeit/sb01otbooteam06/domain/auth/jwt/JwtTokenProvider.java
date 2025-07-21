@@ -41,7 +41,7 @@ public class JwtTokenProvider {
     ) {
         try{
             log.info("JWT_SECRET: {}", secret);
-            this.key = Keys.hmacShaKeyFor(Base64.getDecoder().decode(secret));
+            this.key = Keys.hmacShaKeyFor(Base64.getUrlDecoder().decode(secret));
         } catch (IllegalArgumentException | WeakKeyException e){
             log.info("JWT Secret Key 오류 발생 : {}", e.getMessage());
             e.printStackTrace();
