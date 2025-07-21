@@ -5,11 +5,13 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.WeakKeyException;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.security.InvalidKeyException;
 import java.security.Key;
 import java.util.Date;
 import java.util.UUID;
@@ -39,7 +41,7 @@ public class JwtTokenProvider {
         try{
             log.info("JWT_SECRET: {}", secret);
             this.key = Keys.hmacShaKeyFor(secret.getBytes());
-        } catch (Exception e){
+        } catch (IllegalArgumentException | WeakKeyException e){
             log.info("JWT Secret Key 오류 발생 : {}", e.getMessage());
             e.printStackTrace();
             throw e;
