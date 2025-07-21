@@ -27,6 +27,8 @@ public class ClothesServiceTest {
   @Mock
   private ClothesRepository clothesRepository;
 
+  @Mock
+  private ClothesCacheService clothesCacheService;
 
   @InjectMocks
   private ClothesService clothesService;
@@ -37,7 +39,7 @@ public class ClothesServiceTest {
   Profile profile = EntityProvider.createTestProfile(user);
 
   Clothes clothes = EntityProvider.createTestClothes(user);
-  
+
   @BeforeEach
   void setUp() {
 
@@ -58,6 +60,7 @@ public class ClothesServiceTest {
 
     // then
     verify(clothesRepository).deleteById(clothesId);
+    verify(clothesCacheService).invalidateUserCurrentClothesCountCache(clothes.getOwner().getId());
   }
 
 }
