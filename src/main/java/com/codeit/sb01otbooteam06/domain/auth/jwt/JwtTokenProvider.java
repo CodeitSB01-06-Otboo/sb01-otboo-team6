@@ -49,6 +49,7 @@ public class JwtTokenProvider {
                 this.key = Keys.hmacShaKeyFor(Base64.getUrlDecoder().decode(secret));
             }
             else {
+                this.key = Keys.hmacShaKeyFor(secret.getBytes());
                 log.info("JwtToeknProcider 부분의 apring active Profile 부분 오류 발생.");
             }
         } catch (IllegalArgumentException | WeakKeyException e){
