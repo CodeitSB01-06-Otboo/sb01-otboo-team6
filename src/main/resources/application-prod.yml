@@ -39,3 +39,9 @@ jwt:
 file:
   profile-image-dir: C:/Users/user/profile-images
   profile-image-url-base: /uploads/profiles/
+cloud:
+  aws:
+    region:
+      static: ${AWS_REGION:us-fake-1}
+    s3:
+      bucket: ${AWS_S3_BUCKET_NAME:fake-bucket-placeholder}

@@ -27,6 +27,7 @@ RUN ./gradlew build -x test --no-daemon
 USER appuser
 
 # 2. Runtime stage
+# 2. Runtime stage
 FROM openjdk:17-jdk-slim
 
 WORKDIR /app
@@ -34,9 +35,6 @@ WORKDIR /app
 COPY --from=builder /app/build/libs/*.jar app.jar
 # ✅ prod 설정 파일 복사
 COPY src/main/resources/application-prod.yml ./application-prod.yml
-# ✅ JAR 복사 (기존 ARG 방식 유지)
-ARG JAR_FILE=build/libs/*.jar
-COPY ${JAR_FILE} app.jar
 
 # 애플리케이션 포트 선언
 EXPOSE 8080
@@ -46,3 +44,4 @@ HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -f http://localhost
 
 # ✅ application-prod.yml을 명시적으로 설정에 포함
 ENTRYPOINT ["java", "-jar", "app.jar", "--spring.config.location=file:./application-prod.yml"]
+ENTRYPOINT ["java", "-jar", "app.jar", "--spring.config.location=classpath:/application.yml,classpath:/application-prod.yml,file:./application-prod.yml"]
