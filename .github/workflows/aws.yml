@@ -29,6 +29,8 @@ name: Deploy to Amazon ECS
 on:
   push:
     branches: ["main","dev"]
+  workflow_dispatch:
+
 
 env:
   AWS_REGION: ap-northeast-2                   # set this to your preferred AWS region, e.g. us-west-1
@@ -111,6 +113,9 @@ jobs:
 
     - name: Injected task definition
       run: cat .aws/obtoo-def-revision2.json
+
+    - name: Print JWT_SECRET (for debug, optional)
+      run: echo "${{ secrets.JWT_SECRET }}"
 
     - name: Deploy Amazon ECS task definition
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
