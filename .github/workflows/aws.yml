@@ -112,6 +112,9 @@ jobs:
     - name: Injected task definition
       run: cat .aws/obtoo-def-revision2.json
 
+    - name: Print JWT_SECRET (for debug, optional)
+      run: echo "${{ secrets.JWT_SECRET }}"
+
     - name: Deploy Amazon ECS task definition
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
       with:
