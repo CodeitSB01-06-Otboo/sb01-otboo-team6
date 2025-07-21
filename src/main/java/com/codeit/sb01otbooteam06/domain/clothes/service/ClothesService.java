@@ -172,17 +172,6 @@ public class ClothesService {
     Clothes clothes = clothesRepository.findById(clothesID)
         .orElseThrow(() -> new ClothesNotFoundException().withId(clothesID));
 
-    // name, type의 수정이 없는 경우 예외처리
-    // todo: 엔티티단으로 책임 넘기기?
-    String newName = clothesUpdateRequest.name();
-    String newType = clothesUpdateRequest.type();
-    if (clothesUpdateRequest.name() == null) {
-      newName = clothes.getName();
-    }
-    if (clothesUpdateRequest.type() == null) {
-      newType = clothes.getType();
-    }
-
     //  이미지가 새로 들어온 경우에 S3에 업로드
     String imageUrl = clothes.getImageUrl();
     if (clothesImage != null) {
@@ -191,8 +180,8 @@ public class ClothesService {
 
     //의상 정보 업데이트
     clothes.update(
-        newName,
-        newType,
+        clothesUpdateRequest.name(),
+        clothesUpdateRequest.type(),
         imageUrl
     );
 
