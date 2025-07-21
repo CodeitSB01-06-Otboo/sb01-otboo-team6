@@ -104,12 +104,13 @@ jobs:
 
     - name: Inject secrets into ECS task definition
       run: |
-        jq '.containerDefinitions[0].environment += [
-        { "name": "JWT_SECRET", "value": "${{ secrets.JWT_SECRET }}" },
-        { "name": "RDS_URL", "value": "${{ secrets.RDS_URL }}" },
-        { "name": "RDS_USERNAME", "value": "${{ secrets.RDS_USERNAME }}" },
-        { "name": "RDS_PASSWORD", "value": "${{ secrets.RDS_PASSWORD }}" }
-        ]' .aws/obtoo-def-revision2.json > temp.json && mv temp.json .aws/obtoo-def-revision2.json
+        sed -i "s|JWT_SECRET|${{ secrets.JWT_SECRET }}|g" .aws/obtoo-def-revision2.json
+        sed -i "s|RDS_URL|${{ secrets.RDS_URL }}|g" .aws/obtoo-def-revision2.json
+        sed -i "s|RDS_USERNAME|${{ secrets.RDS_USERNAME }}|g" .aws/obtoo-def-revision2.json
+        sed -i "s|RDS_PASSWORD|${{ secrets.RDS_PASSWORD }}|g" .aws/obtoo-def-revision2.json
+
+    - name: Injected task definition
+      run: cat .aws/obtoo-def-revision2.json
 
     - name: Deploy Amazon ECS task definition
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
