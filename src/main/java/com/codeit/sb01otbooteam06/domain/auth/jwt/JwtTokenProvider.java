@@ -5,6 +5,8 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -16,11 +18,18 @@ import java.util.UUID;
  * JWT 토큰 생성 및 검증을 담당하는 클래스 (액세스 토큰, 리프레시 토큰 분리 발급)
  */
 @Component
+@Slf4j
 public class JwtTokenProvider {
 
     private final Key key;
     private final long accessTokenValidityInMillis;
     private final long refreshTokenValidityInMillis;
+
+    @PostConstruct
+    public void logSecretEnv() {
+        String jwtSecret = System.getenv("JWT_SECRET");
+        log.info("🔐 JWT_SECRET from env: {}", jwtSecret != null ? "[REDACTED]" : "NULL (Not Set)");
+    }
 
     public JwtTokenProvider(
             @Value("${jwt.secret}") String secret,
