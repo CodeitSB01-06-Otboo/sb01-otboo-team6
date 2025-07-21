@@ -83,6 +83,10 @@ dependencies {
     //웹크롤링 jsoup
     implementation 'org.jsoup:jsoup:1.21.1'
 
+    //Caffeine Cache
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'com.github.ben-manes.caffeine:caffeine'
+
 }
 
 tasks.named('test') {

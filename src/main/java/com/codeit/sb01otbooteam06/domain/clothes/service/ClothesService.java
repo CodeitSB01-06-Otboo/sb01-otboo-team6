@@ -27,6 +27,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -87,6 +89,8 @@ public class ClothesService {
 
     List<ClothesAttribute> clothesAttributes = clothesAttributeService.create(clothes,
         clothesCreateRequest.attributes());
+    invalidateUserClothesCache(owner.getId(
+    )); //의상 캐시 삭제
 
     return customClothesUtils.makeClothesDto(clothes, clothesAttributes);
   }
@@ -197,7 +201,6 @@ public class ClothesService {
 
   }
 
-  //TODO: (심화) 구매 링크로 의상정보 불러오기?
 
   /**
    * 의상을 삭제합니다.
@@ -208,7 +211,9 @@ public class ClothesService {
   public void delete(UUID clothesId) {
     clothesRepository.findById(clothesId)
         .orElseThrow(() -> new ClothesNotFoundException().withId(clothesId));
+    UUID userId = clothesRepository.findById(clothesId).get().getOwner().getId();
     clothesRepository.deleteById(clothesId);
+    invalidateUserClothesCache(userId); //의상 개수 캐시 삭제
 
   }
 
@@ -258,4 +263,22 @@ public class ClothesService {
     return new ClothesDto(null, null, null, null, null, null);
 
   }
+
+
+  //유저 옷장의 옷 개수 캐시 //todo 페이지네이션에서 이용하기!
+  @Cacheable(value = "userClothesCount", key = "#userId")
+  public int getUserClothesCountWithCache(UUID userId) {
+    return clothesRepository.getTotalCounts("", userId);
+  }
+
+  public int getUserClothesCount(UUID userId) {
+    return clothesRepository.getTotalCounts("", userId);
+  }
+
+  // 호출시 유저의 의상 수 캐시 제거됨 (예: 옷 추가/삭제 시)
+  @CacheEvict(value = "userClothesCount", key = "#userId")
+  public void invalidateUserClothesCache(UUID userId) {
+  }
+
+
 }
