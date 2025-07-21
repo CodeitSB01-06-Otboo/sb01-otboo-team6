@@ -31,7 +31,6 @@ public class RecommendClothesService {
   private final ClothesRepository clothesRepository;
 
   private final RecommendClothesMapper recommendClothesMapper;
-  private final ClothesAttributeService clothesAttributeService;
   private final ClothesAttributeRepository clothesAttributeRepository;
 
   //의상 타입 extra 목록 선언

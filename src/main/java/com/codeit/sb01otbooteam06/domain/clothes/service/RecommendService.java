@@ -8,7 +8,6 @@ import com.codeit.sb01otbooteam06.domain.clothes.entity.RecommendClothes;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.dto.ClothesDto;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.dto.OotdDto;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.dto.RecommendationDto;
-import com.codeit.sb01otbooteam06.domain.clothes.mapper.ClothesMapper;
 import com.codeit.sb01otbooteam06.domain.clothes.mapper.CustomClothesUtils;
 import com.codeit.sb01otbooteam06.domain.clothes.repository.ClothesAttributeRepository;
 import com.codeit.sb01otbooteam06.domain.clothes.repository.ClothesRepository;
@@ -57,7 +56,6 @@ public class RecommendService {
   private final ClothesAttributeRepository clothesAttributeRepository;
   private final RecommendClothesRepository recommendClothesRepository;
 
-  private final ClothesMapper clothesMapper;
 
   private final CustomClothesUtils customClothesUtils;
   private final CacheManager cacheManager;
