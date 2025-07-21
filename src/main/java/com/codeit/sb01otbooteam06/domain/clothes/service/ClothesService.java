@@ -89,7 +89,7 @@ public class ClothesService {
     List<ClothesAttribute> clothesAttributes = clothesAttributeService.create(clothes,
         clothesCreateRequest.attributes());
 
-    clothesCacheService.invalidateUserClothesCache(owner.getId(
+    clothesCacheService.invalidateUserCurrentClothesCountCache(owner.getId(
     )); //의상 캐시 삭제
 
     return customClothesUtils.makeClothesDto(clothes, clothesAttributes);
@@ -139,13 +139,17 @@ public class ClothesService {
 
     int size = resultClothes.size();
 
-    //TODO: 매번 호출 비효율 -> 캐싱?
-    //totalCount
-    int totalCount = clothesRepository.getTotalCounts(typeEqual, ownerId);
+    //캐싱으로 totalCount 조회
+    int totalCount = clothesCacheService.getPageUserClothesCountWithCache(typeEqual, ownerId);
 
     // next 조회
     String nextCursor = hasNext ? resultClothes.get(size - 1).getCreatedAt().toString() : null;
     String nextIdAfter = hasNext ? resultClothes.get(size - 1).getId().toString() : null;
+
+    //다음 존재하지 않을시 페이지 캐시 삭제
+    if (!hasNext) {
+      clothesCacheService.invalidatePageUserCurrentClothesCountCache(ownerId);
+    }
 
     return new PageResponse<>(clothesDtos, nextCursor, nextIdAfter, hasNext, totalCount,
         "createdAt", "DESCENDING");
@@ -213,7 +217,7 @@ public class ClothesService {
         .orElseThrow(() -> new ClothesNotFoundException().withId(clothesId));
     UUID userId = clothesRepository.findById(clothesId).get().getOwner().getId();
     clothesRepository.deleteById(clothesId);
-    clothesCacheService.invalidateUserClothesCache(userId); //의상 개수 캐시 삭제
+    clothesCacheService.invalidateUserCurrentClothesCountCache(userId); //의상 개수 캐시 삭제
 
   }
 
@@ -264,5 +268,14 @@ public class ClothesService {
 
   }
 
+  /**
+   * 유저의 현재 옷 개수를 반환합니다.
+   *
+   * @param userId
+   * @return
+   */
+  public int getUserClothesCount(UUID userId) {
+    return clothesRepository.getTotalCounts("", userId);
+  }
 
 }

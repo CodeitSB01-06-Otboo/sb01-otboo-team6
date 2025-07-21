@@ -82,7 +82,7 @@ public class RecommendService {
     Integer cachedClothesCount = cacheManager.getCache("userClothesCount")
         .get(userId, Integer.class);
 
-    int currentClothesCount = clothesCacheService.getUserClothesCount(userId);
+    int currentClothesCount = clothesService.getUserClothesCount(userId);
     System.out.println("currentClothesCount  " + currentClothesCount);
 
     /// 추천 의상 id 리스트를 얻는다.
@@ -102,8 +102,8 @@ public class RecommendService {
       recommendClothesIds = create(user, weather);
     }
     // 현재 유저 의상 개수 캐시 저장
-    clothesCacheService.saveCache(userId, currentClothesCount);
-    
+    clothesCacheService.saveUserCurrentClothesCountCache(userId, currentClothesCount);
+
     // 추천 의상 id 리스트에 대한 List<OotdDto> 생성
     List<OotdDto> ootdDtos = getOotdDtos(recommendClothesIds);
 

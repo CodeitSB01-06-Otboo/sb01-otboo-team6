@@ -15,24 +15,26 @@ public class ClothesCacheService {
   private final ClothesRepository clothesRepository;
   private final CacheManager cacheManager;
 
-  //유저 옷장의 옷 개수 캐시 //todo 페이지네이션에서 이용하기!
-  @Cacheable(value = "userClothesCount", key = "#userId")
-  public int getUserClothesCountWithCache(UUID userId) {
-    return clothesRepository.getTotalCounts("", userId);
+  //조회 페이지네이션 - 유저 옷장의 옷 개수 캐시
+  @Cacheable(value = "PageUserClothesCount", key = "#userId")
+  public int getPageUserClothesCountWithCache(String typeEqual, UUID userId) {
+    return clothesRepository.getTotalCounts(typeEqual, userId);
   }
 
-  public int getUserClothesCount(UUID userId) {
-    return clothesRepository.getTotalCounts("", userId);
+  //조회 페이지네이션 - 유저 옷장의 옷 개수 캐시 삭제
+  @CacheEvict(value = "PageUserClothesCount", key = "#userId")
+  public void invalidatePageUserCurrentClothesCountCache(UUID userId) {
   }
 
-  // 호출시 유저의 의상 수 캐시 제거됨 (예: 옷 추가/삭제 시)
-  @CacheEvict(value = "userClothesCount", key = "#userId")
-  public void invalidateUserClothesCache(UUID userId) {
-  }
 
-  // 호출시 캐시에 저장
-  public void saveCache(UUID userId, int currentClothesCount) {
+  // 의상 추천시 현재 유저의 옷 개수 캐시에 저장
+  public void saveUserCurrentClothesCountCache(UUID userId, int currentClothesCount) {
     cacheManager.getCache("userClothesCount").put(userId, currentClothesCount);
+  }
+
+  // 호출시 현재 유저의 의상 수 캐시 제거됨 (예: 옷 추가/삭제 시)
+  @CacheEvict(value = "userClothesCount", key = "#userId")
+  public void invalidateUserCurrentClothesCountCache(UUID userId) {
   }
 
 
