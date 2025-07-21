@@ -26,14 +26,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class DirectMessageController {
     private final DirectMessageService dmService;
 
-    /** 메시지 전송 */
-    @PostMapping
-    public ResponseEntity<UUID> send(@RequestBody @Valid DirectMessageCreateRequest req,
-        @RequestHeader("X-USER-ID") UUID senderId) {
-        UUID id = dmService.send(senderId, req.receiverId(), req.content());
-        return ResponseEntity.ok(id);
-    }
-
     /** DM 목록 */
     @GetMapping
     public DirectMessageListResponse list(@RequestParam UUID userId,
