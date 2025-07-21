@@ -18,9 +18,12 @@ public enum ErrorCode {
   ATTRIBUTEDEF_ALREADY_EXISTS("의상 속성이 이미 존재합니다."),
   ATTRIBUTEDEF_NOT_FOUND("의상 속성이 존재하지 않습니다."),
 
-
   //weather
   WEATHER_NOT_FOUND("현재 위치의 날씨 데이터가 없습니다."),
+
+  //Follow
+  FOLLOWER_MISMATCH("followerId가 인증 정보와 일치하지 않습니다."),
+
   //USER
   USER_NOT_FOUND("사용자를 찾을 수 없습니다."),
 
