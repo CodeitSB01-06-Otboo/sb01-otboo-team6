@@ -38,6 +38,7 @@ env:
   ECS_TASK_DEFINITION: .aws/obtoo-def-revision2.json # set this to the path to your Amazon ECS task definition
                                                # file, e.g. .aws/task-definition.json
   CONTAINER_NAME: obtoo          # set this to the name of the container in the
+  JWT_SECRET: ${{ secrets.JWT_SECRET }}
 
 permissions:
   contents: read
@@ -100,6 +101,15 @@ jobs:
           SPRING_DATASOURCE_URL=${{ secrets.RDS_URL }}
           SPRING_DATASOURCE_USERNAME=${{ secrets.RDS_USERNAME }}
           SPRING_DATASOURCE_PASSWORD=${{ secrets.RDS_PASSWORD }}
+
+    - name: Inject secrets into ECS task definition
+      run: |
+        jq '.containerDefinitions[0].environment += [
+        { "name": "JWT_SECRET", "value": "${{ secrets.JWT_SECRET }}" },
+        { "name": "RDS_URL", "value": "${{ secrets.RDS_URL }}" },
+        { "name": "RDS_USERNAME", "value": "${{ secrets.RDS_USERNAME }}" },
+        { "name": "RDS_PASSWORD", "value": "${{ secrets.RDS_PASSWORD }}" }
+        ]' obtoo-def-revision2.json > temp.json && mv temp.json obtoo-def-revision2.json
 
     - name: Deploy Amazon ECS task definition
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
