@@ -26,3 +26,14 @@ cloud:
       static: ${AWS_REGION:us-fake-1}
     s3:
       bucket: ${AWS_S3_BUCKET_NAME:fake-bucket-placeholder}
+
+oauth:
+  google:
+    client-id: ${GOOGLE_CLIENT_ID}
+    client-secret: ${GOOGLE_CLIENT_SECRET}
+    redirect-uri: ${GOOGLE_REDIRECT_URI}
+  kakao:
+    client-id: ${KAKAO_CLIENT_ID}
+    client-secret: ${KAKAO_CLIENT_SECRET}
+    redirect-uri: ${KAKAO_REDIRECT_URI}
+

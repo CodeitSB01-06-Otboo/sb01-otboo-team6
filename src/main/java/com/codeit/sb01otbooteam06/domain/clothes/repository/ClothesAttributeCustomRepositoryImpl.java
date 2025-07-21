@@ -28,7 +28,7 @@ public class ClothesAttributeCustomRepositoryImpl implements ClothesAttributeCus
     if (clothesIds == null || clothesIds.isEmpty()) {
       return Collections.emptyList();
     }
-    
+
     QClothesAttribute qClothesAttribute = QClothesAttribute.clothesAttribute;
     QAttributeDef qAttributeDef = QAttributeDef.attributeDef;
 

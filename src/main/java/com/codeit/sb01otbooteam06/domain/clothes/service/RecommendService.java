@@ -4,13 +4,12 @@ package com.codeit.sb01otbooteam06.domain.clothes.service;
 import com.codeit.sb01otbooteam06.domain.auth.service.AuthService;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.Clothes;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.ClothesAttribute;
+import com.codeit.sb01otbooteam06.domain.clothes.entity.RecommendClothes;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.dto.ClothesDto;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.dto.OotdDto;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.dto.RecommendationDto;
-import com.codeit.sb01otbooteam06.domain.clothes.mapper.ClothesMapper;
 import com.codeit.sb01otbooteam06.domain.clothes.mapper.CustomClothesUtils;
 import com.codeit.sb01otbooteam06.domain.clothes.repository.ClothesAttributeRepository;
-import com.codeit.sb01otbooteam06.domain.clothes.repository.ClothesRepository;
 import com.codeit.sb01otbooteam06.domain.profile.entity.Profile;
 import com.codeit.sb01otbooteam06.domain.profile.exception.ProfileNotFoundException;
 import com.codeit.sb01otbooteam06.domain.profile.repository.ProfileRepository;
@@ -32,6 +31,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,24 +41,21 @@ import org.springframework.transaction.annotation.Transactional;
 public class RecommendService {
 
   private final ClothesService clothesService;
+  private final ClothesCacheService clothesCacheService;
   private final AuthService authService;
   private final RecommendClothesService recommendClothesService;
 
 
-  //todo: 서비스? 웨더 확인해보고 추후 변경
   private final WeatherRepository weatherRepository;
   private final UserRepository userRepository;
   private final ProfileRepository profileRepository;
-  private final ClothesRepository clothesRepository;
   private final ClothesAttributeRepository clothesAttributeRepository;
-
-  private final ClothesMapper clothesMapper;
-
+  
   private final CustomClothesUtils customClothesUtils;
+  private final CacheManager cacheManager;
 
   @Value("${gemini.prompt}")
   private String secretPrompt;
-
 
   @Transactional
   public RecommendationDto recommend(UUID weatherId) {
@@ -73,25 +70,31 @@ public class RecommendService {
     Weather weather = weatherRepository.findById(weatherId)
         .orElseThrow(() -> new WeatherNotFoundException());
 
+    //유저 의상 수 캐시 가져온다
+    Integer cachedClothesCount = cacheManager.getCache("userClothesCount")
+        .get(userId, Integer.class);
+
+    int currentClothesCount = clothesService.getUserClothesCount(userId);
+    System.out.println("currentClothesCount  " + currentClothesCount);
+
     /// 추천 의상 id 리스트를 얻는다.
+    // 빈 추천 의상 id리스트 생성
     List<UUID> recommendClothesIds;
 
-    // todo: 현재 매번 추천(개발용)
-    recommendClothesIds = create(user, weather);
-
-    //todo:  레디스 비동기??? 의상 등록시 추천 알고리즘 다시해야함.
-//
-//    // 추천 의상 테이블에 유저-날씨에 대한 추천 의상이 있으면 랜덤 하나 반환
-//    if (recommendClothesRepository.existsByUserAndWeather(user, weather)) {
-//      RecommendClothes recommendClothes = recommendClothesRepository.findRandomByUserAndWeather(
-//          user,
-//          weather);
-//      recommendClothesIds = recommendClothes.getClothesIds();
-//    }
-//    //없으면 새로 추천 의상을 만들고 저장한다.
-//    else {
-//      recommendClothesIds = create(user, weather);
-//    }
+    // 추천 이전 시점과 현재 유저의 옷 개수를 비교한다.
+    // 개수 동일하면 DB 추천 의상 테이블에서 랜덤 하나 반환
+    if (cachedClothesCount != null && cachedClothesCount.equals(currentClothesCount)) {
+      RecommendClothes recommendClothes = recommendClothesService.findRandomByUserAndWeather(
+          user.getId(),
+          weather.getId());
+      recommendClothesIds = recommendClothes.getClothesIds();
+    }
+    //없으면 새로 추천 의상을 만들고 저장한다.
+    else {
+      recommendClothesIds = create(user, weather);
+    }
+    // 현재 유저 의상 개수 캐시 저장
+    clothesCacheService.saveUserCurrentClothesCountCache(userId, currentClothesCount);
 
     // 추천 의상 id 리스트에 대한 List<OotdDto> 생성
     List<OotdDto> ootdDtos = getOotdDtos(recommendClothesIds);
@@ -102,17 +105,12 @@ public class RecommendService {
   private List<OotdDto> getOotdDtos(List<UUID> recommendClothesIds) {
 
     // 추천 의상 ids에 대한 의상 엔티티 리스트를 가져온다.
-    List<Clothes> clothesList = clothesRepository.findAllById(recommendClothesIds);
-
-    //todo: n+1문제 해결.
+    List<Clothes> clothesList = clothesService.findAllById(recommendClothesIds);
 
     // 의상 속성들 한꺼번에 가져오기 (의상 리스트로)
     List<ClothesAttribute> clothesAttributes = clothesAttributeRepository.findByClothesIn(
         clothesList);
 
-//    List<ClothesAttribute> clothesAttributes = clothesAttributeService.findAttributesByClothesIds(
-//        recommendClothesIds);
-//
     // 의상 ID별 속성 매핑 (Map<ClothesId, List<ClothesAttribute>>)
     Map<UUID, List<ClothesAttribute>> attributesByClothesId = clothesAttributes.stream()
         .collect(Collectors.groupingBy(attr -> attr.getClothes().getId()));
@@ -142,9 +140,6 @@ public class RecommendService {
      * 2. gen-ai에게 프롬포팅해서 결과값(의상 속성중 날씨 관련)을 수치화
      * 3. 해당 수치를 토대로 의상리스트에서, 일치하는 속성값을 가진 것들을 산출
      * 4. 의상 추천 조합 생성해 DB저장 후 가져옴.
-     *
-     * TODO: 1)프로필 위치로, 배치 작업으로 DB저장해 꺼내써 빠른 사용자 속도 경험 제공,
-     *       2)새로운 위치시 즉시호출
      */
 
     //추천에 필요한 날씨 관련 데이터 가져오기
@@ -218,8 +213,7 @@ public class RecommendService {
         );
 
 //    long endTime = System.currentTimeMillis();
-//  TODO: 개발용 나중에 끄기
-    System.out.println("gemini response = " + response.text());
+//    System.out.println("gemini response = " + response.text());
 //    System.out.println("응답 생성 시간: " + (endTime - startTime) + " ms");
 
     // 반환값 변환

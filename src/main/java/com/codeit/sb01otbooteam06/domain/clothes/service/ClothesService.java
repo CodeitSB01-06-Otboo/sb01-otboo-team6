@@ -39,6 +39,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class ClothesService {
 
   private final S3Service s3Service;
+  private final ClothesCacheService clothesCacheService;
 
   private final ClothesRepository clothesRepository;
   private final UserRepository userRepository;
@@ -88,6 +89,9 @@ public class ClothesService {
     List<ClothesAttribute> clothesAttributes = clothesAttributeService.create(clothes,
         clothesCreateRequest.attributes());
 
+    clothesCacheService.invalidateUserCurrentClothesCountCache(owner.getId(
+    )); //의상 캐시 삭제
+
     return customClothesUtils.makeClothesDto(clothes, clothesAttributes);
   }
 
@@ -135,13 +139,17 @@ public class ClothesService {
 
     int size = resultClothes.size();
 
-    //TODO: 매번 호출 비효율 -> 캐싱?
-    //totalCount
-    int totalCount = clothesRepository.getTotalCounts(typeEqual, ownerId);
+    //캐싱으로 totalCount 조회
+    int totalCount = clothesCacheService.getPageUserClothesCountWithCache(typeEqual, ownerId);
 
     // next 조회
     String nextCursor = hasNext ? resultClothes.get(size - 1).getCreatedAt().toString() : null;
     String nextIdAfter = hasNext ? resultClothes.get(size - 1).getId().toString() : null;
+
+    //다음 존재하지 않을시 페이지 캐시 삭제
+    if (!hasNext) {
+      clothesCacheService.invalidatePageUserCurrentClothesCountCache(ownerId);
+    }
 
     return new PageResponse<>(clothesDtos, nextCursor, nextIdAfter, hasNext, totalCount,
         "createdAt", "DESCENDING");
@@ -164,17 +172,6 @@ public class ClothesService {
     Clothes clothes = clothesRepository.findById(clothesID)
         .orElseThrow(() -> new ClothesNotFoundException().withId(clothesID));
 
-    // name, type의 수정이 없는 경우 예외처리
-    // todo: 엔티티단으로 책임 넘기기?
-    String newName = clothesUpdateRequest.name();
-    String newType = clothesUpdateRequest.type();
-    if (clothesUpdateRequest.name() == null) {
-      newName = clothes.getName();
-    }
-    if (clothesUpdateRequest.type() == null) {
-      newType = clothes.getType();
-    }
-
     //  이미지가 새로 들어온 경우에 S3에 업로드
     String imageUrl = clothes.getImageUrl();
     if (clothesImage != null) {
@@ -183,8 +180,8 @@ public class ClothesService {
 
     //의상 정보 업데이트
     clothes.update(
-        newName,
-        newType,
+        clothesUpdateRequest.name(),
+        clothesUpdateRequest.type(),
         imageUrl
     );
 
@@ -197,7 +194,6 @@ public class ClothesService {
 
   }
 
-  //TODO: (심화) 구매 링크로 의상정보 불러오기?
 
   /**
    * 의상을 삭제합니다.
@@ -208,7 +204,9 @@ public class ClothesService {
   public void delete(UUID clothesId) {
     clothesRepository.findById(clothesId)
         .orElseThrow(() -> new ClothesNotFoundException().withId(clothesId));
+    UUID userId = clothesRepository.findById(clothesId).get().getOwner().getId();
     clothesRepository.deleteById(clothesId);
+    clothesCacheService.invalidateUserCurrentClothesCountCache(userId); //의상 개수 캐시 삭제
 
   }
 
@@ -257,5 +255,20 @@ public class ClothesService {
 
     return new ClothesDto(null, null, null, null, null, null);
 
+  }
+
+  /**
+   * 유저의 현재 옷 개수를 반환합니다.
+   *
+   * @param userId
+   * @return
+   */
+  public int getUserClothesCount(UUID userId) {
+    return clothesRepository.getTotalCounts("", userId);
+  }
+
+  public List<Clothes> findAllById(List<UUID> clothesIds) {
+
+    return clothesRepository.findAllById(clothesIds);
   }
 }

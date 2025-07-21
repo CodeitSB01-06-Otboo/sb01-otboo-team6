@@ -2,6 +2,7 @@ package com.codeit.sb01otbooteam06.domain.clothes.service;
 
 import com.codeit.sb01otbooteam06.domain.clothes.entity.Clothes;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.ClothesAttribute;
+import com.codeit.sb01otbooteam06.domain.clothes.entity.RecommendClothes;
 import com.codeit.sb01otbooteam06.domain.clothes.mapper.RecommendClothesMapper;
 import com.codeit.sb01otbooteam06.domain.clothes.repository.ClothesAttributeRepository;
 import com.codeit.sb01otbooteam06.domain.clothes.repository.ClothesRepository;
@@ -31,11 +32,11 @@ public class RecommendClothesService {
   private final ClothesRepository clothesRepository;
 
   private final RecommendClothesMapper recommendClothesMapper;
-  private final ClothesAttributeService clothesAttributeService;
   private final ClothesAttributeRepository clothesAttributeRepository;
 
   //의상 타입 extra 목록 선언
-  private final List<String> typeList = Arrays.asList("OUTER", "UNDERWEAR", "ACCESSORY", "SOCKS",
+  private static final List<String> TYPE_LIST = Arrays.asList("OUTER", "UNDERWEAR", "ACCESSORY",
+      "SOCKS",
       "HAT", "BAG",
       "SCARF", "ETC");
 
@@ -227,7 +228,7 @@ public class RecommendClothesService {
     List<UUID> extraClothesIds = new ArrayList<>();
 
     // 나머지 타입 의상 리스트에서 의상을 뽑거나 뽑지 않는다.
-    for (String type : typeList) {
+    for (String type : TYPE_LIST) {
       UUID id = pickRandomOrNot(getClothesTypeList(clothesList, type));
       addClothesIdIfNotNull(extraClothesIds, id);
     }
@@ -237,4 +238,8 @@ public class RecommendClothesService {
   }
 
 
+  public RecommendClothes findRandomByUserAndWeather(UUID userId, UUID weatherId) {
+    return recommendClothesRepository.findRandomByUserAndWeather(
+        userId, weatherId);
+  }
 }
