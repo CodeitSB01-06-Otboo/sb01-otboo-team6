@@ -19,3 +19,10 @@ springdoc:
 
 gemini:
   prompt: ${GEMINI_PROMPT}
+
+cloud:
+  aws:
+    region:
+      static: ${AWS_REGION:us-fake-1}
+    s3:
+      bucket: ${AWS_S3_BUCKET_NAME:fake-bucket-placeholder}

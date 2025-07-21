@@ -46,10 +46,10 @@ public class UserServiceImpl implements UserService {
                 user.getName(),
                 Gender.OTHER,
                 LocalDate.now(),
-                0.0,
-                0.0,
-                0,
-                0,
+                null, // 수정
+                null, // 수정
+                null, // 수정
+                null, // 수정
                 List.of(),
                 3,
                 null

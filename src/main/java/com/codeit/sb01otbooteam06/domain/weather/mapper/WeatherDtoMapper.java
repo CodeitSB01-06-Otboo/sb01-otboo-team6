@@ -1,7 +1,11 @@
 package com.codeit.sb01otbooteam06.domain.weather.mapper;
 
+import com.codeit.sb01otbooteam06.domain.weather.dto.PrecipitationDto;
+import com.codeit.sb01otbooteam06.domain.weather.dto.TemperatureDto;
 import com.codeit.sb01otbooteam06.domain.weather.dto.WeatherDto;
+import com.codeit.sb01otbooteam06.domain.weather.dto.WeatherSummaryDto;
 import com.codeit.sb01otbooteam06.domain.weather.entity.Location;
+import com.codeit.sb01otbooteam06.domain.weather.entity.Precipitation;
 import com.codeit.sb01otbooteam06.domain.weather.entity.Temperature;
 import com.codeit.sb01otbooteam06.domain.weather.entity.Weather;
 import com.codeit.sb01otbooteam06.domain.weather.entity.WeatherLocationName;
@@ -35,6 +39,24 @@ public class WeatherDtoMapper {
         toWindSpeed(w.getWind())
     );
   }
+
+  // Weather -> WeatherSummaryDto
+  public WeatherSummaryDto toSummaryDto(Weather w) {
+    if (w == null) {
+      return null;
+    }
+    Precipitation precipitation = w.getPrecipitation();
+    Temperature temperature = w.getTemperature();
+
+    return new WeatherSummaryDto(
+        w.getId(),
+        w.getSkyStatus(),
+        new PrecipitationDto(w.getPrecipitationType(),precipitation.getAmount(),precipitation.getProbability()),
+        new TemperatureDto(temperature.getCurrent(),0, temperature.getMin(), temperature.getMax())
+    );
+  }
+
+
 
   // 매핑 메서드
   private WeatherDto.Loc toLoc(Weather w) {

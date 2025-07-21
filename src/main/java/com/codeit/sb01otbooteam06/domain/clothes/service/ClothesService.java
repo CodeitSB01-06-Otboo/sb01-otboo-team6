@@ -9,39 +9,50 @@ import com.codeit.sb01otbooteam06.domain.clothes.entity.dto.PageResponse;
 import com.codeit.sb01otbooteam06.domain.clothes.exception.ClothesNotFoundException;
 import com.codeit.sb01otbooteam06.domain.clothes.mapper.ClothesAttributeWithDefDtoMapper;
 import com.codeit.sb01otbooteam06.domain.clothes.mapper.ClothesMapper;
+import com.codeit.sb01otbooteam06.domain.clothes.mapper.CustomClothesUtils;
 import com.codeit.sb01otbooteam06.domain.clothes.repository.ClothesAttributeRepository;
 import com.codeit.sb01otbooteam06.domain.clothes.repository.ClothesRepository;
-import com.codeit.sb01otbooteam06.domain.clothes.utils.ClothesUtils;
 import com.codeit.sb01otbooteam06.domain.user.entity.User;
 import com.codeit.sb01otbooteam06.domain.user.exception.UserNotFoundException;
 import com.codeit.sb01otbooteam06.domain.user.repository.UserRepository;
+import com.codeit.sb01otbooteam06.global.s3.S3Service;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+@PreAuthorize("hasRole('USER')")
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class ClothesService {
 
+  private final S3Service s3Service;
+
   private final ClothesRepository clothesRepository;
   private final UserRepository userRepository;
+  private final ClothesAttributeRepository clothesAttributeRepository;
 
   private final ClothesAttributeService clothesAttributeService;
 
   private final ClothesMapper clothesMapper;
   private final ClothesAttributeWithDefDtoMapper clothesAttributeWithDefDtoMapper;
 
-  private final ClothesUtils clothesUtils;
+  private final CustomClothesUtils customClothesUtils;
 
   //S3 이미지 저장 디렉토리 네임
   private final String directory = "Clothes";
-  private final ClothesAttributeRepository clothesAttributeRepository;
 
 
   /**
@@ -58,9 +69,11 @@ public class ClothesService {
     User owner = userRepository.findById(clothesCreateRequest.ownerId())
         .orElseThrow(() -> new UserNotFoundException(clothesCreateRequest.ownerId()));
 
-    //TODO: S3 업로드 로직 필요
-    String imageUrl = "";
-    //String imageUrl = s3Service.upload(clothesImage, directory);
+    // S3 업로드
+    String imageUrl = null;
+    if (clothesImage != null && !clothesImage.isEmpty()) {
+      imageUrl = s3Service.upload(clothesImage, directory);
+    }
 
     Clothes clothes = new Clothes(
         owner,
@@ -75,7 +88,7 @@ public class ClothesService {
     List<ClothesAttribute> clothesAttributes = clothesAttributeService.create(clothes,
         clothesCreateRequest.attributes());
 
-    return clothesUtils.makeClothesDto(clothes, clothesAttributes);
+    return customClothesUtils.makeClothesDto(clothes, clothesAttributes);
   }
 
 
@@ -115,7 +128,7 @@ public class ClothesService {
       //의상에 대한 속성
       List<ClothesAttribute> clothesAttributes = clothesAttributeRepository.findByClothes(clothes);
       //결과리스트에 clothesdto추가
-      clothesDtos.add(clothesUtils.makeClothesDto(clothes, clothesAttributes)
+      clothesDtos.add(customClothesUtils.makeClothesDto(clothes, clothesAttributes)
       );
     }
     ///
@@ -162,11 +175,11 @@ public class ClothesService {
       newType = clothes.getType();
     }
 
-    // todo: 이미지가 새로 들어온 경우에 S3에 업로드
+    //  이미지가 새로 들어온 경우에 S3에 업로드
     String imageUrl = clothes.getImageUrl();
-//    if (clothesImage != null) {
-//      imageUrl = s3Service.upload(clothesImage, directory);
-//    }
+    if (clothesImage != null) {
+      imageUrl = s3Service.upload(clothesImage, directory);
+    }
 
     //의상 정보 업데이트
     clothes.update(
@@ -179,7 +192,7 @@ public class ClothesService {
     List<ClothesAttribute> clothesAttributes =
         clothesAttributeService.update(clothes, clothesUpdateRequest.attributes());
 
-    return clothesUtils.makeClothesDto(clothes, clothesAttributes);
+    return customClothesUtils.makeClothesDto(clothes, clothesAttributes);
 
 
   }
@@ -199,4 +212,50 @@ public class ClothesService {
 
   }
 
+  /**
+   * 구매 링크로 옷 정보 불러오기
+   *
+   * @param url
+   * @return 의상 정보
+   */
+  public ClothesDto extractByUrl(String url) {
+
+    //의상 이미지와 이름
+    try {
+      Document document = Jsoup.connect(url).get();
+
+      // script 태그 중 id="pdp-data" 찾기
+      Element scriptTag = document.selectFirst("script#pdp-data");
+
+      if (scriptTag != null) {
+        String scriptData = scriptTag.html();
+
+        // window.__MSS__.product.state 부분 파싱
+        int stateIndex = scriptData.indexOf("window.__MSS__.product.state = ");
+        if (stateIndex != -1) {
+          int jsonStart = scriptData.indexOf("{", stateIndex);
+          int jsonEnd = scriptData.indexOf("};", jsonStart) + 1;
+
+          String jsonString = scriptData.substring(jsonStart, jsonEnd);
+
+          ObjectMapper objectMapper = new ObjectMapper();
+          JsonNode jsonNode = objectMapper.readTree(jsonString);
+          // 파싱
+          String name = jsonNode.get("goodsNm").asText();
+          String thumbnailImageUrl =
+              "https://image.msscdn.net" + jsonNode.get("thumbnailImageUrl").asText();
+
+          return new ClothesDto(null, null, name, thumbnailImageUrl, null, null);
+
+
+        }
+      }
+
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+
+    return new ClothesDto(null, null, null, null, null, null);
+
+  }
 }

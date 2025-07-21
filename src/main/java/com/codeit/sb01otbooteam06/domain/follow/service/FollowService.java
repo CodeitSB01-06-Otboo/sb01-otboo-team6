@@ -17,6 +17,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,11 +43,15 @@ public class FollowService {
     }
 
     @Transactional
-    public void unfollow(UUID followerId, UUID followeeId) {
-        User follower = getUser(followerId);
-        User followee = getUser(followeeId);
-        log.info("[UNFOLLOW] {} → {}", followerId, followeeId);
-        followRepository.deleteByFollowerAndFollowee(follower, followee);
+    public void unfollowById(UUID followerId, UUID followId) {
+        Follow follow = followRepository.findById(followId)
+            .orElseThrow(() -> new IllegalArgumentException("팔로우 정보를 찾을 수 없습니다."));
+
+        // 보안: 내 팔로우만 지울 수 있도록 체크
+        if (!follow.getFollower().getId().equals(followerId)) {
+            throw new AccessDeniedException("다른 사용자의 팔로우는 취소할 수 없습니다.");
+        }
+        followRepository.delete(follow);
     }
 
     public FollowSummaryDto getSummary(UUID me, UUID target) {

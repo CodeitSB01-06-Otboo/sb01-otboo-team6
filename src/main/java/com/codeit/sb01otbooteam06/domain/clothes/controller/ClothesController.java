@@ -66,4 +66,11 @@ public class ClothesController {
 
   }
 
+  @GetMapping("/extractions")
+  public ResponseEntity<ClothesDto> extractByUrl(@RequestParam String url
+  ) {
+    ClothesDto clothesDto = clothesService.extractByUrl(url);
+    return ResponseEntity.ok(clothesDto);
+  }
+
 }
