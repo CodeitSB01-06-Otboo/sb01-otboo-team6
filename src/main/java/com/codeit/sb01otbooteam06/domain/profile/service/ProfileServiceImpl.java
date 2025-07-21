@@ -50,11 +50,16 @@ public class ProfileServiceImpl implements ProfileService {
 
         Profile profile = findById(userId);
 
-        double latitude = request.getLocation().getLatitude();
-        double longitude = request.getLocation().getLongitude();
-        int[] xy = GeoUtils.convertToGrid(latitude, longitude);
-        int x = xy[0];
-        int y = xy[1];
+        Double latitude = request.getLocation() != null ? request.getLocation().getLatitude() : null;
+        Double longitude = request.getLocation() != null ? request.getLocation().getLongitude() : null;
+
+        Integer x = null;
+        Integer y = null;
+        if (latitude != null && longitude != null) {
+            int[] xy = GeoUtils.convertToGrid(latitude, longitude);
+            x = xy[0];
+            y = xy[1];
+        }
 
         List<String> locationNames = profile.getLocationNames();
         if (request.getLocation() != null) {
@@ -120,12 +125,13 @@ public class ProfileServiceImpl implements ProfileService {
                 name,
                 Gender.OTHER,
                 null,
-                0.0, 0.0,
-                0, 0,
+                null, null,
+                null, null,
                 List.of(),
                 3,
                 null
         );
+
 
         // ③ 저장
         profileRepository.save(profile);

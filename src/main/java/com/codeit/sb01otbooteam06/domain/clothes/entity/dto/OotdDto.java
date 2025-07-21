@@ -1,6 +1,7 @@
 package com.codeit.sb01otbooteam06.domain.clothes.entity.dto;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 //추천시 반환하는 의상 정보 dto
@@ -18,7 +19,7 @@ public record OotdDto(
         clothesDto.name(),
         clothesDto.imageUrl(),
         clothesDto.type(),
-        clothesDto.attributes()
+        Optional.ofNullable(clothesDto.attributes()).orElse(List.of())
     );
   }
 }

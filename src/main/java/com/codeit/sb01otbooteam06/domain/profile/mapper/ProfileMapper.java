@@ -4,6 +4,8 @@ import com.codeit.sb01otbooteam06.domain.profile.dto.ProfileDto;
 import com.codeit.sb01otbooteam06.domain.profile.entity.Profile;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 /**
  * 프로필 엔티티 ↔ DTO 변환 매퍼 (Swagger 명세 기반)
  */
@@ -16,20 +18,22 @@ public class ProfileMapper {
      * @return 프로필 응답 DTO
      */
     public ProfileDto toDto(Profile profile) {
+        if (profile == null) return null;
+
         return ProfileDto.builder()
-                .userId(profile.getUser().getId())                   // User의 UUID 반환
-                .name(profile.getName())                             // 이름
-                .gender(profile.getGender())                         // Gender enum 그대로 반환
-                .birthDate(profile.getBirthDate())                   // 생년월일
+                .userId(profile.getUser().getId())
+                .name(profile.getName())
+                .gender(profile.getGender())
+                .birthDate(profile.getBirthDate())
                 .location(ProfileDto.Location.builder()
-                        .latitude(profile.getLatitude())            // 위도
-                        .longitude(profile.getLongitude())          // 경도
-                        .x(profile.getX())                          // X 좌표 (기상청용)
-                        .y(profile.getY())                          // Y 좌표 (기상청용)
-                        .locationNames(profile.getLocationNames())  // 행정구역 이름 리스트
+                        .latitude(profile.getLatitude() != null ? profile.getLatitude() : 0.0)
+                        .longitude(profile.getLongitude() != null ? profile.getLongitude() : 0.0)
+                        .x(profile.getX() != null ? profile.getX() : 0)
+                        .y(profile.getY() != null ? profile.getY() : 0)
+                        .locationNames(profile.getLocationNames() != null ? profile.getLocationNames() : List.of())
                         .build())
-                .temperatureSensitivity(profile.getTemperatureSensitivity()) // 온도 민감도
-                .profileImageUrl(profile.getProfileImageUrl())       // 프로필 이미지 URL
+                .temperatureSensitivity(profile.getTemperatureSensitivity())
+                .profileImageUrl(profile.getProfileImageUrl())
                 .build();
     }
 }

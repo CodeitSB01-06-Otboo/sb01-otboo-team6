@@ -9,4 +9,5 @@ public class TokenResponse {
 
     private String accessToken;
     private String refreshToken;
+    private boolean mustChangePassword; // 추가: 임시 비밀번호 사용 여부
 }

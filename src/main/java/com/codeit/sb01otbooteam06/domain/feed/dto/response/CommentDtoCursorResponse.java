@@ -1,5 +1,6 @@
 package com.codeit.sb01otbooteam06.domain.feed.dto.response;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import lombok.AccessLevel;
@@ -20,7 +21,7 @@ public class CommentDtoCursorResponse {
 
   public CommentDtoCursorResponse(List<CommentDto> data, String nextCursor, UUID nextIdAfter,
       boolean hasNext, long totalCount, String sortBy, String sortDirection) {
-    this.data = data;
+    this.data = data != null ? data : new ArrayList<>();
     this.nextCursor = nextCursor;
     this.nextIdAfter = nextIdAfter;
     this.hasNext = hasNext;

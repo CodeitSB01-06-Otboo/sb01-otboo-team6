@@ -7,7 +7,7 @@ import com.codeit.sb01otbooteam06.domain.feed.entity.Feed;
 import com.codeit.sb01otbooteam06.domain.profile.entity.Profile;
 import com.codeit.sb01otbooteam06.domain.user.dto.AuthorDto;
 import com.codeit.sb01otbooteam06.domain.user.entity.User;
-import com.codeit.sb01otbooteam06.domain.weather.dto.WeatherDto;
+import com.codeit.sb01otbooteam06.domain.weather.dto.WeatherSummaryDto;
 import com.codeit.sb01otbooteam06.domain.weather.entity.Weather;
 import com.codeit.sb01otbooteam06.domain.weather.mapper.WeatherDtoMapper;
 import java.time.Instant;
@@ -26,7 +26,7 @@ public class FeedDto {
   private Instant updatedAt;
 
   private AuthorDto author;
-  private WeatherDto weather;
+  private WeatherSummaryDto weather;
   private List<OotdDto> ootds;
 
   private String content;
@@ -35,7 +35,7 @@ public class FeedDto {
   private boolean likedByMe;
 
   public FeedDto(UUID id, Instant createdAt, Instant updatedAt, AuthorDto author,
-      WeatherDto weather,
+      WeatherSummaryDto weather,
       List<OotdDto> ootds, String content, long likeCount, int commentsCount, boolean likedByMe) {
     this.id = id;
     this.createdAt = createdAt;
@@ -59,7 +59,7 @@ public class FeedDto {
         .build();
 
     Weather weather = feed.getWeather();
-    WeatherDto weatherDto = weatherMapper.toDto(weather);
+    WeatherSummaryDto weatherSummaryDto = weather != null ? weatherMapper.toSummaryDto(weather) : null;
 
     List<ClothesFeed> clothesFeeds = feed.getClothesFeeds();
     List<OotdDto> ootdDtos = clothesFeeds.stream()
@@ -73,7 +73,7 @@ public class FeedDto {
         feed.getCreatedAt(),
         feed.getUpdatedAt(),
         authorDto,
-        weatherDto,
+        weatherSummaryDto,
         ootdDtos,
         feed.getContent(),
         feed.getLikeCount(),

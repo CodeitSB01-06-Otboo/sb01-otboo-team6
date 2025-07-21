@@ -10,8 +10,10 @@ RUN apt-get update && \
 
 WORKDIR /app
 
+
 COPY build.gradle settings.gradle gradlew ./
 COPY gradle ./gradle
+
 
 RUN chmod +x ./gradlew
 
@@ -25,11 +27,14 @@ RUN ./gradlew build -x test --no-daemon
 USER appuser
 
 # 2. Runtime stage
+# 2. Runtime stage
 FROM openjdk:17-jdk-slim
 
 WORKDIR /app
 
 COPY --from=builder /app/build/libs/*.jar app.jar
+# ✅ prod 설정 파일 복사
+COPY src/main/resources/application-prod.yml ./application-prod.yml
 
 # 애플리케이션 포트 선언
 EXPOSE 8080
@@ -37,4 +42,7 @@ EXPOSE 8080
 # 런타임 헬스체크
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -f http://localhost:8080/actuator/health || exit 1
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# ✅ application-prod.yml을 명시적으로 설정에 포함
+ENTRYPOINT ["java", "-jar", "app.jar", "--spring.config.location=file:./application-prod.yml"]
+ENTRYPOINT ["java", "-jar", "app.jar", "--spring.config.location=classpath:/application.yml,classpath:/application-prod.yml,file:./application-prod.yml"]
+

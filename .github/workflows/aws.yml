@@ -32,13 +32,12 @@ on:
 
 env:
   AWS_REGION: ap-northeast-2                   # set this to your preferred AWS region, e.g. us-west-1
-  ECR_REPOSITORY: obtoo-registry           # set this to your Amazon ECR repository name
-  ECS_SERVICE: obtoo-task-service-jufgal33                 # set this to your Amazon ECS service name
-  ECS_CLUSTER: oubtoo-cluster                 # set this to your Amazon ECS cluster name
-  ECS_TASK_DEFINITION: .aws/obtoo-task-revision4.json # set this to the path to your Amazon ECS task definition
+  ECR_REPOSITORY: otboo           # set this to your Amazon ECR repository name
+  ECS_SERVICE: obtoo                # set this to your Amazon ECS service name
+  ECS_CLUSTER: obtoo-ecs-cluster
+  ECS_TASK_DEFINITION: .aws/obtoo-def-revision2.json # set this to the path to your Amazon ECS task definition
                                                # file, e.g. .aws/task-definition.json
-  CONTAINER_NAME: obtoo-container           # set this to the name of the container in the
-                                               # containerDefinitions section of your task definition
+  CONTAINER_NAME: obtoo          # set this to the name of the container in the
 
 permissions:
   contents: read
@@ -64,18 +63,31 @@ jobs:
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
 
+#    - name: Build, tag, and push image to Amazon ECR
+#      id: build-image
+#      env:
+#        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+#        IMAGE_TAG: ${{ github.sha }}
+#      run: |
+#        # Build a docker container and
+#        # push it to ECR so that it can
+#        # be deployed to ECS.
+#        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+#        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+#        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
     - name: Build, tag, and push image to Amazon ECR
-      id: build-image
+      id: build-and-push-image
       env:
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REGISTRY: 681689809064.dkr.ecr.ap-northeast-2.amazonaws.com
+        ECR_REPOSITORY: otboo
         IMAGE_TAG: ${{ github.sha }}
       run: |
-        # Build a docker container and
-        # push it to ECR so that it can
-        # be deployed to ECS.
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker build -t obtoo .
+        docker tag obtoo:latest $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
 
     - name: Fill in the new image ID in the Amazon ECS task definition
       id: task-def
@@ -83,7 +95,11 @@ jobs:
       with:
         task-definition: ${{ env.ECS_TASK_DEFINITION }}
         container-name: ${{ env.CONTAINER_NAME }}
-        image: ${{ steps.build-image.outputs.image }}
+        image: ${{ steps.build-and-push-image.outputs.image }}
+        environment-variables: |
+          SPRING_DATASOURCE_URL=${{ secrets.RDS_URL }}
+          SPRING_DATASOURCE_USERNAME=${{ secrets.RDS_USERNAME }}
+          SPRING_DATASOURCE_PASSWORD=${{ secrets.RDS_PASSWORD }}
 
     - name: Deploy Amazon ECS task definition
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
