@@ -5,6 +5,7 @@ import com.codeit.sb01otbooteam06.domain.follow.dto.FollowCreateRequest;
 import com.codeit.sb01otbooteam06.domain.follow.dto.FollowDto;
 import com.codeit.sb01otbooteam06.domain.follow.dto.FollowListResponse;
 import com.codeit.sb01otbooteam06.domain.follow.dto.FollowSummaryDto;
+import com.codeit.sb01otbooteam06.domain.follow.exception.InvalidFollowerException;
 import com.codeit.sb01otbooteam06.domain.follow.service.FollowService;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -44,7 +45,7 @@ public class FollowController {
 
         // 2. 바디(followerId)와 헤더/JWT 값 불일치 → 400
         if (req.followerId() != null && !req.followerId().equals(me)) {
-            throw new IllegalArgumentException("followerId가 인증 정보와 일치하지 않습니다.");
+            throw new InvalidFollowerException();
         }
 
         log.info("[HTTP] POST /follows  me={}, followee={}", me, req.followeeId());
