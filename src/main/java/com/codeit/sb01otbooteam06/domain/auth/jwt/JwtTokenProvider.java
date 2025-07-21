@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import java.security.InvalidKeyException;
 import java.security.Key;
+import java.util.Base64;
 import java.util.Date;
 import java.util.UUID;
 
@@ -40,7 +41,7 @@ public class JwtTokenProvider {
     ) {
         try{
             log.info("JWT_SECRET: {}", secret);
-            this.key = Keys.hmacShaKeyFor(secret.getBytes());
+            this.key = Keys.hmacShaKeyFor(Base64.getDecoder().decode(secret));
         } catch (IllegalArgumentException | WeakKeyException e){
             log.info("JWT Secret Key 오류 발생 : {}", e.getMessage());
             e.printStackTrace();
