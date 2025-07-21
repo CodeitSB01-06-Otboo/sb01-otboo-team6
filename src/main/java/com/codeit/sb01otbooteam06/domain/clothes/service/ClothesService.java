@@ -278,4 +278,8 @@ public class ClothesService {
     return clothesRepository.getTotalCounts("", userId);
   }
 
+  public List<Clothes> findAllById(List<UUID> clothesIds) {
+
+    return clothesRepository.findAllById(clothesIds);
+  }
 }

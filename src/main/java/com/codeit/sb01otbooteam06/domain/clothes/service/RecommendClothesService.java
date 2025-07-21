@@ -2,6 +2,7 @@ package com.codeit.sb01otbooteam06.domain.clothes.service;
 
 import com.codeit.sb01otbooteam06.domain.clothes.entity.Clothes;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.ClothesAttribute;
+import com.codeit.sb01otbooteam06.domain.clothes.entity.RecommendClothes;
 import com.codeit.sb01otbooteam06.domain.clothes.mapper.RecommendClothesMapper;
 import com.codeit.sb01otbooteam06.domain.clothes.repository.ClothesAttributeRepository;
 import com.codeit.sb01otbooteam06.domain.clothes.repository.ClothesRepository;
@@ -237,4 +238,8 @@ public class RecommendClothesService {
   }
 
 
+  public RecommendClothes findRandomByUserAndWeather(UUID userId, UUID weatherId) {
+    return recommendClothesRepository.findRandomByUserAndWeather(
+        userId, weatherId);
+  }
 }
