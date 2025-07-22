@@ -108,7 +108,6 @@ public class FeedRepositoryTest {
     em.persist(feed2);
 
     feed3 = Feed.of("늦게 생성된 피드", user, weather3);
-    feed3.like(); // 좋아요 1개
     em.persist(feed3);
 
     em.flush();
