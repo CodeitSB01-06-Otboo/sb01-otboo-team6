@@ -43,5 +43,4 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -f http://localhost:8080/actuator/health || exit 1
 
 # ✅ application-prod.yml을 명시적으로 설정에 포함
-ENTRYPOINT ["java", "-jar", "app.jar", "--spring.config.location=file:./application-prod.yml"]
 ENTRYPOINT ["java", "-jar", "app.jar", "--spring.config.location=classpath:/application.yml,classpath:/application-prod.yml,file:./application-prod.yml"]

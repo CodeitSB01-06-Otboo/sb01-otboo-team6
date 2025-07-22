@@ -14,16 +14,9 @@ public interface RecommendClothesRepository extends JpaRepository<RecommendCloth
 
   void deleteByUserAndWeather(User user, Weather weather);
 
-  //  todo : 문제잇음.
-  // weather-user 에 해당하는 추천 셋 중 랜덤 하나를 리턴
-  @Query(value = """
-      SELECT *
-      FROM recommend_clothes rc
-      WHERE rc.user_id = :#{#user.id} AND rc.weather_id = :#{#weather.id}
-      ORDER BY RANDOM()
-      LIMIT 1
-      """, nativeQuery = true)
-  RecommendClothes findRandomByUserAndWeather(@Param("user") User user,
-      @Param("weather") Weather weather);
+  @Query(value = "SELECT * FROM recommend_clothes WHERE user_id = :userId AND weather_id = :weatherId ORDER BY RANDOM() LIMIT 1", nativeQuery = true)
+  RecommendClothes findRandomByUserAndWeather(@Param("userId") UUID userId,
+      @Param("weatherId") UUID weatherId);
 
+  ;
 }

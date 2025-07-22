@@ -73,7 +73,7 @@ VALUES
     );
 
 ------------------------------ 의상 속성 중간테이블
-INSERT INTO clothes_attributes (id, clothes_id, attribute_id, value, created_at, updated_at)
+INSERT INTO clothes_attributes (id, clothes_id, attribute_id, att_value, created_at, updated_at)
 
 VALUES
     --hjhj 유저의 '카우보의 반팔티' 의상 속성 중간 정보

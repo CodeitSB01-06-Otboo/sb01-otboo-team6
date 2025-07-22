@@ -19,7 +19,6 @@ public class AttributeDefCustomRepositoryImpl implements AttributeDefCustomRepos
   private final JPAQueryFactory queryFactory;
 
 
-  //todo" idAfter를 레포구현에서, 전반적 사용처 고민해보기 
   @Override
   public List<AttributeDef> findAllByCursor(String cursor, String idAfter, int limit, String sortBy,
       String sortDirection, String keywordLike) {

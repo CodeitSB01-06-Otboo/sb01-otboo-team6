@@ -8,7 +8,6 @@ import com.codeit.sb01otbooteam06.domain.clothes.entity.dto.PageResponse;
 import com.codeit.sb01otbooteam06.domain.clothes.exception.AttributeDefNotFoundException;
 import com.codeit.sb01otbooteam06.domain.clothes.mapper.AttributeDefMapper;
 import com.codeit.sb01otbooteam06.domain.clothes.repository.AttributeDefRepository;
-import com.codeit.sb01otbooteam06.domain.clothes.repository.ClothesAttributeRepository;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +26,6 @@ public class AttributeDefService {
   //TODO: null 검증
 
   private final AttributeDefRepository attributeDefRepository;
-  private final ClothesAttributeRepository attributeDefClothesRepository;
 
   private final AttributeDefMapper attributeDefMapper;
 
@@ -36,12 +34,6 @@ public class AttributeDefService {
   @Transactional
   public ClothesAttributeDefDto create(
       ClothesAttributeDefCreateRequest clothesAttributeDefCreateRequest) {
-
-    //todo: 중복처리 고민, 프로토는 중복허용
-//    //중복 의상 속성 네임 검증
-//    if (attributeDefRepository.existsByName(clothesAttributeDefCreateRequest.name())) {
-//      throw new AttributeDefAlreadyExistsException();
-//    }
 
     AttributeDef attributeDef = new AttributeDef(
         clothesAttributeDefCreateRequest.name(),
@@ -78,7 +70,7 @@ public class AttributeDefService {
 
     //TODO: 매번 호출 비효율 -> 캐싱?
     //totalCount
-    //sortBy 는 name 디폴트?
+    //sortBy 는 name 디폴트
     int totalCount = attributeDefRepository.getTotalCounts(sortBy, keywordLike);
 
     // next 조회
@@ -95,11 +87,6 @@ public class AttributeDefService {
   @Transactional
   public ClothesAttributeDefDto update(UUID definitionId,
       ClothesAttributeDefUpdateRequest updateRequest) {
-
-//    //중복 의상 속성 네임 검증
-//    if (attributeDefRepository.existsByName(updateRequest.name())) {
-//      throw new AttributeDefAlreadyExistsException();
-//    }
 
     // attributeDef 검색
     AttributeDef attributeDef = attributeDefRepository.findById(definitionId)

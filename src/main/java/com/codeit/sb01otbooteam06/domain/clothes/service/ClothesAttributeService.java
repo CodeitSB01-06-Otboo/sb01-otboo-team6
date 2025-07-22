@@ -8,7 +8,6 @@ import com.codeit.sb01otbooteam06.domain.clothes.entity.dto.ClothesAttributeDto;
 import com.codeit.sb01otbooteam06.domain.clothes.exception.AttributeDefNotFoundException;
 import com.codeit.sb01otbooteam06.domain.clothes.repository.AttributeDefRepository;
 import com.codeit.sb01otbooteam06.domain.clothes.repository.ClothesAttributeRepository;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +34,6 @@ public class ClothesAttributeService {
    */
   @Transactional
   public List<ClothesAttribute> create(Clothes clothes, List<ClothesAttributeDto> attributes) {
-    List<ClothesAttribute> savedAttributes = new ArrayList<>();
 
     //todo: value가 속성리스트에 포함되어있는지 예외체크
 
@@ -65,9 +63,5 @@ public class ClothesAttributeService {
     return this.create(clothes, attributes);
 
   }
-  
-  @Transactional(readOnly = true)
-  public List<ClothesAttribute> findAttributesByClothesIds(List<UUID> clothesIds) {
-    return clothesAttributeRepository.findAttributesByClothesIds(clothesIds);
-  }
+
 }

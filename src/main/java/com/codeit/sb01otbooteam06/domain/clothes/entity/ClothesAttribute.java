@@ -27,7 +27,7 @@ public class ClothesAttribute extends BaseUpdatableEntity {
   @JoinColumn(name = "attribute_id", nullable = false)
   private AttributeDef attributeDef;
 
-  @Column(name = "value", nullable = false)
+  @Column(name = "att_value", nullable = false)
   private String value;
 
   public ClothesAttribute(Clothes clothes, AttributeDef attributeDef, String value) {
