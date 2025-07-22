@@ -104,12 +104,32 @@ jobs:
           SPRING_DATASOURCE_USERNAME=${{ secrets.RDS_USERNAME }}
           SPRING_DATASOURCE_PASSWORD=${{ secrets.RDS_PASSWORD }}
 
-    - name: Inject secrets into ECS task definition
+    - name: Inject secrets into ECS task definition with jq
       run: |
-        sed -i "s|jwt_secret|${{ secrets.JWT_SECRET }}|g" .aws/obtoo-def-revision2.json
-        sed -i "s|rds_url|${{ secrets.RDS_URL }}|g" .aws/obtoo-def-revision2.json
-        sed -i "s|rds_username|${{ secrets.RDS_USERNAME }}|g" .aws/obtoo-def-revision2.json
-        sed -i "s|rds_password|${{ secrets.RDS_PASSWORD }}|g" .aws/obtoo-def-revision2.json
+        tmpfile=$(mktemp)
+        jq --arg jwt_secret "${{ secrets.JWT_SECRET }}" \
+           --arg rds_url "${{ secrets.RDS_URL }}" \
+           --arg rds_username "${{ secrets.RDS_USERNAME }}" \
+           --arg rds_password "${{ secrets.RDS_PASSWORD }}" \
+           '
+           .containerDefinitions[0].environment |= map(
+             if .name == "JWT_SECRET" then .value = $jwt_secret
+             elif .name == "RDS_URL" then .value = $rds_url
+             elif .name == "RDS_USERNAME" then .value = $rds_username
+             elif .name == "RDS_PASSWORD" then .value = $rds_password
+             else .
+             end
+           )
+           ' .aws/obtoo-def-revision2.json > "$tmpfile" && mv "$tmpfile" .aws/obtoo-def-revision2.json
+
+    - name: Register ECS Task Definition
+      run: |
+        aws ecs register-task-definition --cli-input-json file://.aws/obtoo-def-revision2.json
+
+    - name: Update ECS service to use new task definition
+      run: |
+        aws ecs update-service --cluster obtoo-cluster --service obtoo-service --task-definition obtoo-def
+
 
     - name: Injected task definition
       run: cat .aws/obtoo-def-revision2.json
