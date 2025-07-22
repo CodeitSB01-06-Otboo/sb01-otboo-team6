@@ -85,24 +85,8 @@ class WeatherRepositoryTest {
         repository.flush();
         em.clear();
 
-        // 🔍 디버깅: 저장된 데이터 확인
-        List<Weather> allWeathers = repository.findAll();
-        System.out.println("=== 저장된 전체 데이터 ===");
-        System.out.println("총 개수: " + allWeathers.size());
-
-        for (Weather w : allWeathers) {
-            System.out.printf("ID: %s, lat: %.10f, lon: %.10f, forecastedAt: %s, forecastAt: %s%n",
-                w.getId(),
-                w.getLocation().getLatitude(),
-                w.getLocation().getLongitude(),
-                w.getForecastedAt(),
-                w.getForecastAt());
-        }
-
         // when
         List<Weather> bundle = repository.findForecastBundle(lat, lon);
-        System.out.println("=== 조회 결과 ===");
-        System.out.println("조회된 개수: " + bundle.size());
 
         // then
         then(bundle).hasSize(2);
