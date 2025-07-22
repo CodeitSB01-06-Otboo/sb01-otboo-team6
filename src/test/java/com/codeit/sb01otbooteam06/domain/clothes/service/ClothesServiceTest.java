@@ -38,7 +38,7 @@ public class ClothesServiceTest {
   // Profile 생성
   Profile profile = EntityProvider.createTestProfile(user);
 
-  Clothes clothes = EntityProvider.createTestClothes(user);
+  Clothes clothes = EntityProvider.createCustomTestClothes(user, "상의", "TOP", "image.url");
 
   @BeforeEach
   void setUp() {

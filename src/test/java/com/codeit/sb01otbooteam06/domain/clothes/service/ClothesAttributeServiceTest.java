@@ -45,7 +45,7 @@ class ClothesAttributeServiceTest {
     MockitoAnnotations.openMocks(this);
     User user = EntityProvider.createTestUser();
     Profile profile = EntityProvider.createTestProfile(user);
-    clothes = EntityProvider.createTestClothes(user);
+    clothes = EntityProvider.createCustomTestClothes(user, "상의", "TOP", "image.url");
     attrDef = EntityProvider.createTestAttributeDef("속성", List.of("속성", "속성2"));
     attrDefId = UUID.randomUUID();
   }

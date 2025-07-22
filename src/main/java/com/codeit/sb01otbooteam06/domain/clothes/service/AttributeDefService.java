@@ -23,8 +23,6 @@ public class AttributeDefService {
 
   /// 의상 속성 서비스
 
-  //TODO: null 검증
-
   private final AttributeDefRepository attributeDefRepository;
 
   private final AttributeDefMapper attributeDefMapper;
