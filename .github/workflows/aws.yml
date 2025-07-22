@@ -129,9 +129,9 @@ jobs:
     - name: Update ECS service to use new task definition
       run: |
         aws ecs update-service \
-       --cluster ${{ env.ECS_CLUSTER }} \
-       --service ${{ env.ECS_SERVICE }} \
-       --task-definition obtoo-def
+          --cluster ${{ env.ECS_CLUSTER }} \
+          --service ${{ env.ECS_SERVICE }} \
+          --task-definition obtoo-def
 
 
     - name: Injected task definition
