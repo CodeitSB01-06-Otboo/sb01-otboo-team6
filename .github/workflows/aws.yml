@@ -128,7 +128,7 @@ jobs:
         task_def_arn=$(aws ecs register-task-definition \
           --cli-input-json file://.aws/obtoo-def-revision2.json | \
           jq -r '.taskDefinition.taskDefinitionArn')
-        echo "task_def_arn=$task_def_arn" >> "$GITHUB_OUTPUT"
+        echo "::set-output name=task_def_arn::$task_def_arn"
 
     - name: Update ECS service to use new task definition
       run: |
