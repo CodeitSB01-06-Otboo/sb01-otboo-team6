@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.codeit.sb01otbooteam06.domain.feed.entity.Feed;
-import com.codeit.sb01otbooteam06.domain.user.entity.Role;
 import com.codeit.sb01otbooteam06.domain.user.entity.User;
 import com.codeit.sb01otbooteam06.domain.weather.entity.Location;
 import com.codeit.sb01otbooteam06.domain.weather.entity.Precipitation;
@@ -14,6 +13,7 @@ import com.codeit.sb01otbooteam06.domain.weather.entity.SkyStatus;
 import com.codeit.sb01otbooteam06.domain.weather.entity.Temperature;
 import com.codeit.sb01otbooteam06.domain.weather.entity.Weather;
 import com.codeit.sb01otbooteam06.domain.weather.entity.Wind;
+import com.codeit.sb01otbooteam06.util.EntityProvider;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -74,60 +74,27 @@ public class FeedRepositoryTest {
   void setUp() {
     // 위치 객체
     Location location = Location.from(33.5, 126.5, 55, 127);
+    //온도 객체
+    Temperature temperature = Temperature.from(28.0, 23.0, 30.0);
+    //강수량 객체
+    Precipitation precipitation = Precipitation.from(1.0, "보통", 60.0);
+    //풍량 객체
+    Wind wind = Wind.from(3.2, 2, 0.5, 0.1, 0.1);
 
     // 날씨 엔티티 생성
-    Weather weather1 = Weather.from(
-        Instant.now().minusSeconds(600),
-        Instant.now().plusSeconds(3600),
-        location
-    );
-    weather1.applyMetrics(
-        SkyStatus.CLEAR,
-        PrecipitationType.RAIN,
-        Temperature.from(28.0, 23.0, 30.0),
-        Precipitation.from(1.0, "보통", 60.0),
-        Wind.from(3.2, 2, 0.5, 0.1, 0.1),
-        85.0,
-        0.5,
-        0.0
-    );
+    Weather weather1 = EntityProvider.createTestWeather(location, SkyStatus.CLEAR,
+        PrecipitationType.RAIN, temperature, precipitation, wind, 0.1, 0.3, 0.4);
     em.persist(weather1);
 
-    Weather weather2 = Weather.from(
-        Instant.now().minusSeconds(600),
-        Instant.now().plusSeconds(3600),
-        location
-    );
-    weather2.applyMetrics(
-        SkyStatus.CLOUDY,
-        PrecipitationType.DRIZZLE_SNOW,
-        Temperature.from(28.0, 23.0, 30.0),
-        Precipitation.from(1.0, "보통", 60.0),
-        Wind.from(3.2, 2, 0.5, 0.1, 0.1),
-        85.0,
-        0.5,
-        0.0
-    );
+    Weather weather2 = EntityProvider.createTestWeather(location, SkyStatus.CLOUDY,
+        PrecipitationType.DRIZZLE_SNOW, temperature, precipitation, wind, 0.3, 0.3, 0.4);
     em.persist(weather2);
 
-    weather2.applyMetrics(
-        SkyStatus.CLOUDY,
-        PrecipitationType.DRIZZLE_SNOW,
-        Temperature.from(28.0, 23.0, 30.0),
-        Precipitation.from(1.0, "보통", 60.0),
-        Wind.from(3.2, 2, 0.5, 0.1, 0.1),
-        85.0,
-        0.5,
-        0.0
-    );
-    em.persist(weather2);
+    Weather weather3 = EntityProvider.createTestWeather(location, SkyStatus.CLEAR,
+        PrecipitationType.SHOWER, temperature, precipitation, wind, 0.3, 0.3, 0.4);
+    em.persist(weather3);
 
-    User user = User.builder()
-        .name("test")
-        .email("test@test.com")
-        .role(Role.USER)
-        .password("password")
-        .build();
+    User user = EntityProvider.createTestUser();
     em.persist(user);
 
     // 피드 생성
@@ -140,7 +107,7 @@ public class FeedRepositoryTest {
     feed2.like();
     em.persist(feed2);
 
-    feed3 = Feed.of("늦게 생성된 피드", user, weather2);
+    feed3 = Feed.of("늦게 생성된 피드", user, weather3);
     feed3.like(); // 좋아요 1개
     em.persist(feed3);
 
@@ -191,7 +158,7 @@ public class FeedRepositoryTest {
   @DisplayName("필터 조건 없이 전체 count 조회")
   void countByFilters_no_conditions() {
     long count = feedQueryRepository.countByFilters(null, null, null);
-    assertThat(count).isEqualTo(2);
+    assertThat(count).isEqualTo(3);
   }
 
   @Test
@@ -245,7 +212,8 @@ public class FeedRepositoryTest {
     );
 
     assertThat(result.getContent()).hasSize(1); // feed2만 DRIZZLE_SNOW
-    assertThat(result.getContent().get(0).getWeather().getPrecipitationType()).isEqualTo(PrecipitationType.DRIZZLE_SNOW);
+    assertThat(result.getContent().get(0).getWeather().getPrecipitationType()).isEqualTo(
+        PrecipitationType.DRIZZLE_SNOW);
   }
 
   @Test
@@ -262,8 +230,9 @@ public class FeedRepositoryTest {
         pageable
     );
 
-    assertThat(result.getContent()).hasSize(2);
-    assertThat(result.getContent().get(0).getCreatedAt()).isAfter(result.getContent().get(1).getCreatedAt());
+    assertThat(result.getContent()).hasSize(3);
+    assertThat(result.getContent().get(0).getCreatedAt()).isAfter(
+        result.getContent().get(1).getCreatedAt());
   }
 
   @Test
