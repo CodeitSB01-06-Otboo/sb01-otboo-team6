@@ -41,7 +41,7 @@ class AttributeDefServiceTest {
 
 
   @Test
-  void createAttributeDef_thenSuccess() {
+  void createAttributeDef_정상적으로_Dto를_반환한다() {
     // given
     var createRequest = new ClothesAttributeDefCreateRequest("색상", List.of("빨강", "파랑", "초록"));
 
@@ -63,7 +63,7 @@ class AttributeDefServiceTest {
   }
 
   @Test
-  void updateAttributeDef_thenUpdated() {
+  void updateAttributeDef_업데이트된_Dto를_반환한다() {
     // given
     UUID id = UUID.randomUUID();
     var original = EntityProvider.createTestAttributeDef("사이즈", List.of("S", "M", "L"));
@@ -86,7 +86,7 @@ class AttributeDefServiceTest {
   }
 
   @Test
-  void deleteAttributeDef_thenNotFoundOnNextQuery() {
+  void deleteAttributeDef_삭제후_다시조회하면_예외가_발생한다() {
     // given
     UUID id = UUID.randomUUID();
     var entity = EntityProvider.createTestAttributeDef("소재", List.of("면", "울"));
@@ -107,7 +107,7 @@ class AttributeDefServiceTest {
 
 
   @Test
-  void findAll_withPagingAndSorting_thenReturnsPageResponse() {
+  void findAll_페이징_정렬_조건으로_PageResponse를_반환한다() {
     // given
     String cursor = null;
     String idAfter = null;
@@ -158,7 +158,7 @@ class AttributeDefServiceTest {
 
 
   @Test
-  void getStyleValues_whenExists_thenReturnList() {
+  void getStyleValues_값이_존재하면_리스트를_반환한다() {
     // given
     when(attributeDefRepository.findSelectableValuesByName("스타일"))
         .thenReturn(List.of("캐주얼,포멀"));
@@ -171,7 +171,7 @@ class AttributeDefServiceTest {
   }
 
   @Test
-  void getStyleValues_whenNotExists_thenThrow() {
+  void getStyleValues_값이_존재하지_않으면_예외를_던진다() {
     // given
     when(attributeDefRepository.findSelectableValuesByName("스타일"))
         .thenReturn(List.of());

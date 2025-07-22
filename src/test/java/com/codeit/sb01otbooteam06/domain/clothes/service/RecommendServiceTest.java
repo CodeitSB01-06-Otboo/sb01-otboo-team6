@@ -125,7 +125,7 @@ class RecommendServiceTest {
   }
 
   @Test
-  void recommend_whenCachedCountMatches_thenReturnsCachedRecommendation() {
+  void recommend_캐시된_의상_수_일치하면_캐시된_추천_반환() {
     UUID userId = UUID.randomUUID();
     UUID weatherId = UUID.randomUUID();
 
@@ -170,74 +170,8 @@ class RecommendServiceTest {
     assertThat(result.clothes()).isNotNull();
   }
 
-//  @Test
-//  void recommend_whenCachedCountDiffers_thenCreatesRecommendation() {
-//    UUID userId = user.getId();
-//    UUID weatherId = UUID.randomUUID();
-//
-//    weather = mock(Weather.class);
-//    profile = mock(Profile.class);
-//
-//    List<UUID> newRecommendIds = List.of(UUID.randomUUID());
-//
-//    // user 관련 mocking
-//    when(authService.getCurrentUserId()).thenReturn(userId);
-//    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-//
-//    // weather 관련 mocking
-//    when(weatherRepository.findById(weatherId)).thenReturn(Optional.of(weather));
-//
-//    Instant mockInstant = Instant.parse("2025-07-22T10:15:30.00Z");
-//    when(weather.getForecastAt()).thenReturn(mockInstant);
-//
-//    SkyStatus mockSkyStatus = mock(SkyStatus.class);
-//    when(mockSkyStatus.getCode()).thenReturn(1);
-//    when(weather.getSkyStatus()).thenReturn(mockSkyStatus);
-//
-//    Temperature mockTemperature = mock(Temperature.class);
-//    when(mockTemperature.getCurrent()).thenReturn(25.0);
-//    when(weather.getTemperature()).thenReturn(mockTemperature);
-//
-//    when(weather.getHumidity()).thenReturn(60.0);
-//
-//    Wind mockWind = mock(Wind.class);
-//    when(mockWind.getSpeed()).thenReturn(3.5);
-//    when(weather.getWind()).thenReturn(mockWind);
-//
-//    // cache 관련 mocking
-//    when(cacheManager.getCache("userClothesCount")).thenReturn(cache);
-//    when(cache.get(userId, Integer.class)).thenReturn(1);
-//
-//    // clothes, recommend 관련 mocking
-//    when(clothesService.getUserClothesCount(userId)).thenReturn(2);
-//    when(recommendClothesService.makeRecommendClothes(any(), eq(user), eq(weather))).thenReturn(
-//        newRecommendIds);
-//
-//    // profile mocking
-//    when(profileRepository.findById(userId)).thenReturn(Optional.of(profile));
-//    when(profile.getTemperatureSensitivity()).thenReturn(2);
-//
-//    // getOotdDtos 관련 mocking
-//    List<Clothes> clothesList = List.of(clothes1);
-//    when(clothesService.findAllById(newRecommendIds)).thenReturn(clothesList);
-//    when(clothesAttributeRepository.findByClothesIn(clothesList)).thenReturn(
-//        Collections.emptyList());
-//    when(customClothesUtils.makeClothesDto(any(), anyList())).thenAnswer(
-//        i -> new OotdDto(UUID.randomUUID(), "옷" + i.getArgument(0), "url", "TOP", List.of()));
-//
-//    // 테스트 실행
-//    RecommendationDto result = recommendService.recommend(weatherId);
-//
-//    verify(clothesCacheService).saveUserCurrentClothesCountCache(userId, 2);
-//
-//    assertThat(result).isNotNull();
-//    assertThat(result.weatherId()).isEqualTo(weatherId);
-//    assertThat(result.userId()).isEqualTo(userId);
-//    assertThat(result.clothes()).isNotEmpty();
-//  }
-
   @Test
-  void recommend_whenUserNotFound_thenThrows() {
+  void recommend_유저_없으면_예외_던짐() {
     UUID userId = UUID.randomUUID();
     UUID weatherId = UUID.randomUUID();
 
@@ -249,7 +183,7 @@ class RecommendServiceTest {
   }
 
   @Test
-  void recommend_whenWeatherNotFound_thenThrows() {
+  void recommend_날씨정보_없으면_예외_던짐() {
     UUID userId = UUID.randomUUID();
     UUID weatherId = UUID.randomUUID();
 
@@ -262,7 +196,7 @@ class RecommendServiceTest {
   }
 
   @Test
-  void getWeatherData_whenProfileNotFound_thenThrows() throws Exception {
+  void getWeatherData_프로필_없으면_예외_던짐() throws Exception {
     when(profileRepository.findById(user.getId())).thenReturn(Optional.empty());
 
     Method method = recommendService.getClass()
@@ -274,7 +208,7 @@ class RecommendServiceTest {
   }
 
   @Test
-  void getWeatherData_returnsCorrectArray() {
+  void getWeatherData_올바른_날씨_데이터_배열_반환() {
     user = Mockito.mock(User.class);
     weather = Mockito.mock(Weather.class);
     profile = Mockito.mock(Profile.class);
@@ -309,7 +243,7 @@ class RecommendServiceTest {
   }
 
   @Test
-  void create_returnsRecommendedClothesIds() {
+  void create_추천_의상_ID_목록_반환() {
     // given
     User mockUser = mock(User.class);
     Weather mockWeather = mock(Weather.class);
@@ -337,42 +271,6 @@ class RecommendServiceTest {
     verify(spyService).getValueByAi(mockWeatherData);
     verify(recommendClothesService).makeRecommendClothes(mockWeightData, mockUser, mockWeather);
   }
-
-//  @Test
-//  void getValueByAi_returnsIntArray() {
-//    // given
-//    double[] mockWeatherData = {7, 1, 25.0, 60.0, 3.5, 2};
-//
-//    // RecommendService spy 생성 (private method 테스트 or client mocking 목적)
-//    RecommendService spyService = Mockito.spy(recommendService);
-//
-//    // client와 관련 객체 Mocking
-//    Client mockClient = mock(Client.class);
-//    Models mockModels = mock(Models.class);
-//    GenerateContentResponse mockResponse = mock(GenerateContentResponse.class);
-//
-//    // client 내부 models 필드 접근이 가능해야 함. (필드가 private이면 리플렉션 필요할 수 있음)
-//    // 여기선 리플렉션으로 client 객체를 spyService에 주입하는 예시:
-//    ReflectionTestUtils.setField(spyService, "client", mockClient);
-//
-//    // mockClient.models가 mockModels 반환하도록 설
-//
-//    // mockModels.generateContent가 mockResponse 반환하도록 설정
-//    when(mockModels.generateContent(
-//        anyString(),
-//        anyString(),
-//        any(GenerateContentConfig.class))
-//    ).thenReturn(mockResponse);
-//
-//    // mockResponse.text()가 테스트할 텍스트 반환하도록 설정
-//    when(mockResponse.text()).thenReturn("1,2,3,4,5");
-//
-//    // when
-//    int[] result = spyService.getValueByAi(mockWeatherData);
-//
-//    // then
-//    assertThat(result).containsExactly(1, 2, 3, 4, 5);
-//  }
 
 
 }

@@ -62,7 +62,7 @@ class ClothesServiceTest {
   private ClothesService clothesService;
 
   @Test
-  void create_shouldSaveClothesAndReturnDto() throws Exception {
+  void create_옷을_저장하고_데이터_전송_객체를_반환한다() throws Exception {
     // given
     UUID ownerId = UUID.randomUUID();
     User mockUser = mock(User.class);
@@ -93,7 +93,7 @@ class ClothesServiceTest {
   }
 
   @Test
-  void findAll_shouldReturnPagedClothesDto() {
+  void findAll_페이징된_옷_데이터_전송_객체_목록을_반환한다() {
     // given
     UUID ownerId = UUID.randomUUID();
     Clothes mockClothes = mock(Clothes.class);
@@ -124,7 +124,7 @@ class ClothesServiceTest {
   }
 
   @Test
-  void update_shouldUpdateAndReturnDto() {
+  void update_옷을_수정하고_데이터_전송_객체를_반환한다() {
     // given
     UUID clothesId = UUID.randomUUID();
     ClothesUpdateRequest req = new ClothesUpdateRequest("UpdatedName", "UpdatedType", List.of());
@@ -151,7 +151,7 @@ class ClothesServiceTest {
 
 
   @Test
-  void delete_shouldDeleteClothesAndInvalidateCache() {
+  void delete_옷을_삭제하고_캐시를_무효화한다() {
     // given
     UUID clothesId = UUID.randomUUID();
     User owner = mock(User.class);
@@ -173,7 +173,7 @@ class ClothesServiceTest {
 
 
   @Test
-  void extractByUrl_scriptTagNotNull_shouldParseAndReturnDto() throws Exception {
+  void extractByUrl스크립트_태그에서_데이터를_파싱해_데이터_전송_객체를_반환한다() throws Exception {
     String url = "http://someurl.com";
 
     Document mockDocument = mock(Document.class);
@@ -191,7 +191,7 @@ class ClothesServiceTest {
   }
 
   @Test
-  void getUserClothesCount_shouldReturnCount() {
+  void getUserClothesCount_유저의_옷_개수를_반환한다() {
     // given
     UUID userId = UUID.randomUUID();
     when(clothesRepository.getTotalCounts("", userId)).thenReturn(5);
@@ -205,7 +205,7 @@ class ClothesServiceTest {
   }
 
   @Test
-  void findAllById_shouldReturnClothesList() {
+  void findAllById_아이디_목록에_해당하는_옷_목록을_반환한다() {
     // given
     List<UUID> clothesIds = List.of(UUID.randomUUID(), UUID.randomUUID());
     List<Clothes> clothesList = List.of(mock(Clothes.class), mock(Clothes.class));

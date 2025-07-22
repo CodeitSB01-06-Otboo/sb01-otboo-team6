@@ -71,7 +71,7 @@ public class RecommendClothesServiceTest {
   }
 
   @Test
-  public void testMakeRecommendClothes() {
+  public void testMakeRecommendClothes_의상추천을하고_DB에_저장한다() {
     // given
     int[] valueData = {1, 2, 3, 4};
     when(attributeDef.getName()).thenReturn("스타일");
@@ -138,7 +138,7 @@ public class RecommendClothesServiceTest {
   }
 
   @Test
-  public void testFindRandomByUserAndWeather() {
+  public void testFindRandomByUserAndWeather_날씨와_유저에_대한_추천의상세트_중_랜덤한_하나를_반환한다() {
     // given
     UUID userId = UUID.randomUUID();
     UUID weatherId = UUID.randomUUID();
