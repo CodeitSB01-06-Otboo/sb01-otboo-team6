@@ -123,15 +123,19 @@ jobs:
            ' .aws/obtoo-def-revision2.json > "$tmpfile" && mv "$tmpfile" .aws/obtoo-def-revision2.json
 
     - name: Register ECS Task Definition
+      id: register-task-def
       run: |
-        aws ecs register-task-definition --cli-input-json file://.aws/obtoo-def-revision2.json
+        task_def_arn=$(aws ecs register-task-definition \
+          --cli-input-json file://.aws/obtoo-def-revision2.json | \
+          jq -r '.taskDefinition.taskDefinitionArn')
+        echo "task_def_arn=$task_def_arn" >> "$GITHUB_OUTPUT"
 
     - name: Update ECS service to use new task definition
       run: |
         aws ecs update-service \
           --cluster ${{ env.ECS_CLUSTER }} \
           --service ${{ env.ECS_SERVICE }} \
-          --task-definition obtoo-def
+          --task-definition ${{ steps.register-task-def.outputs.task_def_arn }}
 
 
     - name: Injected task definition
