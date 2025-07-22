@@ -25,10 +25,6 @@ public class WeatherQueryRepositoryImpl implements WeatherQueryRepository {
 
   @Override
   public List<Weather> findForecastBundle(double lat, double lon) {
-    System.out.printf("🔍 findForecastBundle 호출: lat=%.10f, lon=%.10f%n", lat, lon);
-    System.out.printf("🔍 검색 범위: lat=[%.10f ~ %.10f], lon=[%.10f ~ %.10f]%n",
-        lat - TOL, lat + TOL, lon - TOL, lon + TOL);
-
     double latMin = lat - TOL, latMax = lat + TOL;
     double lonMin = lon - TOL, lonMax = lon + TOL;
 
@@ -39,10 +35,7 @@ public class WeatherQueryRepositoryImpl implements WeatherQueryRepository {
             .and(w.location.longitude.between(lonMin, lonMax)))
         .fetchFirst();
 
-    System.out.println("🔍 찾은 최신 forecastedAt: " + latest);
-
     if (latest == null) {
-      System.out.println("🔍 latest가 null이므로 빈 리스트 반환");
       return List.of();
     }
 
@@ -66,7 +59,6 @@ public class WeatherQueryRepositoryImpl implements WeatherQueryRepository {
         .orderBy(w.forecastAt.asc())
         .fetch();
 
-    System.out.println("🔍 최종 결과 개수: " + result.size());
     return result;
   }
 
