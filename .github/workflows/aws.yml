@@ -83,7 +83,6 @@ jobs:
       id: build-and-push-image
       env:
         ECR_REGISTRY: 681689809064.dkr.ecr.ap-northeast-2.amazonaws.com
-        ECR_REPOSITORY: otboo
         IMAGE_TAG: ${{ github.sha }}
       run: |
         docker build -t obtoo .
@@ -92,62 +91,20 @@ jobs:
         echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
 
-    - name: Fill in the new image ID in the Amazon ECS task definition
+      # ──────────────────── 템플릿에 새 이미지만 주입 (env 변수 X) ────────────────────
+    - name: Render Amazon ECS task definition
       id: task-def
       uses: aws-actions/amazon-ecs-render-task-definition@v1
       with:
         task-definition: ${{ env.ECS_TASK_DEFINITION }}
         container-name: ${{ env.CONTAINER_NAME }}
         image: ${{ steps.build-and-push-image.outputs.image }}
-        environment-variables: |
-          SPRING_DATASOURCE_URL=${{ secrets.RDS_URL }}
-          SPRING_DATASOURCE_USERNAME=${{ secrets.RDS_USERNAME }}
-          SPRING_DATASOURCE_PASSWORD=${{ secrets.RDS_PASSWORD }}
 
-    - name: Inject secrets into ECS task definition with jq
-      run: |
-        tmpfile=$(mktemp)
-        jq --arg jwt_secret "${{ secrets.JWT_SECRET }}" \
-           --arg rds_url "${{ secrets.RDS_URL }}" \
-           --arg rds_username "${{ secrets.RDS_USERNAME }}" \
-           --arg rds_password "${{ secrets.RDS_PASSWORD }}" \
-           '
-           .containerDefinitions[0].environment |= map(
-             if .name == "JWT_SECRET" then .value = $jwt_secret
-             elif .name == "RDS_URL" then .value = $rds_url
-             elif .name == "RDS_USERNAME" then .value = $rds_username
-             elif .name == "RDS_PASSWORD" then .value = $rds_password
-             else .
-             end
-           )
-           ' .aws/obtoo-def-revision2.json > "$tmpfile" && mv "$tmpfile" .aws/obtoo-def-revision2.json
-
-    - name: Register ECS Task Definition
-      id: register-task-def
-      run: |
-        task_def_arn=$(aws ecs register-task-definition \
-          --cli-input-json file://.aws/obtoo-def-revision2.json | \
-          jq -r '.taskDefinition.taskDefinitionArn')
-        echo "::set-output name=task_def_arn::$task_def_arn"
-
-    - name: Update ECS service to use new task definition
-      run: |
-        aws ecs update-service \
-          --cluster ${{ env.ECS_CLUSTER }} \
-          --service ${{ env.ECS_SERVICE }} \
-          --task-definition ${{ steps.register-task-def.outputs.task_def_arn }}
-
-
-    - name: Injected task definition
-      run: cat .aws/obtoo-def-revision2.json
-
-    - name: Print JWT_SECRET (for debug, optional)
-      run: echo "${{ secrets.JWT_SECRET }}"
-
-    - name: Deploy Amazon ECS task definition
+      # ────────────── 서비스 업데이트 & 안정화 대기 (한 단계면 충분) ──────────────
+    - name: Deploy to Amazon ECS
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
       with:
-        task-definition: .aws/obtoo-def-revision2.json
+        task-definition: ${{ steps.task-def.outputs.task-definition }}
         service: ${{ env.ECS_SERVICE }}
         cluster: ${{ env.ECS_CLUSTER }}
         wait-for-service-stability: true
