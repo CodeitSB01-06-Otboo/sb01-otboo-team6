@@ -75,7 +75,7 @@ public class FeedRepositoryTest {
     // 위치 객체
     Location location1 = Location.from(33.5, 126.5, 55, 127);
     Location location2 = Location.from(34.5, 122.5, 54, 124);
-    Location location3 = Location.from(37.5, 127.5, 57, 177);
+    Location location3 = Location.from(37.5, 128.5, 57, 177);
     //온도 객체
     Temperature temperature = Temperature.from(28.0, 23.0, 30.0);
     //강수량 객체
