@@ -47,8 +47,8 @@ public class FeedDto {
     this.commentsCount = commentsCount;
     this.likedByMe = likedByMe;
   }
-
-  public static FeedDto fromEntity(Feed feed, ClothesMapper clothesMapper, WeatherDtoMapper weatherMapper) {
+  public static FeedDto fromEntity(Feed feed, ClothesMapper clothesMapper,
+      WeatherDtoMapper weatherMapper, boolean likedByMe) {
     User author = feed.getUser();
     Profile profile = author.getProfile();
     AuthorDto authorDto = AuthorDto.builder()
@@ -58,7 +58,8 @@ public class FeedDto {
         .build();
 
     Weather weather = feed.getWeather();
-    WeatherSummaryDto weatherSummaryDto = weather != null ? weatherMapper.toSummaryDto(weather) : null;
+    WeatherSummaryDto weatherSummaryDto =
+        weather != null ? weatherMapper.toSummaryDto(weather) : null;
 
     List<ClothesFeed> clothesFeeds = feed.getClothesFeeds();
     List<OotdDto> ootdDtos = clothesFeeds.stream()
@@ -77,7 +78,7 @@ public class FeedDto {
         feed.getContent(),
         feed.getLikeCount(),
         feed.getCommentCount(),
-        feed.isLikedByMe()
+        likedByMe
     );
   }
 
