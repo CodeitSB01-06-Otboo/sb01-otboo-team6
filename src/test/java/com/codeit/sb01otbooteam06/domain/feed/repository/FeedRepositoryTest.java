@@ -54,6 +54,7 @@ public class FeedRepositoryTest {
       return new JPAQueryFactory(em);
     }
 
+
     @Bean
     public FeedQueryRepository feedQueryRepository(JPAQueryFactory jpaQueryFactory) {
       return new FeedQueryRepositoryImpl(jpaQueryFactory);
