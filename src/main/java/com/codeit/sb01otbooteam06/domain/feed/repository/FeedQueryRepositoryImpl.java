@@ -7,6 +7,7 @@ import com.codeit.sb01otbooteam06.domain.weather.entity.QWeather;
 import com.codeit.sb01otbooteam06.domain.weather.entity.SkyStatus;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.time.Instant;
 import java.util.List;
@@ -47,7 +48,7 @@ public class FeedQueryRepositoryImpl implements FeedQueryRepository {
       condition.and(feed.weather.precipitationType.eq(precipitationType));
     }
 
-    // 정렬 기준: createdAt 또는 likeCount
+    // 정렬 기준
     Sort.Order sortOrder = pageable.getSort().getOrderFor("likeCount") != null
         ? pageable.getSort().getOrderFor("likeCount")
         : pageable.getSort().getOrderFor("createdAt");
@@ -61,19 +62,42 @@ public class FeedQueryRepositoryImpl implements FeedQueryRepository {
 
     if (sortOrder.getProperty().equals("likeCount")) {
       primaryOrder = sortOrder.isAscending() ? feed.likeCount.asc() : feed.likeCount.desc();
-      if (cursorValue != null && cursorId != null) {
-        condition.and(
-            feed.likeCount.lt((Long) cursorValue)
-                .or(feed.likeCount.eq((Long) cursorValue).and(feed.id.lt(cursorId)))
-        );
+
+      if (cursorValue != null) {
+        Long cursorLikeCount = (Long) cursorValue;
+
+        BooleanExpression cursorCondition = sortOrder.isAscending()
+            ? feed.likeCount.gt(cursorLikeCount)
+            : feed.likeCount.lt(cursorLikeCount);
+
+        if (cursorId != null) {
+          BooleanExpression tieBreaker = feed.likeCount.eq(cursorLikeCount)
+              .and(feed.id.lt(cursorId));
+          cursorCondition = cursorCondition.or(tieBreaker);
+        }
+
+        condition.and(cursorCondition);
       }
-    } else { // createdAt
+
+    } else { // createdAt 정렬
       primaryOrder = sortOrder.isAscending() ? feed.createdAt.asc() : feed.createdAt.desc();
-      if (cursorValue != null && cursorId != null) {
-        condition.and(
-            feed.createdAt.lt((Instant) cursorValue)
-                .or(feed.createdAt.eq((Instant) cursorValue).and(feed.id.lt(cursorId)))
-        );
+
+      if (cursorValue != null) {
+        Instant cursorCreatedAt = (cursorValue instanceof Instant)
+            ? (Instant) cursorValue
+            : Instant.ofEpochMilli((Long) cursorValue);
+
+        BooleanExpression cursorCondition = sortOrder.isAscending()
+            ? feed.createdAt.gt(cursorCreatedAt)
+            : feed.createdAt.lt(cursorCreatedAt);
+
+        if (cursorId != null) {
+          BooleanExpression tieBreaker = feed.createdAt.eq(cursorCreatedAt)
+              .and(feed.id.lt(cursorId));
+          cursorCondition = cursorCondition.or(tieBreaker);
+        }
+
+        condition.and(cursorCondition);
       }
     }
 

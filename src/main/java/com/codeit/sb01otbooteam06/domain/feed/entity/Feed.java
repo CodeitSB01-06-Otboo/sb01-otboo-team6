@@ -61,7 +61,12 @@ public class Feed extends BaseUpdatableEntity {
   }
 
   public static Feed of(String content, User user, Weather weather) {
-    return new Feed(content, user, weather);
+    Feed feed = new Feed();
+    feed.content = content;
+    feed.user = user;
+    feed.weather = weather;
+    feed.likeCount = 0L;
+    return feed;
   }
 
   public void updateContent(String newContent) {
