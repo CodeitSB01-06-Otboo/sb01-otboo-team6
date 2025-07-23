@@ -73,7 +73,9 @@ public class FeedRepositoryTest {
   @BeforeEach
   void setUp() {
     // 위치 객체
-    Location location = Location.from(33.5, 126.5, 55, 127);
+    Location location1 = Location.from(33.5, 126.5, 55, 127);
+    Location location2 = Location.from(34.5, 122.5, 54, 124);
+    Location location3 = Location.from(37.5, 127.5, 57, 177);
     //온도 객체
     Temperature temperature = Temperature.from(28.0, 23.0, 30.0);
     //강수량 객체
@@ -82,15 +84,15 @@ public class FeedRepositoryTest {
     Wind wind = Wind.from(3.2, 2, 0.5, 0.1, 0.1);
 
     // 날씨 엔티티 생성
-    Weather weather1 = EntityProvider.createTestWeather(location, SkyStatus.CLEAR,
+    Weather weather1 = EntityProvider.createTestWeather(location1, SkyStatus.CLEAR,
         PrecipitationType.RAIN, temperature, precipitation, wind, 0.1, 0.3, 0.4);
     em.persist(weather1);
 
-    Weather weather2 = EntityProvider.createTestWeather(location, SkyStatus.CLOUDY,
+    Weather weather2 = EntityProvider.createTestWeather(location2, SkyStatus.CLOUDY,
         PrecipitationType.DRIZZLE_SNOW, temperature, precipitation, wind, 0.3, 0.3, 0.4);
     em.persist(weather2);
 
-    Weather weather3 = EntityProvider.createTestWeather(location, SkyStatus.CLEAR,
+    Weather weather3 = EntityProvider.createTestWeather(location3, SkyStatus.CLEAR,
         PrecipitationType.SHOWER, temperature, precipitation, wind, 0.3, 0.3, 0.4);
     em.persist(weather3);
 
