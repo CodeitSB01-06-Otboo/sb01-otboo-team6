@@ -57,6 +57,13 @@ public class User extends BaseEntity {
   @Column(name = "provider")
   private List<String> linkedOAuthProviders = new ArrayList<>();
 
+  @Column(nullable = true)
+  private String provider;
+
+  @Column(nullable = true)
+  private String providerId;
+
+
   // ------------------------- 메서드 ---------------------------
 
   public void setProfile(Profile profile) {
@@ -100,14 +107,16 @@ public class User extends BaseEntity {
   /**
    * 소셜 로그인 회원가입용 생성자 (정적 팩토리 메서드)
    */
-  public static User createSocialUser(String email, String name) {
+  public static User createSocialUser(String provider, String providerId, String email, String name) {
     return User.builder()
             .email(email)
-            .password("SOCIAL") // 소셜 로그인은 비밀번호 사용하지 않음
+            .password("SOCIAL")
             .name(name)
             .role(Role.USER)
             .locked(false)
-            .linkedOAuthProviders(new ArrayList<>(List.of("SOCIAL")))
+            .linkedOAuthProviders(new ArrayList<>(List.of(provider)))
+            .provider(provider)
+            .providerId(providerId)
             .build();
   }
 
