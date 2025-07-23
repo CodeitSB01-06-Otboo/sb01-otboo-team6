@@ -23,6 +23,7 @@ import com.codeit.sb01otbooteam06.domain.feed.dto.request.FeedUpdateRequest;
 import com.codeit.sb01otbooteam06.domain.feed.dto.response.FeedDto;
 import com.codeit.sb01otbooteam06.domain.feed.dto.response.FeedDtoCursorResponse;
 import com.codeit.sb01otbooteam06.domain.feed.entity.Feed;
+import com.codeit.sb01otbooteam06.domain.feed.repository.FeedLikeRepository;
 import com.codeit.sb01otbooteam06.domain.feed.repository.FeedRepository;
 import com.codeit.sb01otbooteam06.domain.feed.service.impl.FeedServiceImpl;
 import com.codeit.sb01otbooteam06.domain.profile.entity.Profile;
@@ -36,6 +37,7 @@ import com.codeit.sb01otbooteam06.domain.weather.entity.Weather;
 import com.codeit.sb01otbooteam06.domain.weather.mapper.WeatherDtoMapper;
 import com.codeit.sb01otbooteam06.domain.weather.repository.WeatherRepository;
 import com.codeit.sb01otbooteam06.global.exception.OtbooException;
+import com.codeit.sb01otbooteam06.util.EntityProvider;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -74,16 +76,18 @@ public class FeedServiceImplTest {
   private WeatherDtoMapper weatherDtoMapper;
   @Mock
   private AuthService authService;
+  @Mock
+  private FeedLikeRepository feedLikeRepository;
 
   private final UUID userId = UUID.randomUUID();
   private final UUID feedId = UUID.randomUUID();
   private final UUID weatherId = UUID.randomUUID();
   private final UUID clothesId = UUID.randomUUID();
 
-  User mockUser = mock(User.class);
   Weather mockWeather = mock(Weather.class);
   Clothes mockClothes = mock(Clothes.class);
   ClothesDto mockClothesDto = mock(ClothesDto.class);
+  User user = EntityProvider.createTestUser();
 
   @Nested
   @DisplayName("피드 생성 메서드 테스트")
@@ -96,11 +100,12 @@ public class FeedServiceImplTest {
     @Test
     void createFeed_Success() {
       //given
-      given(userRepository.findById(userId)).willReturn(Optional.of(mockUser));
+      given(userRepository.findById(userId)).willReturn(Optional.of(user));
       given(weatherRepository.findById(weatherId)).willReturn(Optional.of(mockWeather));
       given(clothesRepository.findById(clothesId)).willReturn(Optional.of(mockClothes));
       given(authService.getCurrentUserId()).willReturn(userId);
       given(clothesMapper.toDto(any(Clothes.class))).willReturn(mockClothesDto);
+      given(feedLikeRepository.existsByFeedAndUser(any(), any())).willReturn(false);
 
       //when
       FeedDto result = feedService.createFeed(request);
@@ -125,7 +130,7 @@ public class FeedServiceImplTest {
     void createFeed_Not_Found_Weather_ThrowsException() {
       //given
       given(authService.getCurrentUserId()).willReturn(userId);
-      given(userRepository.findById(userId)).willReturn(Optional.of(mockUser));
+      given(userRepository.findById(userId)).willReturn(Optional.of(user));
       given(weatherRepository.findById(weatherId)).willReturn(Optional.empty());
 
       //when , then
@@ -137,7 +142,7 @@ public class FeedServiceImplTest {
     void createFeed_Not_Found_Clothes_ThrowsException() {
       //given
       given(authService.getCurrentUserId()).willReturn(userId);
-      given(userRepository.findById(userId)).willReturn(Optional.of(mockUser));
+      given(userRepository.findById(userId)).willReturn(Optional.of(user));
       given(weatherRepository.findById(weatherId)).willReturn(Optional.of(mockWeather));
       given(clothesRepository.findById(clothesId)).willReturn(Optional.empty());
 
@@ -156,19 +161,18 @@ public class FeedServiceImplTest {
     void getFeed_Success() {
 
       //given
-      Profile profile = mock(Profile.class);
-
-      User user = User.builder().profile(profile).email("email@example.com").password("1234")
-          .name("닉네임").build();
-
       Weather weather = mock(Weather.class);
       Clothes clothes = mock(Clothes.class);
       Feed feed = Feed.of("내용", user, weather);
       feed.setClothesFeeds(List.of(clothes));
 
       given(feedRepository.findById(feedId)).willReturn(Optional.of(feed));
+      given(authService.getCurrentUserId()).willReturn(userId);
       given(clothesMapper.toDto(clothes)).willReturn(mock(ClothesDto.class));
       given(weatherDtoMapper.toSummaryDto(weather)).willReturn(mock(WeatherSummaryDto.class));
+      given(userRepository.findById(userId)).willReturn(Optional.of(user));
+      given(feedLikeRepository.existsByFeedAndUser(any(), any())).willReturn(false);
+
 
       //when
       FeedDto result = feedService.getFeed(feedId);
@@ -182,6 +186,8 @@ public class FeedServiceImplTest {
     @DisplayName("피드 단건 조회시, 피드가 존재하지 않으면 피드 하나를 반환할 수 없다.")
     void getFeed_Not_Found_Feed_ThrowsException() {
       //given
+      given(authService.getCurrentUserId()).willReturn(userId);
+      given(userRepository.findById(userId)).willReturn(Optional.of(user));
       given(feedRepository.findById(feedId)).willReturn(Optional.empty());
       //when, then
       assertThrows(OtbooException.class, () -> feedService.getFeed(feedId));
@@ -195,7 +201,7 @@ public class FeedServiceImplTest {
 
     FeedUpdateRequest request = FeedUpdateRequest.builder().content("test").build();
 
-    Feed feed = Feed.of("내용", mockUser, mockWeather);
+    Feed feed = Feed.of("내용", user, mockWeather);
 
     @DisplayName("피드를 소유하고 있는 유저이고 피드가 존재한다면 피드를 수정한다.")
     @Test
@@ -208,6 +214,7 @@ public class FeedServiceImplTest {
       given(feedRepository.save(any(Feed.class))).willReturn(feed);
       given(feedRepository.existsByIdAndUserId(feedId, userId)).willReturn(true);
       given(clothesMapper.toDto(any(Clothes.class))).willReturn(mockClothesDto);
+      given(feedLikeRepository.existsByFeedAndUser(any(), any())).willReturn(false);
 
       //when
       FeedDto feedDto = feedService.updateFeed(feedId, request);
@@ -291,17 +298,17 @@ public class FeedServiceImplTest {
     Long likeCursor = 100L;
     int size = 2;
 
-    Feed feed = Feed.of("내용", mockUser, mockWeather);
+    Feed feed = Feed.of("내용", user, mockWeather);
 
 
     @DisplayName("필터 조건이 주어졌을 때 피드 리스트를 커서 기반으로 반환한다.")
     @Test
     void getFeedsByCursor_Success() {
       // given
-      Feed feed1 = Feed.of("OOTD1", mockUser, mockWeather);
+      Feed feed1 = Feed.of("OOTD1", user, mockWeather);
       feed1.setClothesFeeds(List.of(mockClothes));
       feed1.like(); // likeCount = 1
-      Feed feed2 = Feed.of("OOTD2", mockUser, mockWeather);
+      Feed feed2 = Feed.of("OOTD2", user, mockWeather);
       feed2.setClothesFeeds(List.of(mockClothes));
       feed2.like();
       feed2.like(); // likeCount = 2
@@ -324,6 +331,8 @@ public class FeedServiceImplTest {
           .willReturn(20L);
 
       given(clothesMapper.toDto(any(Clothes.class))).willReturn(mock(ClothesDto.class));
+      given(authService.getCurrentUserId()).willReturn(userId);
+      given(userRepository.findById(userId)).willReturn(Optional.of(user));
 
       // when
       FeedDtoCursorResponse result = feedService.getFeedsByCursor(
@@ -360,11 +369,11 @@ public class FeedServiceImplTest {
       long lastFeedLikeCount = 123L;
       String sortBy = "likeCount";
 
-      Feed feed1 = Feed.of("OOTD1", mockUser, mockWeather);
+      Feed feed1 = Feed.of("OOTD1", user, mockWeather);
       feed1.setClothesFeeds(List.of(mockClothes));
       ReflectionTestUtils.setField(feed1, "id", UUID.randomUUID());
 
-      Feed feed2 = Feed.of("OOTD2", mockUser, mockWeather);
+      Feed feed2 = Feed.of("OOTD2", user, mockWeather);
       feed2.setClothesFeeds(List.of(mockClothes));
       ReflectionTestUtils.setField(feed2, "id", lastFeedId);
       ReflectionTestUtils.setField(feed2, "likeCount", lastFeedLikeCount);
@@ -382,6 +391,8 @@ public class FeedServiceImplTest {
       )).willReturn(page);
 
       given(feedRepository.countByFilters(keyword, skyStatus, precipitationType)).willReturn(5L);
+      given(authService.getCurrentUserId()).willReturn(userId);
+      given(userRepository.findById(userId)).willReturn(Optional.of(user));
       lenient().when(clothesMapper.toDto(any())).thenReturn(mockClothesDto);
       lenient().when(weatherDtoMapper.toDto(any())).thenReturn(mock(WeatherDto.class));
 
@@ -404,7 +415,7 @@ public class FeedServiceImplTest {
     void getFeedsByCursor_WithNullKeyword() {
       // given
       String keyword = null;
-      Feed feed = Feed.of("내용", mockUser, mockWeather);
+      Feed feed = Feed.of("내용", user, mockWeather);
       feed.setClothesFeeds(List.of(mockClothes));
       String sortBy = "likeCount";
 
@@ -425,6 +436,8 @@ public class FeedServiceImplTest {
           eq(precipitationType)
       )).willReturn(1L);
 
+      given(authService.getCurrentUserId()).willReturn(userId);
+      given(userRepository.findById(userId)).willReturn(Optional.of(user));
       given(clothesMapper.toDto(any())).willReturn(mock(ClothesDto.class));
 
       // when
@@ -443,7 +456,7 @@ public class FeedServiceImplTest {
       // given
       String sortBy = "likeCount";
 
-      Feed feed = Feed.of("OOTD1", mockUser, mockWeather);
+      Feed feed = Feed.of("OOTD1", user, mockWeather);
       Page<Feed> page = new PageImpl<>(List.of(feed));
 
       given(feedRepository.findFeedsByCursorAndSort(
@@ -455,6 +468,8 @@ public class FeedServiceImplTest {
           any(PageRequest.class)
       )).willReturn(page);
 
+      given(authService.getCurrentUserId()).willReturn(userId);
+      given(userRepository.findById(userId)).willReturn(Optional.of(user));
       given(feedRepository.countByFilters(keyword, skyStatus, precipitationType)).willReturn(1L);
 
       // when
@@ -482,7 +497,7 @@ public class FeedServiceImplTest {
       // given
       String sortBy = "createdAt";
 
-      Feed feed = Feed.of("OOTD2", mockUser, mockWeather);
+      Feed feed = Feed.of("OOTD2", user, mockWeather);
       Page<Feed> page = new PageImpl<>(List.of(feed));
 
       given(feedRepository.findFeedsByCursorAndSort(
@@ -494,6 +509,8 @@ public class FeedServiceImplTest {
           any(PageRequest.class)
       )).willReturn(page);
 
+      given(authService.getCurrentUserId()).willReturn(userId);
+      given(userRepository.findById(userId)).willReturn(Optional.of(user));
       given(feedRepository.countByFilters(keyword, skyStatus, precipitationType)).willReturn(1L);
 
       // when

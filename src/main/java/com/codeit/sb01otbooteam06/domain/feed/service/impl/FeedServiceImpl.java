@@ -9,6 +9,7 @@ import com.codeit.sb01otbooteam06.domain.feed.dto.request.FeedCreateRequest;
 import com.codeit.sb01otbooteam06.domain.feed.dto.request.FeedUpdateRequest;
 import com.codeit.sb01otbooteam06.domain.feed.dto.response.FeedDtoCursorResponse;
 import com.codeit.sb01otbooteam06.domain.feed.entity.Feed;
+import com.codeit.sb01otbooteam06.domain.feed.repository.FeedLikeRepository;
 import com.codeit.sb01otbooteam06.domain.feed.repository.FeedRepository;
 import com.codeit.sb01otbooteam06.domain.feed.repository.FeedQueryRepository;
 import com.codeit.sb01otbooteam06.domain.feed.service.FeedService;
@@ -23,6 +24,7 @@ import com.codeit.sb01otbooteam06.global.exception.ErrorCode;
 import com.codeit.sb01otbooteam06.global.exception.OtbooException;
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -38,6 +40,7 @@ public class FeedServiceImpl implements FeedService {
   private final FeedRepository feedRepository;
   private final UserRepository userRepository;
   private final WeatherRepository weatherRepository;
+  private final FeedLikeRepository feedLikeRepository;
   private final ClothesRepository clothesRepository;
   private final ClothesMapper clothesMapper;
   private final WeatherDtoMapper weatherDtoMapper;
@@ -55,7 +58,6 @@ public class FeedServiceImpl implements FeedService {
         .orElseThrow(() -> new OtbooException(ErrorCode.WEATHER_NOT_FOUND));
 
     Feed feed = Feed.of(request.getContent(), author, weather);
-
     // 의상 연결
     List<Clothes> clothesList = request.getClothesIds().stream()
         .map(clothesId -> clothesRepository.findById(clothesId)
@@ -64,16 +66,26 @@ public class FeedServiceImpl implements FeedService {
     feed.setClothesFeeds(clothesList);
     feedRepository.save(feed);
 
-    return FeedDto.fromEntity(feed, clothesMapper, weatherDtoMapper);
+    boolean likedByMe = feedLikeRepository.existsByFeedAndUser(feed, author);
+
+    return FeedDto.fromEntity(feed, clothesMapper, weatherDtoMapper,likedByMe);
   }
 
   @Transactional(readOnly = true)
   @Override
   public FeedDto getFeed(UUID feedId) {
+    UUID userId = authService.getCurrentUserId();
+
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new OtbooException(ErrorCode.USER_NOT_FOUND));
+
     Feed feed = feedRepository.findById(feedId)
         .orElseThrow(() -> new OtbooException(ErrorCode.FEED_NOT_FOUND));
 
-    return FeedDto.fromEntity(feed, clothesMapper, weatherDtoMapper);
+    boolean likedByMe = feedLikeRepository.existsByFeedAndUser(feed, user);
+
+
+    return FeedDto.fromEntity(feed, clothesMapper, weatherDtoMapper, likedByMe);
   }
 
   @Transactional
@@ -90,7 +102,9 @@ public class FeedServiceImpl implements FeedService {
     feed.updateContent(request.getContent());
     Feed updatedFeed = feedRepository.save(feed);
 
-    return FeedDto.fromEntity(updatedFeed, clothesMapper, weatherDtoMapper);
+    boolean likedByMe = feedLikeRepository.existsByFeedAndUser(updatedFeed, userRepository.getReferenceById(userId));
+
+    return FeedDto.fromEntity(updatedFeed, clothesMapper, weatherDtoMapper, likedByMe);
   }
 
   @Transactional
@@ -110,10 +124,13 @@ public class FeedServiceImpl implements FeedService {
       PrecipitationType precipitationType,
       Instant cursorCreatedAt, UUID cursorId, Long cursorLikeCount, int size, String sortBy) {
 
+    UUID userId = authService.getCurrentUserId();
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new OtbooException(ErrorCode.USER_NOT_FOUND));
+
     keyword = (keyword == null || keyword.isBlank()) ? null : keyword;
     PageRequest pageReq = PageRequest.of(0, size, Sort.by(Sort.Direction.DESC, sortBy));
 
-    // 커서 값 설정 (정렬 기준에 따라)
     Object cursorValue = "likeCount".equalsIgnoreCase(sortBy) ? cursorLikeCount : cursorCreatedAt;
 
     Page<Feed> resultPage = feedRepository.findFeedsByCursorAndSort(
@@ -125,16 +142,25 @@ public class FeedServiceImpl implements FeedService {
         pageReq
     );
 
-    List<FeedDto> data = resultPage.getContent().stream()
-        .map(feed -> FeedDto.fromEntity(feed, clothesMapper, weatherDtoMapper))
+    List<Feed> feeds = resultPage.getContent();
+
+    List<UUID> feedIds = feeds.stream().map(Feed::getId).toList();
+    Set<UUID> likedFeedIds = feedLikeRepository.findFeedIdsLikedByUser(userId, feedIds);
+
+
+    List<FeedDto> data = feeds.stream()
+        .map(feed -> {
+          boolean likedByMe = likedFeedIds.contains(feed.getId());
+          return FeedDto.fromEntity(feed, clothesMapper, weatherDtoMapper, likedByMe);
+        })
         .toList();
 
-    boolean hasNext = resultPage.hasNext(); // 정확한 hasNext 판단
+    boolean hasNext = resultPage.hasNext();
     String nextCursor = null;
     UUID nextIdAfter = null;
 
     if (hasNext && !data.isEmpty()) {
-      Feed last = resultPage.getContent().get(data.size() - 1);
+      Feed last = feeds.get(data.size() - 1);
       nextIdAfter = last.getId();
       nextCursor = "likeCount".equalsIgnoreCase(sortBy)
           ? String.valueOf(last.getLikeCount())
