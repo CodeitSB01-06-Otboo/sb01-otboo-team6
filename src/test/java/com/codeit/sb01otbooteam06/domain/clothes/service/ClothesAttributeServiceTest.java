@@ -45,13 +45,13 @@ class ClothesAttributeServiceTest {
     MockitoAnnotations.openMocks(this);
     User user = EntityProvider.createTestUser();
     Profile profile = EntityProvider.createTestProfile(user);
-    clothes = EntityProvider.createTestClothes(user);
+    clothes = EntityProvider.createCustomTestClothes(user, "상의", "TOP", "image.url");
     attrDef = EntityProvider.createTestAttributeDef("속성", List.of("속성", "속성2"));
     attrDefId = UUID.randomUUID();
   }
 
   @Test
-  void create_validAttributes_shouldReturnSavedAttributes() {
+  void create_유효한_속성들로_저장된_속성들을_반환한다() {
     // given
     ClothesAttributeDto dto = new ClothesAttributeDto(attrDefId.toString(), "면");
     List<ClothesAttributeDto> dtoList = List.of(dto);
@@ -71,7 +71,7 @@ class ClothesAttributeServiceTest {
   }
 
   @Test
-  void create_invalidDefinitionId_shouldThrowException() {
+  void create_잘못된_속성정의_아이디로_예외를_던진다() {
     // given
     UUID invalidId = UUID.randomUUID();
     ClothesAttributeDto dto = new ClothesAttributeDto(invalidId.toString(), "울");
@@ -83,7 +83,7 @@ class ClothesAttributeServiceTest {
   }
 
   @Test
-  void update_shouldDeleteAndRecreateAttributes() {
+  void update_기존속성을_삭제하고_새속성을_생성하여_반환한다() {
     // given
     ClothesAttributeDto dto = new ClothesAttributeDto(attrDefId.toString(), "합성섬유");
     List<ClothesAttributeDto> dtoList = List.of(dto);

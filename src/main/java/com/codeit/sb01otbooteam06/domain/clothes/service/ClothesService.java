@@ -7,8 +7,6 @@ import com.codeit.sb01otbooteam06.domain.clothes.entity.dto.ClothesDto;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.dto.ClothesUpdateRequest;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.dto.PageResponse;
 import com.codeit.sb01otbooteam06.domain.clothes.exception.ClothesNotFoundException;
-import com.codeit.sb01otbooteam06.domain.clothes.mapper.ClothesAttributeWithDefDtoMapper;
-import com.codeit.sb01otbooteam06.domain.clothes.mapper.ClothesMapper;
 import com.codeit.sb01otbooteam06.domain.clothes.mapper.CustomClothesUtils;
 import com.codeit.sb01otbooteam06.domain.clothes.repository.ClothesAttributeRepository;
 import com.codeit.sb01otbooteam06.domain.clothes.repository.ClothesRepository;
@@ -24,7 +22,6 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -40,6 +37,7 @@ public class ClothesService {
 
   private final S3Service s3Service;
   private final ClothesCacheService clothesCacheService;
+  private final JsoupService jsoupService;
 
   private final ClothesRepository clothesRepository;
   private final UserRepository userRepository;
@@ -47,8 +45,6 @@ public class ClothesService {
 
   private final ClothesAttributeService clothesAttributeService;
 
-  private final ClothesMapper clothesMapper;
-  private final ClothesAttributeWithDefDtoMapper clothesAttributeWithDefDtoMapper;
 
   private final CustomClothesUtils customClothesUtils;
 
@@ -122,7 +118,7 @@ public class ClothesService {
     List<Clothes> resultClothes = hasNext ? clothesList.subList(0, limit) : clothesList;
 
     ///  dto 변환 로직
-    //결과를 담을 clothesDto리스트 
+    //결과를 담을 clothesDto리스트
     List<ClothesDto> clothesDtos = new ArrayList<>();
 
     //todo: n+1문제
@@ -220,7 +216,7 @@ public class ClothesService {
 
     //의상 이미지와 이름
     try {
-      Document document = Jsoup.connect(url).get();
+      Document document = jsoupService.getDocument(url);
 
       // script 태그 중 id="pdp-data" 찾기
       Element scriptTag = document.selectFirst("script#pdp-data");

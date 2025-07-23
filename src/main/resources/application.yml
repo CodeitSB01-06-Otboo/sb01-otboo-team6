@@ -37,3 +37,6 @@ oauth:
     client-secret: ${KAKAO_CLIENT_SECRET}
     redirect-uri: ${KAKAO_REDIRECT_URI}
 
+google:
+  api:
+    key: ${GOOGLE_API_KEY}

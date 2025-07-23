@@ -48,6 +48,13 @@ public class EntityProvider {
     );
   }
 
+  public static Clothes createCustomTestClothes(User user, String name, String type,
+      String iamgeUrl) {
+    return new Clothes(
+        user, name, type, iamgeUrl
+    );
+  }
+
   public static Clothes createTestClothes(User user) {
     return new Clothes(
         user, "상의", "TOP", "image.url"

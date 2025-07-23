@@ -26,3 +26,6 @@ kma:
 kakao:
   rest-key: kakao-test-rest-key
 
+google:
+  api:
+    key: test-google-api-key
