@@ -71,7 +71,7 @@ public class FeedRepositoryTest {
   Feed feed1, feed2, feed3;
 
   @BeforeEach
-  void setUp() {
+  void setUp() throws InterruptedException {
     // 위치 객체
     Location location1 = Location.from(33.5, 126.5, 55, 127);
     Location location2 = Location.from(34.5, 122.5, 54, 124);
@@ -104,10 +104,14 @@ public class FeedRepositoryTest {
     feed1.like();
     em.persist(feed1);
 
+    Thread.sleep(100);
+
     feed2 = Feed.of("맑은 날씨엔 이렇게 입어요", user, weather2);
     feed2.like();
     feed2.like();
     em.persist(feed2);
+
+    Thread.sleep(100);
 
     feed3 = Feed.of("늦게 생성된 피드", user, weather3);
     em.persist(feed3);
