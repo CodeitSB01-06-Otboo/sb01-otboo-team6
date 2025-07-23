@@ -17,6 +17,7 @@ import com.codeit.sb01otbooteam06.util.EntityProvider;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import java.time.Instant;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,7 +32,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
-import org.springframework.test.util.ReflectionTestUtils;
 
 @DataJpaTest(properties = {
     "spring.sql.init.mode=never",
@@ -55,7 +55,6 @@ public class FeedRepositoryTest {
       return new JPAQueryFactory(em);
     }
 
-
     @Bean
     public FeedQueryRepository feedQueryRepository(JPAQueryFactory jpaQueryFactory) {
       return new FeedQueryRepositoryImpl(jpaQueryFactory);
@@ -71,14 +70,10 @@ public class FeedRepositoryTest {
 
   Feed feed1, feed2, feed3;
 
-  // 테스트코드 순서의 문제?
-
   @BeforeEach
-  void setUp() throws InterruptedException {
+  void setUp() {
     // 위치 객체
-    Location location1 = Location.from(33.5, 126.5, 55, 127);
-    Location location2 = Location.from(34.5, 122.5, 54, 124);
-    Location location3 = Location.from(37.5, 128.5, 57, 177);
+    Location location = Location.from(33.5, 126.5, 55, 127);
     //온도 객체
     Temperature temperature = Temperature.from(28.0, 23.0, 30.0);
     //강수량 객체
@@ -87,15 +82,15 @@ public class FeedRepositoryTest {
     Wind wind = Wind.from(3.2, 2, 0.5, 0.1, 0.1);
 
     // 날씨 엔티티 생성
-    Weather weather1 = EntityProvider.createTestWeather(location1, SkyStatus.CLEAR,
+    Weather weather1 = EntityProvider.createTestWeather(location, SkyStatus.CLEAR,
         PrecipitationType.RAIN, temperature, precipitation, wind, 0.1, 0.3, 0.4);
     em.persist(weather1);
 
-    Weather weather2 = EntityProvider.createTestWeather(location2, SkyStatus.CLOUDY,
+    Weather weather2 = EntityProvider.createTestWeather(location, SkyStatus.CLOUDY,
         PrecipitationType.DRIZZLE_SNOW, temperature, precipitation, wind, 0.3, 0.3, 0.4);
     em.persist(weather2);
 
-    Weather weather3 = EntityProvider.createTestWeather(location3, SkyStatus.CLEAR,
+    Weather weather3 = EntityProvider.createTestWeather(location, SkyStatus.CLEAR,
         PrecipitationType.SHOWER, temperature, precipitation, wind, 0.3, 0.3, 0.4);
     em.persist(weather3);
 
@@ -107,29 +102,16 @@ public class FeedRepositoryTest {
     feed1.like();
     em.persist(feed1);
 
-    Thread.sleep(100);
-
-    em.flush();
-    em.clear();
     feed2 = Feed.of("맑은 날씨엔 이렇게 입어요", user, weather2);
     feed2.like();
     feed2.like();
     em.persist(feed2);
 
-    Thread.sleep(100);
-    em.flush();
-    em.clear();
-
     feed3 = Feed.of("늦게 생성된 피드", user, weather3);
     em.persist(feed3);
+
     em.flush();
     em.clear();
-
-    ReflectionTestUtils.setField(feed1, "createdAt", "2024-01-01T00:00:00Z");
-    ReflectionTestUtils.setField(feed2, "createdAt", "2024-01-02T00:00:00Z");
-    ReflectionTestUtils.setField(feed3, "createdAt", "2024-01-03T00:00:00Z");
-
-
   }
 
   @Test
@@ -303,7 +285,6 @@ public class FeedRepositoryTest {
     assertThat(result.getContent().get(0).getId()).isEqualTo(feed1.getId());
   }
 
-
   @Test
   @DisplayName("likeCount 정렬 기준 + cursor 없이 전체 조회")
   void findFeeds_sortedByLikeCount_withoutCursor() {
@@ -384,31 +365,27 @@ public class FeedRepositoryTest {
         .containsExactly(feed2.getId()); // feed2.likeCount = 10
   }
 
-//  @Test
-//  @DisplayName("createdAt 정렬 기준 ASC + cursorValue만 있는 경우 (cursorId는 null)")
-//  void findFeeds_sortedByCreatedAtAsc_onlyCursorValue() {
-//    // given
-//    Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Order.asc("createdAt")));
-//
-//    Instant cursorCreatedAt = feed1.getCreatedAt(); // feed1은 오래된 피드
-//
-//    System.out.println("feed1 생성시간 : " + feed1.getCreatedAt());
-//    System.out.println("feed2 생성시간 : " + feed2.getCreatedAt());
-//    System.out.println("feed3 생성시간 : " + feed3.getCreatedAt());
-//
-//    // when
-//    Page<Feed> result = feedQueryRepository.findFeedsByCursorAndSort(
-//        null, null, null,
-//        cursorCreatedAt, // cursorValue만 존재
-//        null,            // cursorId 없음
-//        pageable
-//    );
-//
-//    // then
-//    assertThat(result.getContent())
-//        .extracting("id")
-//        .containsExactly(feed2.getId(), feed3.getId()); // feed2, feed3은 feed1보다 이후에 생성
-//  }
+  @Test
+  @DisplayName("createdAt 정렬 기준 ASC + cursorValue만 있는 경우 (cursorId는 null)")
+  void findFeeds_sortedByCreatedAtAsc_onlyCursorValue() {
+    // given
+    Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Order.asc("createdAt")));
+
+    Instant cursorCreatedAt = feed1.getCreatedAt(); // feed1은 오래된 피드
+
+    // when
+    Page<Feed> result = feedQueryRepository.findFeedsByCursorAndSort(
+        null, null, null,
+        cursorCreatedAt, // cursorValue만 존재
+        null,            // cursorId 없음
+        pageable
+    );
+
+    // then
+    assertThat(result.getContent())
+        .extracting("id")
+        .containsExactly(feed2.getId(), feed3.getId()); // feed2, feed3은 feed1보다 이후에 생성
+  }
 }
 
 
