@@ -38,7 +38,7 @@ class ClothesCacheServiceTest {
   }
 
   @Test
-  void getPageUserClothesCountWithCache_callsRepositoryOnce() {
+  void getPageUserClothesCountWithCache_캐시를_사용해_사용자의_의상_총개수를_가져온다() {
     // given
     when(clothesRepository.getTotalCounts("TOP", userId)).thenReturn(5);
 
@@ -51,7 +51,8 @@ class ClothesCacheServiceTest {
   }
 
   @Test
-  void saveUserCurrentClothesCountCache_putsValueIntoCache() {
+  void saveUserCurrentClothesCountCache_사용자의_현재_의상_개수_캐시에_저장한다
+      () {
     // given
     when(cacheManager.getCache("userClothesCount")).thenReturn(cache);
 
@@ -63,7 +64,9 @@ class ClothesCacheServiceTest {
   }
 
   @Test
-  void invalidateUserCurrentClothesCountCache_evictsCacheKey() {
+  void invalidateUserCurrentClothesCountCache_사용자의_현재_의상_개수_캐시를_무효화한다
+
+      () {
     // given
     when(cacheManager.getCache("userClothesCount")).thenReturn(cache);
 
@@ -73,7 +76,7 @@ class ClothesCacheServiceTest {
   }
 
   @Test
-  void invalidatePageUserCurrentClothesCountCache_isAopEvictStub() {
+  void invalidatePageUserCurrentClothesCountCache_페이지_사용자의_현재_의상_개수_캐시를_무효화한다() {
     // given / when
     clothesCacheService.invalidatePageUserCurrentClothesCountCache(userId);
 

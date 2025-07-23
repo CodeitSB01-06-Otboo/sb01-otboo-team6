@@ -30,12 +30,14 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RecommendService {
@@ -50,12 +52,16 @@ public class RecommendService {
   private final UserRepository userRepository;
   private final ProfileRepository profileRepository;
   private final ClothesAttributeRepository clothesAttributeRepository;
-  
+
   private final CustomClothesUtils customClothesUtils;
   private final CacheManager cacheManager;
 
+  //gen-ai 클라이언트
+  private final Client client;
+
   @Value("${gemini.prompt}")
   private String secretPrompt;
+
 
   @Transactional
   public RecommendationDto recommend(UUID weatherId) {
@@ -87,7 +93,12 @@ public class RecommendService {
       RecommendClothes recommendClothes = recommendClothesService.findRandomByUserAndWeather(
           user.getId(),
           weather.getId());
-      recommendClothesIds = recommendClothes.getClothesIds();
+      // null 처리
+      if (recommendClothes == null) {
+        recommendClothesIds = Collections.emptyList();
+      } else {
+        recommendClothesIds = recommendClothes.getClothesIds();
+      }
     }
     //없으면 새로 추천 의상을 만들고 저장한다.
     else {
@@ -163,7 +174,7 @@ public class RecommendService {
    * @param weather
    * @return [달(월), 하늘상태, 온도, 습도, 풍속, 프로필 온도 민감도] double 배열
    */
-  private double[] getWeatherData(Weather weather, User user) {
+  double[] getWeatherData(Weather weather, User user) {
     //프로필 획득
     UUID userId = user.getId();
     Profile profile = profileRepository.findById(userId)
@@ -187,9 +198,7 @@ public class RecommendService {
    * @param weatherData
    * @return [계절, 두께감, 안감, 따뜻한 정도]
    */
-  private int[] getValueByAi(double[] weatherData) {
-    //gen-ai 클라이언트
-    Client client = new Client();
+  int[] getValueByAi(double[] weatherData) {
 
 //    long startTime = System.currentTimeMillis();
 
@@ -215,6 +224,8 @@ public class RecommendService {
 //    long endTime = System.currentTimeMillis();
 //    System.out.println("gemini response = " + response.text());
 //    System.out.println("응답 생성 시간: " + (endTime - startTime) + " ms");
+
+    log.info("추천 로직- 현재 날씨에 대한 속성값 (두께감/계절/안감/따뜻한 정도): " + response.text());
 
     // 반환값 변환
     int[] value = Arrays.stream(response.text().split(","))

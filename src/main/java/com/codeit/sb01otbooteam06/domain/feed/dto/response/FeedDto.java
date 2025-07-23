@@ -13,12 +13,11 @@ import com.codeit.sb01otbooteam06.domain.weather.mapper.WeatherDtoMapper;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
-import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Builder(toBuilder = true)
 public class FeedDto {
 
   private UUID id;
