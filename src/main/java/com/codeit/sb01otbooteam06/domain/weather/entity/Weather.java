@@ -49,7 +49,7 @@ public class Weather extends BaseUpdatableEntity {
 
     /* ── 상태 코드 ────────────────── */
     @Enumerated(EnumType.STRING)
-    @Column(name = "sky_status", length = 12)
+    @Column(name = "sky_status", length = 15)
     private SkyStatus skyStatus;           // SKY
 
     @Enumerated(EnumType.STRING)
