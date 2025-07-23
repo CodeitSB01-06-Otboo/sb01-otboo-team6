@@ -30,12 +30,14 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RecommendService {
@@ -222,6 +224,8 @@ public class RecommendService {
 //    long endTime = System.currentTimeMillis();
 //    System.out.println("gemini response = " + response.text());
 //    System.out.println("응답 생성 시간: " + (endTime - startTime) + " ms");
+
+    log.info("추천 로직- 현재 날씨에 대한 속성값 (두께감/계절/안감/따뜻한 정도): " + response.text());
 
     // 반환값 변환
     int[] value = Arrays.stream(response.text().split(","))
