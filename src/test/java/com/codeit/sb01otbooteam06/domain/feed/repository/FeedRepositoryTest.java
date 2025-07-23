@@ -31,6 +31,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @DataJpaTest(properties = {
     "spring.sql.init.mode=never",
@@ -123,6 +124,10 @@ public class FeedRepositoryTest {
     em.persist(feed3);
     em.flush();
     em.clear();
+
+    ReflectionTestUtils.setField(feed1, "createdAt", "2024-01-01T00:00:00Z");
+    ReflectionTestUtils.setField(feed2, "createdAt", "2024-01-02T00:00:00Z");
+    ReflectionTestUtils.setField(feed3, "createdAt", "2024-01-03T00:00:00Z");
 
 
   }
