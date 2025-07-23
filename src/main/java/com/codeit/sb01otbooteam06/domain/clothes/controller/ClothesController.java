@@ -27,7 +27,6 @@ public class ClothesController {
 
   private final ClothesService clothesService;
 
-  //TODO: VAlid 설정
   @PostMapping
   public ResponseEntity<ClothesDto> create(
       @RequestPart(value = "request")
