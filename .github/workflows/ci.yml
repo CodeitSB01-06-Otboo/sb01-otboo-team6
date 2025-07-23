@@ -48,12 +48,18 @@ jobs:
       - name: Grant execute permission for Gradle Wrapper
         run: chmod +x ./gradlew
 
-      - name: Build with Gradle Wrapper
+      ## 빌드
+      - name: Build without tests (dev profile)
         env:
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-          AWS_S3_BUCKET_NAME: ${{ secrets.AWS_S3_BUCKET_NAME }}
           SPRING_PROFILES_ACTIVE: dev
-        run: ./gradlew build --no-daemon
+        run: ./gradlew assemble --no-daemon
+
+      # 테스트
+      - name: Run tests (test profile)
+        env:
+          SPRING_PROFILES_ACTIVE: test
+        run: ./gradlew test --no-daemon
+
 
       # Jacoco 설정
       # ✅ 커버리지 리포트 생성
@@ -73,16 +79,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           min-coverage-overall: 80
 
-    # NOTE: The Gradle Wrapper is the default and recommended way to run Gradle (https://docs.gradle.org/current/userguide/gradle_wrapper.html).
-    # If your project does not have the Gradle Wrapper configured, you can use the following configuration to run Gradle with a specified version.
-    #
-    # - name: Setup Gradle
-    #   uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
-    #   with:
-    #     gradle-version: '8.9'
-    #
-    # - name: Build with Gradle 8.9
-    #   run: gradle build
+  ## 의존성 그래프 생성 및 제출
 
   dependency-submission:
 
@@ -98,7 +95,5 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # Generates and submits a dependency graph, enabling Dependabot Alerts for all project dependencies.
-      # See: https://github.com/gradle/actions/blob/main/dependency-submission/README.md
       - name: Generate and submit dependency graph
         uses: gradle/actions/dependency-submission@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
