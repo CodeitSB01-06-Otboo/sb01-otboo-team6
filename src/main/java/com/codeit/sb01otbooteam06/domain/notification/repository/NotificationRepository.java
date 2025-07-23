@@ -1,6 +1,7 @@
 package com.codeit.sb01otbooteam06.domain.notification.repository;
 
 import com.codeit.sb01otbooteam06.domain.notification.entity.Notification;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, UUID> {
+
 
   @Query("""
     SELECT n FROM Notification n

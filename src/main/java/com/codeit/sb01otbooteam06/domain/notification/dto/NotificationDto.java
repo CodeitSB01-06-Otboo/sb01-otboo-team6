@@ -13,6 +13,7 @@ public record NotificationDto(UUID id, Instant createdAt, UUID receiverId, Strin
     User receiver = notification.getUser();
     return new NotificationDto(notification.getId(), notification.getCreatedAt(), receiver.getId(),
         notification.getTitle(), notification.getContent(), notification.getType());
+
   }
 
 }
