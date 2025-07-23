@@ -267,4 +267,8 @@ public class ClothesService {
 
     return clothesRepository.findAllById(clothesIds);
   }
+
+  public int testMethod() {
+    return clothesRepository.getTotalCounts("", UUID.randomUUID());
+  }
 }
