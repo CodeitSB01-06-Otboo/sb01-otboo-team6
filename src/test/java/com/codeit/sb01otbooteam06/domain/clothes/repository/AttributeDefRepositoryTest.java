@@ -13,25 +13,21 @@
 //import jakarta.transaction.Transactional;
 //import java.util.List;
 //import org.junit.jupiter.api.BeforeEach;
-//import org.junit.jupiter.api.DisplayName;
-//import org.junit.jupiter.api.Nested;
 //import org.junit.jupiter.api.Test;
 //import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 //import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 //import org.springframework.context.annotation.Import;
 //import org.springframework.test.context.ActiveProfiles;
-//import org.springframework.test.context.TestPropertySource;
 //
-//@DataJpaTest
 //@ActiveProfiles("test")
 //@Transactional
 //@Import({QueryDslConfig.class, JpaAuditingConfiguration.class})
-//@TestPropertySource(properties = {
-//    "spring.datasource.url=jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE",
-//    "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect",
+//@DataJpaTest(properties = {
 //    "spring.sql.init.mode=never",
-//    "spring.jpa.hibernate.ddl-auto=create-drop"
+//    "spring.jpa.hibernate.ddl-auto=create-drop",
+//    "spring.datasource.url=jdbc:h2:mem:test;MODE=PostgreSQL",
+//    "spring.datasource.driverClassName=org.h2.Driver",
 //})
 //public class AttributeDefRepositoryTest {
 //
@@ -68,20 +64,11 @@
 //  }
 //
 //
-//  @Nested
-//  @DisplayName("커서 기반 속성 정의 조회")
-//  public class FindAllByCursorTest {
+//  @Test
+//  public void findAllByCursorTestSuccess() {
 //
-//    @BeforeEach
-//    void setUp() {
-//
-//    }
-//
-//    @Test
-//    public void findAllByCursorTestSuccess() {
-//
-//    }
 //  }
+//
 //
 //  @Test
 //  void getTotalCounts_키워드없을때_전체카운트확인() {
