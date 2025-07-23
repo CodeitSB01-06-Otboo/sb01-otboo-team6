@@ -268,7 +268,12 @@ public class ClothesService {
     return clothesRepository.findAllById(clothesIds);
   }
 
+  //TOdo 삭제 
   public int testMethod() {
+    return clothesRepository.getTotalCounts("", UUID.randomUUID());
+  }
+
+  public int testMethod2() {
     return clothesRepository.getTotalCounts("", UUID.randomUUID());
   }
 }
