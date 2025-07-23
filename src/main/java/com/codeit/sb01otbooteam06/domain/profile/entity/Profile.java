@@ -82,6 +82,14 @@ public class Profile extends BaseUpdatableEntity {
     this.profileImageUrl = profileImageUrl;
   }
 
+  public void setUser(User user) {
+    this.user = user;
+  }
+
+  public void setProfileImageUrl(String profileImageUrl) {
+    this.profileImageUrl = profileImageUrl;
+  }
+
   public void update(
           String name,
           Gender gender,
@@ -103,11 +111,6 @@ public class Profile extends BaseUpdatableEntity {
     this.y = y;
     this.locationNames = locationNames;
     this.temperatureSensitivity = temperatureSensitivity;
-    this.profileImageUrl = profileImageUrl;
-  }
-
-  /** 프로필 이미지 URL만 업데이트하는 setter */
-  public void setProfileImageUrl(String profileImageUrl) {
     this.profileImageUrl = profileImageUrl;
   }
 }

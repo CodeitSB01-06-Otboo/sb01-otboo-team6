@@ -86,9 +86,12 @@ CREATE TABLE users
     -- 임시 비밀번호 관련 필드 추가
     temporary_password          VARCHAR,
     temporary_password_expiration TIMESTAMP,
-    must_change_password        BOOLEAN NOT NULL DEFAULT FALSE
-);
+    must_change_password        BOOLEAN NOT NULL DEFAULT FALSE,
 
+    -- 소셜 로그인 관련 필드 추가
+    provider                    VARCHAR,
+    provider_id                 VARCHAR
+);
 
 -- 프로필
 CREATE TABLE profiles
@@ -97,10 +100,10 @@ CREATE TABLE profiles
     name                    VARCHAR          NOT NULL,
     gender                  VARCHAR          NOT NULL CHECK (gender IN ('MALE', 'FEMALE', 'OTHER')),
     birth_date              DATE             NOT NULL,
-    latitude                DOUBLE PRECISION NOT NULL,
-    longitude               DOUBLE PRECISION NOT NULL,
-    x                       INT              NOT NULL,
-    y                       INT              NOT NULL,
+    latitude                DOUBLE PRECISION,          -- NOT NULL 제거 (nullable)
+    longitude               DOUBLE PRECISION,          -- NOT NULL 제거 (nullable)
+    x                       INT,                       -- NOT NULL 제거 (nullable)
+    y                       INT,                       -- NOT NULL 제거 (nullable)
     location_names          TEXT[],
     temperature_sensitivity INT              NOT NULL CHECK (temperature_sensitivity BETWEEN 1 AND 5),
     profile_image_url       VARCHAR,
@@ -108,9 +111,10 @@ CREATE TABLE profiles
     updated_at              TIMESTAMP
 );
 
--- 프로필-유저 1:1 연결
+-- 프로필-유저 1:1 연결 (외래키)
 ALTER TABLE profiles
     ADD CONSTRAINT fk_profiles_user FOREIGN KEY (id) REFERENCES users (id);
+
 
 
 

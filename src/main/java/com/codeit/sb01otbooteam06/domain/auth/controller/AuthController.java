@@ -1,10 +1,8 @@
 package com.codeit.sb01otbooteam06.domain.auth.controller;
 
-import com.codeit.sb01otbooteam06.domain.auth.dto.OAuthUserResponse;
 import com.codeit.sb01otbooteam06.domain.auth.dto.ResetPasswordRequest;
 import com.codeit.sb01otbooteam06.domain.auth.dto.SignInRequest;
 import com.codeit.sb01otbooteam06.domain.auth.dto.TokenResponse;
-import com.codeit.sb01otbooteam06.domain.auth.oauth.OAuthService;
 import com.codeit.sb01otbooteam06.domain.auth.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -24,7 +22,6 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthService authService;
-    private final OAuthService oAuthService;
 
     @PostMapping("/sign-in")
     public ResponseEntity<?> signIn(@RequestBody @Valid SignInRequest request,
@@ -154,26 +151,5 @@ public class AuthController {
                 "token", csrfToken.getToken(),
                 "parameterName", csrfToken.getParameterName()
         ));
-    }
-
-    @GetMapping("/oauth/callback/{provider}")
-    public ResponseEntity<?> oauthCallback(@PathVariable String provider,
-                                           @RequestParam String code) {
-        try {
-            OAuthUserResponse userResponse = oAuthService.getUserInfo(provider, code);
-            return ResponseEntity.ok(userResponse);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "exceptionName", "OAuthProviderException",
-                    "message", e.getMessage(),
-                    "details", Map.of()
-            ));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
-                    "exceptionName", "OAuthCallbackException",
-                    "message", "소셜 로그인 처리 중 오류가 발생했습니다.",
-                    "details", Map.of()
-            ));
-        }
     }
 }
