@@ -4,6 +4,8 @@ import com.codeit.sb01otbooteam06.domain.base.BaseUpdatableEntity;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.Clothes;
 import com.codeit.sb01otbooteam06.domain.user.entity.User;
 import com.codeit.sb01otbooteam06.domain.weather.entity.Weather;
+import com.codeit.sb01otbooteam06.global.exception.ErrorCode;
+import com.codeit.sb01otbooteam06.global.exception.OtbooException;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -92,6 +94,9 @@ public class Feed extends BaseUpdatableEntity {
   }
 
   public void unlike() {
+    if (this.likeCount <= 0) {
+      throw new OtbooException(ErrorCode.ILLEGAL_ARGUMENT_ERROR);
+    }
     this.likeCount--;
   }
 
