@@ -5,9 +5,13 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -16,6 +20,10 @@ import com.codeit.sb01otbooteam06.domain.clothes.entity.dto.ClothesDto;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.dto.ClothesUpdateRequest;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.dto.PageResponse;
 import com.codeit.sb01otbooteam06.domain.clothes.service.ClothesService;
+import com.codeit.sb01otbooteam06.domain.user.entity.User;
+import com.codeit.sb01otbooteam06.util.EntityProvider;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,6 +40,7 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
+import org.springframework.web.multipart.MultipartFile;
 
 @WebMvcTest(controllers = ClothesController.class)
 @AutoConfigureMockMvc(addFilters = false)
@@ -44,6 +53,9 @@ class ClothesControllerTest {
   @Autowired
   private ClothesService clothesService;
 
+  @Autowired
+  private ObjectMapper objectMapper;
+
   @TestConfiguration
   static class MockConfig {
 
@@ -54,36 +66,66 @@ class ClothesControllerTest {
   }
 
   private ClothesDto clothesDto;
+  private ClothesCreateRequest clothesCreateRequest;
+  private User user;
+  private EntityProvider entityProvider;
 
   @BeforeEach
   void setUp() {
+    UUID ownerId = UUID.randomUUID();
+    UUID clothesId = UUID.randomUUID();
     clothesDto = new ClothesDto(
-        UUID.randomUUID(), UUID.randomUUID(),
-        "테스트 옷", "image.url", "TOP", List.of()
+        ownerId,
+        clothesId,
+        "테스트 옷",
+        "http://example.com/image.jpg",
+        "TOP",
+        List.of()
     );
+
+    user = entityProvider.createTestUser();
+
+    clothesCreateRequest = new ClothesCreateRequest(ownerId, "테스으 옷", "TOP", List.of());
+
   }
 
   @Test
-  @DisplayName("POST /api/clothes - 옷 생성")
-  void createClothes() throws Exception {
+  @DisplayName("POST /api/clothes - 옷 생성 성공 (이미지 포함)")
+  void createClothes_WithImage_Success() throws Exception {
+    // Given
+    String requestJson = objectMapper.writeValueAsString(clothesCreateRequest);
 
     MockMultipartFile requestPart = new MockMultipartFile(
-        "request", "", "application/json",
-        "{\"name\":\"테스트 옷\"}".getBytes()
+        "request",
+        "request.json",
+        "application/json",
+        requestJson.getBytes(StandardCharsets.UTF_8)
     );
 
     MockMultipartFile imagePart = new MockMultipartFile(
-        "image", "image.jpg", "image/jpeg", "fake-image-content".getBytes()
+        "image",
+        "test-image.jpg",
+        "image/jpeg",
+        "fake-image-content".getBytes()
     );
 
-    given(clothesService.create(any(ClothesCreateRequest.class), any())).willReturn(clothesDto);
+    given(clothesService.create(any(ClothesCreateRequest.class), any(MultipartFile.class)))
+        .willReturn(clothesDto);
 
+    // When & Then
     mockMvc.perform(multipart("/api/clothes")
             .file(requestPart)
             .file(imagePart)
             .contentType(MediaType.MULTIPART_FORM_DATA))
+        .andDo(print()) // 디버깅용
         .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.name").value("테스트 옷"));
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.name").value("테스트 옷"))
+        .andExpect(jsonPath("$.imageUrl").exists());
+
+    // Verify
+    verify(clothesService, times(1)).create(any(ClothesCreateRequest.class),
+        any(MultipartFile.class));
   }
 
   @Test
