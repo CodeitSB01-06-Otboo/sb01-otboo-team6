@@ -70,6 +70,8 @@ public class FeedRepositoryTest {
 
   Feed feed1, feed2, feed3;
 
+  // 테스트코드 순서의 문제?
+
   @BeforeEach
   void setUp() throws InterruptedException {
     // 위치 객체
@@ -106,18 +108,23 @@ public class FeedRepositoryTest {
 
     Thread.sleep(100);
 
+    em.flush();
+    em.clear();
     feed2 = Feed.of("맑은 날씨엔 이렇게 입어요", user, weather2);
     feed2.like();
     feed2.like();
     em.persist(feed2);
 
     Thread.sleep(100);
+    em.flush();
+    em.clear();
 
     feed3 = Feed.of("늦게 생성된 피드", user, weather3);
     em.persist(feed3);
-
     em.flush();
     em.clear();
+
+
   }
 
   @Test
@@ -290,6 +297,7 @@ public class FeedRepositoryTest {
     assertThat(result.getContent()).hasSize(1); // feed1만 조회
     assertThat(result.getContent().get(0).getId()).isEqualTo(feed1.getId());
   }
+
 
   @Test
   @DisplayName("likeCount 정렬 기준 + cursor 없이 전체 조회")
