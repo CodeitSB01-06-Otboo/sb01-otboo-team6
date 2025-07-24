@@ -8,7 +8,6 @@ management:
       enabled: true
   endpoints:
     web:
-      base-path: "/manage"
       exposure:
         include:
           - health
