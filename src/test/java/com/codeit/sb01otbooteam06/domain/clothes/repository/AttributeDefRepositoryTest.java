@@ -1,93 +1,108 @@
-//package com.codeit.sb01otbooteam06.domain.clothes.repository;
+package com.codeit.sb01otbooteam06.domain.clothes.repository;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.codeit.sb01otbooteam06.domain.clothes.entity.AttributeDef;
+import com.codeit.sb01otbooteam06.util.EntityProvider;
+import com.codeit.sb01otbooteam06.util.PostgresTestContainer;
+import com.querydsl.jpa.impl.JPAQueryFactory;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import java.time.Instant;
+import java.util.Arrays;
+import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.util.ReflectionTestUtils;
+
+@Import(AttributeDefRepositoryTest.QuerydslTestConfig.class)
+class AttributeDefRepositoryTest extends PostgresTestContainer {
+
+  @TestConfiguration
+  static class QuerydslTestConfig {
+
+    @PersistenceContext
+    EntityManager em;
+
+    @Bean
+    public JPAQueryFactory jpaQueryFactory() {
+      return new JPAQueryFactory(em);
+    }
+
+  }
+
+  @Autowired
+  AttributeDefRepository repository;
+
+  @Autowired
+  TestEntityManager em;
+
+  private EntityProvider entityProvider;
+
+  private AttributeDef attributeDef1;
+  private AttributeDef attributeDef2;
+  private AttributeDef attributeDef3;
+
+  @BeforeEach
+  void setUp() {
+    saveAttribute("상의", new String[]{"반팔", "긴팔"});
+    saveAttribute("하의", new String[]{"청바지", "면바지"});
+    saveAttribute("모자", new String[]{"비니", "캡"});
+
+    attributeDef1 = entityProvider.createTestAttributeDef("계절",
+        List.of("봄", "여름", "가을", "겨울"));
+    attributeDef2 = entityProvider.createTestAttributeDef("사이즈",
+        List.of("S", "M", "L"));
+    attributeDef3 = entityProvider.createTestAttributeDef("색상",
+        List.of("검정", "흰색", "빨간색"));
+
+  }
+
+  void saveAttribute(String name, String[] values) {
+    AttributeDef attr = entityProvider.createTestAttributeDef(name, Arrays.stream(values).toList());
+    ReflectionTestUtils.setField(attr, "createdAt", Instant.now());
+    em.persist(attr);
+  }
+
+  @Test
+  @DisplayName("키워드에 해당하는 속성들을 반환한다")
+  void findAllByKeyword() {
+    List<AttributeDef> results = repository.findAllByCursor(
+        null, null, 10, "name", "ASCENDING", "바지");
+
+    assertThat(results).hasSize(1);
+    assertThat(results.get(0).getName()).isEqualTo("하의");
+  }
 //
-//import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-//
-//import com.codeit.sb01otbooteam06.config.JpaAuditingConfiguration;
-//import com.codeit.sb01otbooteam06.config.QueryDslConfig;
-//import com.codeit.sb01otbooteam06.domain.clothes.entity.AttributeDef;
-//import com.codeit.sb01otbooteam06.domain.clothes.entity.Clothes;
-//import com.codeit.sb01otbooteam06.domain.clothes.entity.ClothesAttribute;
-//import com.codeit.sb01otbooteam06.domain.profile.entity.Profile;
-//import com.codeit.sb01otbooteam06.domain.user.entity.User;
-//import com.codeit.sb01otbooteam06.util.EntityProvider;
-//import jakarta.transaction.Transactional;
-//import java.util.List;
-//import org.junit.jupiter.api.BeforeEach;
-//import org.junit.jupiter.api.DisplayName;
-//import org.junit.jupiter.api.Nested;
-//import org.junit.jupiter.api.Test;
-//import org.springframework.beans.factory.annotation.Autowired;
-//import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-//import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-//import org.springframework.context.annotation.Import;
-//import org.springframework.test.context.ActiveProfiles;
-//import org.springframework.test.context.TestPropertySource;
-//
-//@DataJpaTest
-//@ActiveProfiles("test")
-//@Transactional
-//@Import({QueryDslConfig.class, JpaAuditingConfiguration.class})
-//@TestPropertySource(properties = {
-//    "spring.datasource.url=jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE",
-//    "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect",
-//    "spring.sql.init.mode=never",
-//    "spring.jpa.hibernate.ddl-auto=create-drop"
-//})
-//public class AttributeDefRepositoryTest {
-//
-//  @Autowired
-//  private TestEntityManager entityManager; // 엔티티를 저장 및 조회할때마다 영속성 컨텍스트에 엔티티를 보관하고 관리한다.
-//
-//  @Autowired
-//  private AttributeDefRepository attributeDefRepository;
-//
-//  // 클래스 필드 선언만
-//  static String defName = "계절";
-//  static List<String> defValues = List.of("봄", "여름", "가을", "계절");
-//
-//  User user;
-//  Profile profile;
-//  AttributeDef attributeDef;
-//  Clothes clothes;
-//  ClothesAttribute clothesAttribute;
-//
-//  @BeforeEach
-//  void setUp() {
-//    user = EntityProvider.createTestUser();
-//    profile = EntityProvider.createTestProfile(user);
-//    clothes = EntityProvider.createTestClothes(user);
-//    attributeDef = EntityProvider.createTestAttributeDef(defName, defValues);
-//    clothesAttribute = EntityProvider.createTestClothesAttribute(clothes, attributeDef, "봄");
-//
-//    entityManager.persist(user);
-//    entityManager.persist(profile);
-//    entityManager.persist(attributeDef);
-//    entityManager.persist(clothes);
-//    entityManager.persist(clothesAttribute);
-//    entityManager.clear();
-//  }
-//
-//
-//  @Nested
-//  @DisplayName("커서 기반 속성 정의 조회")
-//  public class FindAllByCursorTest {
-//
-//    @BeforeEach
-//    void setUp() {
-//
-//    }
-//
-//    @Test
-//    public void findAllByCursorTestSuccess() {
-//
-//    }
+//  @Test
+//  @DisplayName("전체 속성 개수를 반환한다")
+//  void getTotalCounts() {
+//    int count = repository.getTotalCounts("name", "");
+//    assertThat(count).isEqualTo(3);
 //  }
 //
 //  @Test
-//  void getTotalCounts_키워드없을때_전체카운트확인() {
-//    int totalCount = attributeDefRepository.getTotalCounts("name", null);
-//    assertThat(totalCount).isEqualTo(1);
+//  @DisplayName("이름 기준 내림차순 정렬 후 커서 기반으로 필터링한다")
+//  void findAllByCursorDesc() {
+//    List<AttributeDef> allDesc = repository.findAllByCursor(
+//        null, null, 10, "name", "DESCENDING", null);
+//
+//    assertThat(allDesc).isSortedAccordingTo((a1, a2) -> a2.getName().compareTo(a1.getName()));
+//
+//    String cursor = allDesc.get(0).getName(); // 가장 큰 이름
+//
+//    List<AttributeDef> filtered = repository.findAllByCursor(
+//        cursor, null, 10, "name", "DESCENDING", null);
+//
+//    assertThat(filtered).hasSize(2); // cursor 제외 나머지 2개
+//    assertThat(filtered)
+//        .extracting(AttributeDef::getName)
+//        .doesNotContain(cursor);
 //  }
-//
-//
-//}
+}

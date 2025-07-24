@@ -76,8 +76,7 @@ jobs:
         with:
           title: 📝 테스트 커버리지 리포트
           paths: ${{ github.workspace }}/build/jacocoReport/test/jacocoTestReport.xml
-          token: ${{ secrets.MY_PAT_TOKEN
-            }}
+          token: ${{ secrets.MY_PAT_TOKEN}}
           min-coverage-overall: 80
 
   ## 의존성 그래프 생성 및 제출
