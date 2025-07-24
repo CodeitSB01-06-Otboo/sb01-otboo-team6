@@ -3,10 +3,40 @@ spring:
     name: otboo
   profiles:
     active: dev
+    include: oauth
   servlet:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB # 임의로 정한 값 입니다. 크기 조정이 필요 하다면 변경하세요. (S3에 업로드 시 용량 제한하는게 좋습니다)
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            redirect-uri: ${GOOGLE_REDIRECT_URI}
+            scope:
+              - profile
+              - email
+
+          kakao:
+            client-id: ${KAKAO_CLIENT_ID}
+            client-secret: ${KAKAO_CLIENT_SECRET}
+            redirect-uri: ${KAKAO_REDIRECT_URI}
+            scope:
+              - profile_nickname
+            client-authentication-method: client_secret_post
+            authorization-grant-type: authorization_code
+            # provider 참조를 올바르게 설정
+            provider: kakao
+
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize?prompt=login
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
 
 logging:
   level:
@@ -27,16 +57,7 @@ cloud:
     s3:
       bucket: ${AWS_S3_BUCKET_NAME:fake-bucket-placeholder}
 
-oauth:
-  google:
-    client-id: ${GOOGLE_CLIENT_ID}
-    client-secret: ${GOOGLE_CLIENT_SECRET}
-    redirect-uri: ${GOOGLE_REDIRECT_URI}
-  kakao:
-    client-id: ${KAKAO_CLIENT_ID}
-    client-secret: ${KAKAO_CLIENT_SECRET}
-    redirect-uri: ${KAKAO_REDIRECT_URI}
-
+## gemini
 google:
   api:
     key: ${GOOGLE_API_KEY}
