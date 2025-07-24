@@ -229,7 +229,7 @@ CREATE TABLE clothes_attributes
     id           UUID PRIMARY KEY,
     clothes_id   UUID        NOT NULL,
     attribute_id UUID        NOT NULL,
-    att_value        VARCHAR(40) NOT NULL,
+    att_value        VARCHAR(255) NOT NULL,
     created_at   TIMESTAMP   NOT NULL,
     updated_at   TIMESTAMP NULL
 );
