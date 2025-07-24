@@ -33,7 +33,8 @@ public class ProfileServiceImpl implements ProfileService {
      */
     @Override
     public ProfileDto getProfile(UUID userId) {
-        Profile profile = findById(userId);
+        Profile profile = profileRepository.findWithLocationsById(userId)
+            .orElseThrow(() -> new ProfileNotFoundException(userId));
         return profileMapper.toDto(profile);
     }
 
