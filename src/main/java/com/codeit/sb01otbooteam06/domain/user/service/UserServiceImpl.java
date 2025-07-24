@@ -81,7 +81,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void changePassword(UUID userId, ChangePasswordRequest request) {
         User user = findById(userId);
-        user.changePassword(passwordEncoder.encode(request.getPassword()));
+        user.changePassword(passwordEncoder.encode(request.getNewPassword()));
     }
 
     @Override

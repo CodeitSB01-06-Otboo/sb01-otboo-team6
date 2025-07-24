@@ -3,13 +3,19 @@ package com.codeit.sb01otbooteam06.domain.user.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 /**
  * 회원가입 요청 DTO
  * 스웨거 명세에 맞는 필드 정의
  */
+@Builder
 @Getter
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserCreateRequest {
 
     @NotBlank(message = "이름은 필수입니다.")
