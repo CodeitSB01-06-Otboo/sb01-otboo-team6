@@ -38,9 +38,8 @@ env:
   ECS_SERVICE: obtoo                # set this to your Amazon ECS service name
   ECS_CLUSTER: obtoo-ecs-cluster
   ECS_TASK_DEFINITION: .aws/obtoo-def-revision2.json # set this to the path to your Amazon ECS task definition
-                                               # file, e.g. .aws/task-definition.json
+  # file, e.g. .aws/task-definition.json
   CONTAINER_NAME: obtoo          # set this to the name of the container in the
-  JWT_SECRET: ${{ secrets.JWT_SECRET }}
 
 permissions:
   contents: read
@@ -52,59 +51,57 @@ jobs:
     environment: production
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
 
-    - name: Login to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
 
-#    - name: Build, tag, and push image to Amazon ECR
-#      id: build-image
-#      env:
-#        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-#        IMAGE_TAG: ${{ github.sha }}
-#      run: |
-#        # Build a docker container and
-#        # push it to ECR so that it can
-#        # be deployed to ECS.
-#        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-#        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-#        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+      #    - name: Build, tag, and push image to Amazon ECR
+      #      id: build-image
+      #      env:
+      #        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+      #        IMAGE_TAG: ${{ github.sha }}
+      #      run: |
+      #        # Build a docker container and
+      #        # push it to ECR so that it can
+      #        # be deployed to ECS.
+      #        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+      #        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+      #        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-    - name: Build, tag, and push image to Amazon ECR
-      id: build-and-push-image
-      env:
-        ECR_REGISTRY: 681689809064.dkr.ecr.ap-northeast-2.amazonaws.com
-        IMAGE_TAG: ${{ github.sha }}
-      run: |
-        docker build -t obtoo .
-        docker tag obtoo:latest $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-and-push-image
+        env:
+          ECR_REGISTRY: 681689809064.dkr.ecr.ap-northeast-2.amazonaws.com
+          ECR_REPOSITORY: otboo
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t obtoo .
+          docker tag obtoo:latest $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
+      - name: Render Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ${{ env.ECS_TASK_DEFINITION }}
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: ${{ steps.build-and-push-image.outputs.image }}
 
-      # ──────────────────── 템플릿에 새 이미지만 주입 (env 변수 X) ────────────────────
-    - name: Render Amazon ECS task definition
-      id: task-def
-      uses: aws-actions/amazon-ecs-render-task-definition@v1
-      with:
-        task-definition: ${{ env.ECS_TASK_DEFINITION }}
-        container-name: ${{ env.CONTAINER_NAME }}
-        image: ${{ steps.build-and-push-image.outputs.image }}
-
-      # ────────────── 서비스 업데이트 & 안정화 대기 (한 단계면 충분) ──────────────
-    - name: Deploy to Amazon ECS
-      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-      with:
-        task-definition: ${{ steps.task-def.outputs.task-definition }}
-        service: ${{ env.ECS_SERVICE }}
-        cluster: ${{ env.ECS_CLUSTER }}
-        wait-for-service-stability: true
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
