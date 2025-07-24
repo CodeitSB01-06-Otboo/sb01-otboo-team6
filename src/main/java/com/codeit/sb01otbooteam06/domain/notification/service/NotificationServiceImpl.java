@@ -73,7 +73,7 @@ public class NotificationServiceImpl implements NotificationService {
     String nextCursor = hasNext ? data.get(data.size() - 1).createdAt().toString() : null;
     String nextIdAfter = hasNext ? data.get(data.size() - 1).id().toString() : null;
 
-    int totalCount = notificationRepository.countByUserIdAndReadFalse(userId);
+    int totalCount = notificationRepository.countByUserIdAndIsReadFalse(userId);
 
     return new PageResponse<>(
         data,
