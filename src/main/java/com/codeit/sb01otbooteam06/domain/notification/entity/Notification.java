@@ -26,6 +26,9 @@ public class Notification extends BaseEntity {
   private User user;
 
   @Column(nullable = false, columnDefinition = "TEXT")
+  private String title;
+
+  @Column(nullable = false, columnDefinition = "TEXT")
   private String content;
 
   @Column(name = "is_read", nullable = false)

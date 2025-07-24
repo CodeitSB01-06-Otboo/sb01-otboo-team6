@@ -2,6 +2,10 @@ package com.codeit.sb01otbooteam06.config;
 
 import com.codeit.sb01otbooteam06.domain.auth.jwt.JwtAuthenticationFilter;
 import com.codeit.sb01otbooteam06.domain.auth.jwt.JwtTokenProvider;
+import com.codeit.sb01otbooteam06.domain.auth.oauth.CustomAuthorizationRequestResolver;
+import com.codeit.sb01otbooteam06.domain.auth.oauth.CustomOAuth2UserService;
+import com.codeit.sb01otbooteam06.domain.auth.oauth.DelegatingOAuth2UserService;
+import com.codeit.sb01otbooteam06.domain.auth.oauth.OAuth2AuthenticationSuccessHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,9 +13,10 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 @Configuration
 @EnableWebSecurity
@@ -19,26 +24,38 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final DelegatingOAuth2UserService delegatingOAuth2UserService; //
+    private final OAuth2AuthenticationSuccessHandler oAuth2SuccessHandler;
+    private final ClientRegistrationRepository clientRegistrationRepository;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        OAuth2AuthorizationRequestResolver resolver =
+                new CustomAuthorizationRequestResolver(clientRegistrationRepository, "/oauth2/authorization");
 
         return http
-            .csrf(csrf -> csrf.disable())
-            .formLogin(form -> form.disable())
-            .httpBasic(httpBasic -> httpBasic.disable())
-            .authorizeHttpRequests(auth -> auth
-                .anyRequest().permitAll()  // 전체 열어둠
-            )
-
-            //추가
-            .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider),
-                UsernamePasswordAuthenticationFilter.class)
-            .build();
+                .csrf(csrf -> csrf.disable())
+                .formLogin(form -> form.disable())
+                .httpBasic(httpBasic -> httpBasic.disable())
+                .authorizeHttpRequests(auth -> auth
+                        .anyRequest().permitAll()
+                )
+                .oauth2Login(oauth2 -> oauth2
+                        .authorizationEndpoint(endpoint -> endpoint
+                                .authorizationRequestResolver(resolver)
+                        )
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(delegatingOAuth2UserService)
+                        )
+                        .successHandler(oAuth2SuccessHandler)
+                )
+                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider),
+                        UsernamePasswordAuthenticationFilter.class)
+                .build();
     }
-    /**
 
-     비밀번호 암호화를 위한 PasswordEncoder 빈 등록*/@Bean
+    @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();}
+        return new BCryptPasswordEncoder();
+    }
 }
