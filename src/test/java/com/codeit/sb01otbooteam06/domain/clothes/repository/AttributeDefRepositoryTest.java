@@ -19,8 +19,12 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.annotation.Rollback;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.transaction.annotation.Transactional;
 
+@Transactional
+@Rollback
 @Import(AttributeDefRepositoryTest.QuerydslTestConfig.class)
 class AttributeDefRepositoryTest extends PostgresTestContainer {
 
@@ -35,6 +39,10 @@ class AttributeDefRepositoryTest extends PostgresTestContainer {
       return new JPAQueryFactory(em);
     }
 
+    @Bean
+    public EntityProvider entityProvider() {
+      return new EntityProvider();
+    }
   }
 
   @Autowired
@@ -43,30 +51,27 @@ class AttributeDefRepositoryTest extends PostgresTestContainer {
   @Autowired
   TestEntityManager em;
 
-  private EntityProvider entityProvider;
-
-  private AttributeDef attributeDef1;
-  private AttributeDef attributeDef2;
-  private AttributeDef attributeDef3;
+  @Autowired
+  EntityProvider entityProvider;
 
   @BeforeEach
-  void setUp() {
-    saveAttribute("상의", new String[]{"반팔", "긴팔"});
-    saveAttribute("하의", new String[]{"청바지", "면바지"});
-    saveAttribute("모자", new String[]{"비니", "캡"});
+  void setUp() throws InterruptedException {
+    // DB 초기화 (PostgreSQL 기준)
+    em.getEntityManager().createQuery("DELETE FROM AttributeDef").executeUpdate();
 
-    attributeDef1 = entityProvider.createTestAttributeDef("계절",
-        List.of("봄", "여름", "가을", "겨울"));
-    attributeDef2 = entityProvider.createTestAttributeDef("사이즈",
-        List.of("S", "M", "L"));
-    attributeDef3 = entityProvider.createTestAttributeDef("색상",
-        List.of("검정", "흰색", "빨간색"));
-
+    // 테스트 데이터 저장
+    saveAttribute("Tops", new String[]{"T-shirt", "Long-sleeve"});
+    saveAttribute("Bottoms", new String[]{"Jeans", "Slacks"});
+    saveAttribute("Accessories", new String[]{"Hat", "Bag"});
+    saveAttribute("Colors", new String[]{"Red", "Blue"});
+    saveAttribute("Sizes", new String[]{"S", "M", "L"});
+    saveAttribute("Materials", new String[]{"Cotton", "Polyester"});
   }
 
-  void saveAttribute(String name, String[] values) {
-    AttributeDef attr = entityProvider.createTestAttributeDef(name, Arrays.stream(values).toList());
+  void saveAttribute(String name, String[] values) throws InterruptedException {
+    AttributeDef attr = entityProvider.createTestAttributeDef(name, Arrays.asList(values));
     ReflectionTestUtils.setField(attr, "createdAt", Instant.now());
+    Thread.sleep(100);
     em.persist(attr);
   }
 
@@ -74,35 +79,76 @@ class AttributeDefRepositoryTest extends PostgresTestContainer {
   @DisplayName("키워드에 해당하는 속성들을 반환한다")
   void findAllByKeyword() {
     List<AttributeDef> results = repository.findAllByCursor(
-        null, null, 10, "name", "ASCENDING", "바지");
+        null, null, 10, "name", "ASCENDING", "Bot");
 
     assertThat(results).hasSize(1);
-    assertThat(results.get(0).getName()).isEqualTo("하의");
+    assertThat(results.get(0).getName()).isEqualTo("Bottoms");
   }
-//
-//  @Test
-//  @DisplayName("전체 속성 개수를 반환한다")
-//  void getTotalCounts() {
-//    int count = repository.getTotalCounts("name", "");
-//    assertThat(count).isEqualTo(3);
-//  }
-//
-//  @Test
-//  @DisplayName("이름 기준 내림차순 정렬 후 커서 기반으로 필터링한다")
-//  void findAllByCursorDesc() {
-//    List<AttributeDef> allDesc = repository.findAllByCursor(
-//        null, null, 10, "name", "DESCENDING", null);
-//
-//    assertThat(allDesc).isSortedAccordingTo((a1, a2) -> a2.getName().compareTo(a1.getName()));
-//
-//    String cursor = allDesc.get(0).getName(); // 가장 큰 이름
-//
-//    List<AttributeDef> filtered = repository.findAllByCursor(
-//        cursor, null, 10, "name", "DESCENDING", null);
-//
-//    assertThat(filtered).hasSize(2); // cursor 제외 나머지 2개
-//    assertThat(filtered)
-//        .extracting(AttributeDef::getName)
-//        .doesNotContain(cursor);
-//  }
+
+  @DisplayName("전체 속성 개수를 반환한다")
+  @Test
+  void getTotalCounts() {
+    // given
+    // @BeforeEach에서 이미 6개 저장됐다고 가정
+
+    // when
+    int count = repository.getTotalCounts("name", "");
+
+    // then
+    assertThat(count).isEqualTo(6);
+  }
+
+  @DisplayName("키워드로 필터링된 속성 개수를 반환한다")
+  @Test
+  void getTotalCounts_withKeyword() {
+    // given
+    String keyword = "Bot";
+
+    // when
+    int count = repository.getTotalCounts("name", keyword);
+
+    // then
+    assertThat(count).isEqualTo(1);
+  }
+
+
+  @Test
+  @DisplayName("이름 기준 내림차순 정렬 후 커서 기반으로 필터링한다")
+  void findAllByCursorDesc() {
+    // Given: 전체 데이터를 내림차순으로 조회
+    List<AttributeDef> allDesc = repository.findAllByCursor(
+        null, null, 10, "name", "DESCENDING", null);
+
+    // 정렬 검증
+    assertThat(allDesc)
+        .isSortedAccordingTo((a1, a2) -> {
+          int nameCompare = a2.getName().compareTo(a1.getName());
+          if (nameCompare != 0) {
+            return nameCompare;
+          }
+          return a2.getCreatedAt().compareTo(a1.getCreatedAt());
+        });
+
+    // When: 첫 번째 아이템을 커서로 사용하여 다음 페이지 조회
+    AttributeDef firstItem = allDesc.get(0);
+    String cursor = firstItem.getName();
+
+    List<AttributeDef> filtered = repository.findAllByCursor(
+        cursor, null, 10, "name", "DESCENDING", null);
+
+    // Then: 필터링된 결과 검증
+    assertThat(filtered)
+        .allMatch(attr -> attr.getName().compareTo(cursor) < 0)  // 이름이 커서보다 작아야 함
+        .doesNotContain(firstItem);  // 첫 번째 아이템은 포함되지 않아야 함
+
+    // 추가 검증: 필터링된 결과도 정렬되어 있어야 함
+    assertThat(filtered)
+        .isSortedAccordingTo((a1, a2) -> {
+          int nameCompare = a2.getName().compareTo(a1.getName());
+          if (nameCompare != 0) {
+            return nameCompare;
+          }
+          return a2.getCreatedAt().compareTo(a1.getCreatedAt());
+        });
+  }
 }
