@@ -18,18 +18,21 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
   @Query("""
     SELECT n FROM Notification n
     WHERE n.user.id = :userId
-      AND (:cursorCreatedAt IS NULL OR
-           (n.createdAt < :cursorCreatedAt OR 
-            (n.createdAt = :cursorCreatedAt AND n.id < :cursorId)))
+      AND n.isRead = false
+      AND (
+        :cursorCreatedAt IS NULL OR
+        (n.createdAt < :cursorCreatedAt OR
+         (n.createdAt = :cursorCreatedAt AND n.id < :cursorId))
+      )
     ORDER BY n.createdAt DESC, n.id DESC
 """)
-  List<Notification> findByUserIdWithCursorPagination(
+  List<Notification> findUnreadByUserIdWithCursorPagination(
       @Param("userId") UUID userId,
       @Param("cursorCreatedAt") Instant cursorCreatedAt,
       @Param("cursorId") UUID cursorId,
       Pageable pageable
   );
 
-  int countByUserId(UUID userId);
+  int countByUserIdAndReadFalse(UUID userId);
 
 }

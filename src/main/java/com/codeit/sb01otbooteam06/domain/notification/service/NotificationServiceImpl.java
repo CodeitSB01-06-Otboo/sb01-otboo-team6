@@ -63,7 +63,7 @@ public class NotificationServiceImpl implements NotificationService {
     Pageable pageable = PageRequest.of(0, limit, Sort.by(direction, "createdAt").and(Sort.by(direction, "id")));
 
     List<Notification> notifications = notificationRepository
-        .findByUserIdWithCursorPagination(userId, cursorCreatedAt, cursorId, pageable);
+        .findUnreadByUserIdWithCursorPagination(userId, cursorCreatedAt, cursorId, pageable);
 
     List<NotificationDto> data = notifications.stream()
         .map(NotificationDto::from)
@@ -73,7 +73,7 @@ public class NotificationServiceImpl implements NotificationService {
     String nextCursor = hasNext ? data.get(data.size() - 1).createdAt().toString() : null;
     String nextIdAfter = hasNext ? data.get(data.size() - 1).id().toString() : null;
 
-    int totalCount = notificationRepository.countByUserId(userId);
+    int totalCount = notificationRepository.countByUserIdAndReadFalse(userId);
 
     return new PageResponse<>(
         data,
