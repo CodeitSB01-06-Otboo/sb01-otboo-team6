@@ -6,12 +6,16 @@ import com.codeit.sb01otbooteam06.domain.weather.entity.Location;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 public interface ProfileRepository extends JpaRepository<Profile, UUID> {
 
   Optional<Profile> findById(UUID id);
+
+  @EntityGraph(attributePaths = "locationNames")
+  Optional<Profile> findWithLocationsById(UUID id);
 
   /**
    * Profile 테이블에서 (lat, lon, x, y) 조합을 DISTINCT 로 추출해
