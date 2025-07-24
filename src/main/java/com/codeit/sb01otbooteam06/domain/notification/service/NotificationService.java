@@ -15,6 +15,6 @@ public interface NotificationService {
   void markAsRead(UUID userId, UUID notificationId);
 
   PageResponse<NotificationDto> getNotificationsByCursor(UUID userId, Instant cursorCreatedAt,
-      UUID cursorId, int limit, String sortBy);
+      UUID cursorId, int limit, String sortBy, String sortDirection);
 
 }
