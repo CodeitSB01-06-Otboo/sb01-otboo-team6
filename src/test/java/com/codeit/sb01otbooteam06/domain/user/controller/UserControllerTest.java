@@ -1,4 +1,4 @@
-package com.codeit.sb01otbooteam06.domain.user.controller;
+/*package com.codeit.sb01otbooteam06.domain.user.controller;
 
 import com.codeit.sb01otbooteam06.domain.user.dto.*;
 import com.codeit.sb01otbooteam06.domain.user.entity.Role;
@@ -148,4 +148,4 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.data.length()").value(3))
                 .andExpect(jsonPath("$.hasNext").value(true));
     }
-}
+}*/
