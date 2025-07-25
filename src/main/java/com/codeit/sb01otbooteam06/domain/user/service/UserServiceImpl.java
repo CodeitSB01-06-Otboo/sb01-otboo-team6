@@ -1,5 +1,6 @@
 package com.codeit.sb01otbooteam06.domain.user.service;
 
+import com.codeit.sb01otbooteam06.domain.notification.service.NotificationService;
 import com.codeit.sb01otbooteam06.domain.profile.entity.Gender;
 import com.codeit.sb01otbooteam06.domain.profile.entity.Profile;
 import com.codeit.sb01otbooteam06.domain.user.dto.*;
@@ -24,6 +25,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final NotificationService notificationService;
 
     @Override
     @Transactional
@@ -66,7 +68,9 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserDto changeRole(UUID userId, UserRoleUpdateRequest request) {
         User user = findById(userId);
+        Role previousRole = user.getRole();
         user.changeRole(request.getRole());
+        notificationService.notifyRoleChange(user, previousRole, user.getRole());
         return toDto(user);
     }
 
