@@ -7,8 +7,10 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -22,6 +24,7 @@ import com.codeit.sb01otbooteam06.domain.feed.entity.Feed;
 import com.codeit.sb01otbooteam06.domain.feed.repository.CommentRepository;
 import com.codeit.sb01otbooteam06.domain.feed.repository.FeedRepository;
 import com.codeit.sb01otbooteam06.domain.feed.service.impl.CommentServiceImpl;
+import com.codeit.sb01otbooteam06.domain.notification.service.NotificationService;
 import com.codeit.sb01otbooteam06.domain.profile.entity.Profile;
 import com.codeit.sb01otbooteam06.domain.user.entity.User;
 import com.codeit.sb01otbooteam06.domain.user.repository.UserRepository;
@@ -54,6 +57,8 @@ public class CommentServiceImplTest {
   private AuthService authService;
   @Mock
   private FeedRepository feedRepository;
+  @Mock
+  private NotificationService notificationService;
 
   private final UUID userId = UUID.randomUUID();
   private final UUID feedId = UUID.randomUUID();
@@ -91,7 +96,8 @@ public class CommentServiceImplTest {
       given(userRepository.findById(userId)).willReturn(Optional.of(user));
       given(feedRepository.findById(feedId)).willReturn(Optional.of(feed));
       given(feedRepository.save(any(Feed.class))).willReturn(feed);
-      //Comment comment = Comment.of(request.getContent(), mockUser.getName(), mockUser , mockFeed);
+      willDoNothing().given(notificationService).notifyFeedCommented(any(User.class), any(User.class), anyString());
+
 
       //when
       CommentDto result = commentService.createComment(feedId, request);
