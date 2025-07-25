@@ -25,7 +25,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "spring.sql.init.mode=never",  // SQL 스크립트 무시
         "spring.jpa.hibernate.ddl-auto=create-drop",  // Hibernate로 테이블 자동 생성
         "spring.datasource.url=jdbc:h2:mem:test;MODE=PostgreSQL",  // H2를 PostgreSQL 호환 모드로 실행
-        "spring.datasource.driverClassName=org.h2.Driver"
+        "spring.datasource.driverClassName=org.h2.Driver",
+        "jwt.secret=oNBHrSfTnlrtuHEGLSnU3bdwtwJIGdsGNPWt0+MlQIA="  // Base64 인코딩된 JWT 시크릿 추가
 })
 class UserControllerTest {
 
