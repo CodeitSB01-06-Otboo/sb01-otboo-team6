@@ -1,14 +1,19 @@
 package com.codeit.sb01otbooteam06.domain.notification.service;
 
 import com.codeit.sb01otbooteam06.domain.clothes.entity.dto.PageResponse;
+import com.codeit.sb01otbooteam06.domain.follow.entity.Follow;
+import com.codeit.sb01otbooteam06.domain.follow.repository.FollowRepository;
 import com.codeit.sb01otbooteam06.domain.notification.dto.NotificationDto;
 import com.codeit.sb01otbooteam06.domain.notification.entity.Notification;
-import com.codeit.sb01otbooteam06.domain.notification.entity.NotificationType;
+import com.codeit.sb01otbooteam06.domain.notification.event.ClothesAttributeAddedEvent;
 import com.codeit.sb01otbooteam06.domain.notification.event.FeedCommentCreatedEvent;
 import com.codeit.sb01otbooteam06.domain.notification.event.FeedLikeCreatedEvent;
+import com.codeit.sb01otbooteam06.domain.notification.event.FolloweeFeedPostedEvent;
+import com.codeit.sb01otbooteam06.domain.notification.event.UserRoleChangeEvent;
 import com.codeit.sb01otbooteam06.domain.notification.repository.NotificationQueryRepository;
 import com.codeit.sb01otbooteam06.domain.notification.repository.NotificationRepository;
 import com.codeit.sb01otbooteam06.domain.notification.util.NotificationCreator;
+import com.codeit.sb01otbooteam06.domain.user.entity.Role;
 import com.codeit.sb01otbooteam06.domain.user.entity.User;
 import com.codeit.sb01otbooteam06.domain.user.repository.UserRepository;
 import com.codeit.sb01otbooteam06.global.exception.ErrorCode;
@@ -30,48 +35,45 @@ public class NotificationServiceImpl implements NotificationService {
 
   private final NotificationRepository notificationRepository;
   private final ApplicationEventPublisher eventPublisher;
-  private final UserRepository userRepository;
   private final NotificationQueryRepository notificationQueryRepository;
 
   @Override
   public void notifyFeedLiked(User sender, User receiver, String feedContent) {
-    if (sender.getId().equals(receiver.getId())) {
-      return; // 본인 알림 제외
+    // 본인 확인 제외
+    if (isSelfNotification(sender, receiver)) {
+      return;
     }
-
-    Notification notification = NotificationCreator.ofFeedLike(sender, receiver, feedContent);
-    notificationRepository.save(notification);
-
-    NotificationDto dto = NotificationDto.from(notification);
-    eventPublisher.publishEvent(new FeedLikeCreatedEvent(dto));
+    eventPublisher.publishEvent(new FeedLikeCreatedEvent(sender, receiver, feedContent));
   }
 
   @Override
   public void notifyFeedCommented(User sender, User receiver, String feedContent) {
-    if (sender.getId().equals(receiver.getId())) {
-      return; // 본인 알림 제외
+    if (isSelfNotification(sender, receiver)) {
+      return;
     }
 
-    Notification notification = NotificationCreator.ofFeedComment(sender, receiver, feedContent);
-    notificationRepository.save(notification);
-
-    NotificationDto dto = NotificationDto.from(notification);
-    eventPublisher.publishEvent(new FeedCommentCreatedEvent(dto));
+    eventPublisher.publishEvent(new FeedCommentCreatedEvent(sender, receiver, feedContent));
   }
 
 
-  @Transactional
   @Override
-  public NotificationDto createNotification(UUID userId, String title, String content,
-      NotificationType type) {
+  public void notifyRoleChange(User receiver, Role previousRole, Role newRole) {
 
-    User user = userRepository.findById(userId)
-        .orElseThrow(() -> new OtbooException(ErrorCode.USER_NOT_FOUND));
+    eventPublisher.publishEvent(new UserRoleChangeEvent(receiver, previousRole, newRole));
+  }
 
-    Notification notification = Notification.create(user, title, content, type);
-    notificationRepository.save(notification);
+  @Override
+  public void notifyClothesAttributeAdded(User receiver, String attributeSummary) {
 
-    return NotificationDto.from(notification);
+    eventPublisher.publishEvent(new ClothesAttributeAddedEvent(receiver, attributeSummary));
+
+  }
+
+  @Override
+  public void notifyFolloweePostedFeed(User followee, String feedContent) {
+
+    eventPublisher.publishEvent(new FolloweeFeedPostedEvent(followee, feedContent));
+
   }
 
   @Transactional
@@ -97,12 +99,10 @@ public class NotificationServiceImpl implements NotificationService {
     Pageable pageable = PageRequest.of(0, limit,
         Sort.by(direction, "createdAt").and(Sort.by(direction, "id")));
 
-    List<Notification> notifications = notificationQueryRepository
-        .findUnreadByUserIdWithCursorPagination(userId, cursorCreatedAt, cursorId, limit);
+    List<Notification> notifications = notificationQueryRepository.findUnreadByUserIdWithCursorPagination(
+        userId, cursorCreatedAt, cursorId, limit);
 
-    List<NotificationDto> data = notifications.stream()
-        .map(NotificationDto::from)
-        .toList();
+    List<NotificationDto> data = notifications.stream().map(NotificationDto::from).toList();
 
     boolean hasNext = data.size() == limit;
     String nextCursor = hasNext ? data.get(data.size() - 1).createdAt().toString() : null;
@@ -110,14 +110,12 @@ public class NotificationServiceImpl implements NotificationService {
 
     int totalCount = notificationRepository.countByUserIdAndIsReadFalse(userId);
 
-    return new PageResponse<>(
-        data,
-        nextCursor,
-        nextIdAfter,
-        hasNext,
-        totalCount,
-        sortBy,
-        sortDirection
-    );
+    return new PageResponse<>(data, nextCursor, nextIdAfter, hasNext, totalCount, sortBy,
+        sortDirection);
+  }
+
+  // 본인 알림 인지 확인하는 메서드
+  private boolean isSelfNotification(User sender, User receiver) {
+    return sender.getId().equals(receiver.getId());
   }
 }
