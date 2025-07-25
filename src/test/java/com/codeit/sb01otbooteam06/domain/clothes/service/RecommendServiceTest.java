@@ -272,5 +272,7 @@ class RecommendServiceTest {
     verify(recommendClothesService).makeRecommendClothes(mockWeightData, mockUser, mockWeather);
   }
 
+  // todo: getValue 메서드로 gemini API 모킹하기.
+
 
 }

@@ -10,9 +10,10 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
  * 레포지토리 테스트시 기본 h2 는 text[] 타입을 지원하지 않습니다. 따라서 테스트컨테이너를 설정해 postgreSql 환경에서 테스트 할 수 있는 추상 클래스를
- * 만들었습니다. 상속하여 사용합니다.
+ * 만들었습니다. extends로 사용합니다.
  */
 
+//todo: 팀 prj에서는 공통으로 설정하는 것도 좋음.
 @Testcontainers
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
