@@ -4,6 +4,7 @@ import com.codeit.sb01otbooteam06.domain.dm.dto.DirectMessageDto;
 import com.codeit.sb01otbooteam06.domain.dm.dto.DirectMessageListResponse;
 import com.codeit.sb01otbooteam06.domain.dm.entity.DirectMessage;
 import com.codeit.sb01otbooteam06.domain.dm.repository.DirectMessageRepository;
+import com.codeit.sb01otbooteam06.domain.notification.service.NotificationService;
 import com.codeit.sb01otbooteam06.domain.user.entity.User;
 import com.codeit.sb01otbooteam06.domain.user.repository.UserRepository;
 import java.util.List;
@@ -31,6 +32,7 @@ public class DirectMessageService {
     private final DirectMessageRepository dmRepository;
     private final UserRepository userRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final NotificationService notificationService;
 
     /* 전송 */
     @Transactional
@@ -45,6 +47,8 @@ public class DirectMessageService {
         messagingTemplate.convertAndSend("/sub/direct-messages_" + key,
             DirectMessageDto.from(dm));
         log.info("[DM-SEND] /sub/direct-messages_{}  payload#{}", key, dm.getId());
+
+        notificationService.notifyDirectMessage(sender, receiver, content);
         return dm.getId();
     }
 
