@@ -9,15 +9,19 @@ import java.util.UUID;
 
 public interface NotificationService {
 
-  public void notifyRoleChange(User receiver, Role previousRole, Role newRole);
+  void notifyRoleChange(User receiver, Role previousRole, Role newRole);
 
-  public void notifyFeedLiked(User sender, User receiver, String feedContent);
+  void notifyFeedLiked(User sender, User receiver, String feedContent);
 
-  public void notifyFeedCommented(User sender, User receiver, String feedContent);
+  void notifyFeedCommented(User sender, User receiver, String feedContent);
 
-  public void notifyClothesAttributeAdded(User receiver, String attributeSummary);
+  void notifyClothesAttributeAdded(User receiver, String attributeSummary);
 
-  public void notifyFolloweePostedFeed(User followee, String feedContent);
+  void notifyFolloweePostedFeed(User followee, String feedContent);
+
+  void notifyUserFollowed(User follower, User following);
+
+  void notifyDirectMessage(User sender, User receiver, String messageContent);
 
   void markAsRead(UUID userId, UUID notificationId);
 

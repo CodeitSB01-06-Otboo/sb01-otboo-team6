@@ -1,21 +1,19 @@
 package com.codeit.sb01otbooteam06.domain.notification.service;
 
 import com.codeit.sb01otbooteam06.domain.clothes.entity.dto.PageResponse;
-import com.codeit.sb01otbooteam06.domain.follow.entity.Follow;
-import com.codeit.sb01otbooteam06.domain.follow.repository.FollowRepository;
 import com.codeit.sb01otbooteam06.domain.notification.dto.NotificationDto;
 import com.codeit.sb01otbooteam06.domain.notification.entity.Notification;
 import com.codeit.sb01otbooteam06.domain.notification.event.ClothesAttributeAddedEvent;
+import com.codeit.sb01otbooteam06.domain.notification.event.DirectMessageReceivedEvent;
 import com.codeit.sb01otbooteam06.domain.notification.event.FeedCommentCreatedEvent;
 import com.codeit.sb01otbooteam06.domain.notification.event.FeedLikeCreatedEvent;
 import com.codeit.sb01otbooteam06.domain.notification.event.FolloweeFeedPostedEvent;
+import com.codeit.sb01otbooteam06.domain.notification.event.UserFollowMeEvent;
 import com.codeit.sb01otbooteam06.domain.notification.event.UserRoleChangeEvent;
 import com.codeit.sb01otbooteam06.domain.notification.repository.NotificationQueryRepository;
 import com.codeit.sb01otbooteam06.domain.notification.repository.NotificationRepository;
-import com.codeit.sb01otbooteam06.domain.notification.util.NotificationCreator;
 import com.codeit.sb01otbooteam06.domain.user.entity.Role;
 import com.codeit.sb01otbooteam06.domain.user.entity.User;
-import com.codeit.sb01otbooteam06.domain.user.repository.UserRepository;
 import com.codeit.sb01otbooteam06.global.exception.ErrorCode;
 import com.codeit.sb01otbooteam06.global.exception.OtbooException;
 import java.time.Instant;
@@ -74,6 +72,20 @@ public class NotificationServiceImpl implements NotificationService {
 
     eventPublisher.publishEvent(new FolloweeFeedPostedEvent(followee, feedContent));
 
+  }
+
+  @Override
+  public void notifyUserFollowed(User follower, User following) {
+    if (follower.getId().equals(following.getId())) return;
+
+    eventPublisher.publishEvent(new UserFollowMeEvent(follower, following));
+  }
+
+  @Override
+  public void notifyDirectMessage(User sender, User receiver, String messageContent) {
+    if (isSelfNotification(sender, receiver)) return;
+
+    eventPublisher.publishEvent(new DirectMessageReceivedEvent(sender, receiver, messageContent));
   }
 
   @Transactional

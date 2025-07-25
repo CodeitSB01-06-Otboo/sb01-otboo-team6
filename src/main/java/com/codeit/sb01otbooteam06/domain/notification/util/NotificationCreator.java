@@ -36,9 +36,23 @@ public class NotificationCreator {
 
   }
 
-  public static Notification ofFolloweeFeedPosted(User receiver, User followee, String feedContent) {
+  public static Notification ofFolloweeFeedPosted(User receiver, User followee,
+      String feedContent) {
     String title = followee.getName() + "님이 새 피드를 등록했어요.";
     return Notification.create(receiver, title, "\"" + feedContent + "\"", NotificationType.INFO);
+  }
+
+  public static Notification ofUserFollowMe(User follower, User following) {
+    String title = follower.getName() + "님이 나를 팔로우하기 시작했어요.";
+    String content = "";
+    return Notification.create(following, title, content, NotificationType.INFO);
+  }
+
+  public static Notification ofDirectMessageReceive(User sender, User receiver,
+      String messageContent) {
+    String title = sender.getName() + "님으로부터 새 메시지가 도착했어요.";
+    String content = "\"" + messageContent + "\"";
+    return Notification.create(receiver, title, content, NotificationType.INFO);
   }
 
 }

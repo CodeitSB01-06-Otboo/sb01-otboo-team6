@@ -26,44 +26,54 @@ public class NotificationEventListener {
 
   @EventListener
   public void handleFeedLiked(FeedLikeCreatedEvent event) {
-    if (event.sender().getId().equals(event.receiver().getId())) return;
+    if (event.sender().getId().equals(event.receiver().getId())) {
+      return;
+    }
 
-    Notification notification = NotificationCreator.ofFeedLike(event.sender(), event.receiver(), event.feedContent());
+    Notification notification = NotificationCreator.ofFeedLike(event.sender(), event.receiver(),
+        event.feedContent());
     notificationRepository.save(notification);
     eventPublisher.publishEvent(new NotificationCreateEvent(NotificationDto.from(notification)));
   }
 
   @EventListener
   public void handleFeedCommented(FeedCommentCreatedEvent event) {
-    if (event.sender().getId().equals(event.receiver().getId())) return;
+    if (event.sender().getId().equals(event.receiver().getId())) {
+      return;
+    }
 
-    Notification notification = NotificationCreator.ofFeedComment(event.sender(), event.receiver(), event.feedContent());
+    Notification notification = NotificationCreator.ofFeedComment(event.sender(), event.receiver(),
+        event.feedContent());
     notificationRepository.save(notification);
     eventPublisher.publishEvent(new NotificationCreateEvent(NotificationDto.from(notification)));
   }
 
   @EventListener
   public void handleRoleChanged(UserRoleChangeEvent event) {
-    Notification notification = NotificationCreator.ofRoleChanged(event.receiver(), event.previousRole(), event.newRole());
+    Notification notification = NotificationCreator.ofRoleChanged(event.receiver(),
+        event.previousRole(), event.newRole());
     notificationRepository.save(notification);
     eventPublisher.publishEvent(new NotificationCreateEvent(NotificationDto.from(notification)));
   }
 
   @EventListener
   public void handleClothesAttributeAdded(ClothesAttributeAddedEvent event) {
-    Notification notification = NotificationCreator.ofClothesAttributeAdded(event.receiver(), event.attributeSummary());
+    Notification notification = NotificationCreator.ofClothesAttributeAdded(event.receiver(),
+        event.attributeSummary());
     notificationRepository.save(notification);
     eventPublisher.publishEvent(new NotificationCreateEvent(NotificationDto.from(notification)));
   }
 
   @EventListener
   public void handleFolloweeFeedPosted(FolloweeFeedPostedEvent event) {
-    List<Follow> follows = followRepository.findFollowers(event.followee().getId(), null, Pageable.unpaged());
+    List<Follow> follows = followRepository.findFollowers(event.followee().getId(), null,
+        Pageable.unpaged());
 
     List<Notification> notifications = follows.stream()
         .map(Follow::getFollower)
         .filter(follower -> !follower.getId().equals(event.followee().getId()))
-        .map(follower -> NotificationCreator.ofFolloweeFeedPosted(follower, event.followee(), event.feedContent()))
+        .map(follower -> NotificationCreator.ofFolloweeFeedPosted(follower, event.followee(),
+            event.feedContent()))
         .toList();
 
     notificationRepository.saveAll(notifications);
@@ -71,4 +81,30 @@ public class NotificationEventListener {
         eventPublisher.publishEvent(new NotificationCreateEvent(NotificationDto.from(n)))
     );
   }
+
+  @EventListener
+  public void handleUserFollowed(UserFollowMeEvent event) {
+    if (event.follower().getId().equals(event.following().getId())) {
+      return;
+    }
+
+    Notification notification = NotificationCreator.ofUserFollowMe(event.follower(),
+        event.following());
+    notificationRepository.save(notification);
+    eventPublisher.publishEvent(new NotificationCreateEvent(NotificationDto.from(notification)));
+  }
+
+  @EventListener
+  public void DirectMessageReceived(DirectMessageReceivedEvent event) {
+    if (event.sender().getId().equals(event.receiver().getId())) {
+      return;
+    }
+
+    Notification notification = NotificationCreator.ofDirectMessageReceive(
+        event.sender(), event.receiver(), event.messageContent());
+    notificationRepository.save(notification);
+    eventPublisher.publishEvent(new NotificationCreateEvent(NotificationDto.from(notification)));
+  }
+
+
 }
