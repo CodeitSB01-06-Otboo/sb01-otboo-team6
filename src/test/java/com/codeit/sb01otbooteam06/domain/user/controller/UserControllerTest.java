@@ -12,13 +12,21 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@TestPropertySource(properties = {
+        "spring.sql.init.mode=never",  // SQL 스크립트 무시
+        "spring.jpa.hibernate.ddl-auto=create-drop",  // Hibernate로 테이블 자동 생성
+        "spring.datasource.url=jdbc:h2:mem:test;MODE=PostgreSQL",  // H2를 PostgreSQL 호환 모드로 실행
+        "spring.datasource.driverClassName=org.h2.Driver"
+})
 class UserControllerTest {
 
     @Autowired private MockMvc mockMvc;
