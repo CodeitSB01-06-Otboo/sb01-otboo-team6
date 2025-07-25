@@ -1,4 +1,4 @@
-package com.codeit.sb01otbooteam06.domain.notification.repository;
+package com.codeit.sb01otbooteam06.domain.notification.sse.repository;
 
 import java.util.Collection;
 import java.util.List;

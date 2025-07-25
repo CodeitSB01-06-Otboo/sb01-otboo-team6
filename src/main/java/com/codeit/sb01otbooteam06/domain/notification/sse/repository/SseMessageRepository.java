@@ -1,6 +1,6 @@
-package com.codeit.sb01otbooteam06.domain.notification.repository;
+package com.codeit.sb01otbooteam06.domain.notification.sse.repository;
 
-import com.codeit.sb01otbooteam06.domain.notification.dto.SseMessage;
+import com.codeit.sb01otbooteam06.domain.notification.sse.dto.SseMessage;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;

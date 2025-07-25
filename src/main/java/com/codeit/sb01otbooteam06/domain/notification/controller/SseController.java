@@ -1,7 +1,7 @@
 package com.codeit.sb01otbooteam06.domain.notification.controller;
 
 import com.codeit.sb01otbooteam06.domain.auth.service.AuthService;
-import com.codeit.sb01otbooteam06.domain.notification.service.SseService;
+import com.codeit.sb01otbooteam06.domain.notification.sse.service.SseService;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;

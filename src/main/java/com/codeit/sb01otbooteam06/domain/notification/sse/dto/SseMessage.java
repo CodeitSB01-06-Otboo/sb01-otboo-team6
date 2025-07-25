@@ -1,4 +1,4 @@
-package com.codeit.sb01otbooteam06.domain.notification.dto;
+package com.codeit.sb01otbooteam06.domain.notification.sse.dto;
 
 import java.util.Collection;
 import java.util.HashSet;

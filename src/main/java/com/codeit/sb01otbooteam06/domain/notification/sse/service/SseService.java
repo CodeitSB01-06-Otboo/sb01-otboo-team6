@@ -1,8 +1,8 @@
-package com.codeit.sb01otbooteam06.domain.notification.service;
+package com.codeit.sb01otbooteam06.domain.notification.sse.service;
 
-import com.codeit.sb01otbooteam06.domain.notification.dto.SseMessage;
-import com.codeit.sb01otbooteam06.domain.notification.repository.SseEmitterRepository;
-import com.codeit.sb01otbooteam06.domain.notification.repository.SseMessageRepository;
+import com.codeit.sb01otbooteam06.domain.notification.sse.dto.SseMessage;
+import com.codeit.sb01otbooteam06.domain.notification.sse.repository.SseEmitterRepository;
+import com.codeit.sb01otbooteam06.domain.notification.sse.repository.SseMessageRepository;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Optional;
