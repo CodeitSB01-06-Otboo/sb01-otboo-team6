@@ -6,6 +6,7 @@ import com.codeit.sb01otbooteam06.domain.feed.entity.FeedLike;
 import com.codeit.sb01otbooteam06.domain.feed.repository.FeedLikeRepository;
 import com.codeit.sb01otbooteam06.domain.feed.repository.FeedRepository;
 import com.codeit.sb01otbooteam06.domain.feed.service.FeedLikeService;
+import com.codeit.sb01otbooteam06.domain.notification.service.NotificationService;
 import com.codeit.sb01otbooteam06.domain.user.entity.User;
 import com.codeit.sb01otbooteam06.domain.user.repository.UserRepository;
 import com.codeit.sb01otbooteam06.global.exception.ErrorCode;
@@ -23,6 +24,7 @@ public class FeedLikeServiceImpl implements FeedLikeService {
   private final UserRepository userRepository;
   private final FeedRepository feedRepository;
   private final AuthService authService;
+  private final NotificationService notificationService;
 
 
   @Override
@@ -47,7 +49,7 @@ public class FeedLikeServiceImpl implements FeedLikeService {
     //피드 카운드 증가 -> dirty checking 으로 자동 반영
     feed.like();
 
-    //todo : 나중에 좋아요 누를때 알림 가도록 설정
+    notificationService.notifyFeedLiked(user, feed.getUser(), feed.getContent());
 
   }
 

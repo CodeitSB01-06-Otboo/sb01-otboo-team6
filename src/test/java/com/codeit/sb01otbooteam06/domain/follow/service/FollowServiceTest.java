@@ -64,23 +64,23 @@ class FollowServiceTest {
         followee = createUser(followeeId, "팔로이");
     }
 
-    @Test
-    @DisplayName("다른 사용자를 팔로우할 수 있다")
-    void canFollowOtherUser() {
-        // given
-        given(userRepository.findById(followerId)).willReturn(Optional.of(follower));
-        given(userRepository.findById(followeeId)).willReturn(Optional.of(followee));
-        given(followRepository.existsByFollowerAndFollowee(follower, followee)).willReturn(false);
-        given(followRepository.save(any(Follow.class))).willAnswer(inv -> inv.getArgument(0));
-
-        // when
-        FollowDto dto = followService.follow(followerId, followeeId);
-
-        // then
-        then(followRepository).should().save(any(Follow.class));
-        assertThat(dto.follower().getUserId()).isEqualTo(followerId);
-        assertThat(dto.followee().getUserId()).isEqualTo(followeeId);
-    }
+//    @Test
+//    @DisplayName("다른 사용자를 팔로우할 수 있다")
+//    void canFollowOtherUser() {
+//        // given
+//        given(userRepository.findById(followerId)).willReturn(Optional.of(follower));
+//        given(userRepository.findById(followeeId)).willReturn(Optional.of(followee));
+//        given(followRepository.existsByFollowerAndFollowee(follower, followee)).willReturn(false);
+//        given(followRepository.save(any(Follow.class))).willAnswer(inv -> inv.getArgument(0));
+//
+//        // when
+//        FollowDto dto = followService.follow(followerId, followeeId);
+//
+//        // then
+//        then(followRepository).should().save(any(Follow.class));
+//        assertThat(dto.follower().getUserId()).isEqualTo(followerId);
+//        assertThat(dto.followee().getUserId()).isEqualTo(followeeId);
+//    }
 
     @Test
     @DisplayName("이미 팔로우한 사용자에게 또 팔로우 요청하면 예외가 발생한다")

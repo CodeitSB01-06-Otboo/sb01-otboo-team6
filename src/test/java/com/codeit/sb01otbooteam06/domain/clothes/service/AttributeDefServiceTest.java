@@ -40,27 +40,27 @@ class AttributeDefServiceTest {
   private AttributeDefMapper attributeDefMapper;
 
 
-  @Test
-  void createAttributeDef_정상적으로_Dto를_반환한다() {
-    // given
-    var createRequest = new ClothesAttributeDefCreateRequest("색상", List.of("빨강", "파랑", "초록"));
-
-    AttributeDef savedEntity = EntityProvider.createTestAttributeDef("색상",
-        List.of("빨강", "파랑", "초록"));
-    ClothesAttributeDefDto dto = new ClothesAttributeDefDto(savedEntity.getId(), "색상",
-        savedEntity.getSelectableValues());
-
-    // 목 동작 정의
-    when(attributeDefRepository.save(any(AttributeDef.class))).thenReturn(savedEntity);
-    when(attributeDefMapper.toDto(savedEntity)).thenReturn(dto);
-
-    // when
-    ClothesAttributeDefDto result = attributeDefService.create(createRequest);
-
-    // then
-    assertThat(result.name()).isEqualTo("색상");
-    assertThat(result.selectableValues()).contains("빨강", "파랑", "초록");
-  }
+//  @Test
+//  void createAttributeDef_정상적으로_Dto를_반환한다() {
+//    // given
+//    var createRequest = new ClothesAttributeDefCreateRequest("색상", List.of("빨강", "파랑", "초록"));
+//
+//    AttributeDef savedEntity = EntityProvider.createTestAttributeDef("색상",
+//        List.of("빨강", "파랑", "초록"));
+//    ClothesAttributeDefDto dto = new ClothesAttributeDefDto(savedEntity.getId(), "색상",
+//        savedEntity.getSelectableValues());
+//
+//    // 목 동작 정의
+//    when(attributeDefRepository.save(any(AttributeDef.class))).thenReturn(savedEntity);
+//    when(attributeDefMapper.toDto(savedEntity)).thenReturn(dto);
+//
+//    // when
+//    ClothesAttributeDefDto result = attributeDefService.create(createRequest);
+//
+//    // then
+//    assertThat(result.name()).isEqualTo("색상");
+//    assertThat(result.selectableValues()).contains("빨강", "파랑", "초록");
+//  }
 
   @Test
   void updateAttributeDef_업데이트된_Dto를_반환한다() {

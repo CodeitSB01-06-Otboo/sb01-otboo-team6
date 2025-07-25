@@ -13,6 +13,7 @@ import com.codeit.sb01otbooteam06.domain.feed.repository.FeedLikeRepository;
 import com.codeit.sb01otbooteam06.domain.feed.repository.FeedRepository;
 import com.codeit.sb01otbooteam06.domain.feed.repository.FeedQueryRepository;
 import com.codeit.sb01otbooteam06.domain.feed.service.FeedService;
+import com.codeit.sb01otbooteam06.domain.notification.service.NotificationService;
 import com.codeit.sb01otbooteam06.domain.user.entity.User;
 import com.codeit.sb01otbooteam06.domain.user.repository.UserRepository;
 import com.codeit.sb01otbooteam06.domain.weather.entity.PrecipitationType;
@@ -45,6 +46,7 @@ public class FeedServiceImpl implements FeedService {
   private final ClothesMapper clothesMapper;
   private final WeatherDtoMapper weatherDtoMapper;
   private final AuthService authService;
+  private final NotificationService notificationService;
 
   @Override
   @Transactional
@@ -67,6 +69,8 @@ public class FeedServiceImpl implements FeedService {
     feedRepository.save(feed);
 
     boolean likedByMe = feedLikeRepository.existsByFeedAndUser(feed, author);
+
+    notificationService.notifyFolloweePostedFeed(author, feed.getContent());
 
     return FeedDto.fromEntity(feed, clothesMapper, weatherDtoMapper,likedByMe);
   }

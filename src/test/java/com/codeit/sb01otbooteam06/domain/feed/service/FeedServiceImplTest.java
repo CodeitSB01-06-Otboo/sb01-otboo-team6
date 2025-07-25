@@ -6,9 +6,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -26,6 +28,7 @@ import com.codeit.sb01otbooteam06.domain.feed.entity.Feed;
 import com.codeit.sb01otbooteam06.domain.feed.repository.FeedLikeRepository;
 import com.codeit.sb01otbooteam06.domain.feed.repository.FeedRepository;
 import com.codeit.sb01otbooteam06.domain.feed.service.impl.FeedServiceImpl;
+import com.codeit.sb01otbooteam06.domain.notification.service.NotificationService;
 import com.codeit.sb01otbooteam06.domain.profile.entity.Profile;
 import com.codeit.sb01otbooteam06.domain.user.entity.User;
 import com.codeit.sb01otbooteam06.domain.user.repository.UserRepository;
@@ -78,6 +81,8 @@ public class FeedServiceImplTest {
   private AuthService authService;
   @Mock
   private FeedLikeRepository feedLikeRepository;
+  @Mock
+  private NotificationService notificationService;
 
   private final UUID userId = UUID.randomUUID();
   private final UUID feedId = UUID.randomUUID();
@@ -96,6 +101,8 @@ public class FeedServiceImplTest {
     FeedCreateRequest request = FeedCreateRequest.builder().authorId(userId).weatherId(weatherId)
         .clothesIds(List.of(clothesId)).content("내용").build();
 
+    User receiver = EntityProvider.createTestUser();
+
     @DisplayName("유저가 있는 곳에 날씨 정보를 통해 옷을 추천받고 추천 의상을 통해 피드를 생성한다.")
     @Test
     void createFeed_Success() {
@@ -107,12 +114,17 @@ public class FeedServiceImplTest {
       given(clothesMapper.toDto(any(Clothes.class))).willReturn(mockClothesDto);
       given(feedLikeRepository.existsByFeedAndUser(any(), any())).willReturn(false);
 
+      willDoNothing().given(notificationService)
+          .notifyFolloweePostedFeed(any(User.class), anyString());
+
       //when
       FeedDto result = feedService.createFeed(request);
 
       //then
       assertNotNull(result);
       verify(feedRepository).save(any(Feed.class));
+      verify(notificationService).notifyFolloweePostedFeed(eq(user), eq("내용"));
+
     }
 
     @DisplayName("피드 생성 시 인증된 유저가 아니면 피드 생성에 실패한다.")
@@ -172,7 +184,6 @@ public class FeedServiceImplTest {
       given(weatherDtoMapper.toSummaryDto(weather)).willReturn(mock(WeatherSummaryDto.class));
       given(userRepository.findById(userId)).willReturn(Optional.of(user));
       given(feedLikeRepository.existsByFeedAndUser(any(), any())).willReturn(false);
-
 
       //when
       FeedDto result = feedService.getFeed(feedId);
