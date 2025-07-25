@@ -30,6 +30,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+//todo: 목빈 쓸수도있음
 @WebMvcTest(controllers = AttributeDefController.class)
 @Import(AttributeDefControllerTest.MockConfig.class)
 @AutoConfigureMockMvc(addFilters = false)

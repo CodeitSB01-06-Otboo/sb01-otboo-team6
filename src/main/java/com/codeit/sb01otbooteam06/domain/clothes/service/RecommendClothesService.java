@@ -22,8 +22,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class RecommendClothesService {
 
   private final AttributeDefService attributeDefService;
@@ -147,6 +149,7 @@ public class RecommendClothesService {
    * @param targetList
    * @param id
    */
+  @Transactional
   private void addClothesIdIfNotNull(List<UUID> targetList, UUID id) {
     if (id == null) {
       return;
@@ -240,7 +243,7 @@ public class RecommendClothesService {
 
   }
 
-
+  @Transactional
   public RecommendClothes findRandomByUserAndWeather(UUID userId, UUID weatherId) {
     return recommendClothesRepository.findRandomByUserAndWeather(
         userId, weatherId);

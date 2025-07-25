@@ -13,6 +13,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
  * 만들었습니다. extends로 사용합니다.
  */
 
+//todo: 팀 prj에서는 공통으로 설정하는 것도 좋음.
 @Testcontainers
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
