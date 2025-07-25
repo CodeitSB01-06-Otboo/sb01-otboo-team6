@@ -7,6 +7,8 @@ import com.codeit.sb01otbooteam06.domain.notification.dto.NotificationDto;
 import com.codeit.sb01otbooteam06.domain.notification.entity.Notification;
 import com.codeit.sb01otbooteam06.domain.notification.repository.NotificationRepository;
 import com.codeit.sb01otbooteam06.domain.notification.util.NotificationCreator;
+import com.codeit.sb01otbooteam06.domain.user.entity.User;
+import com.codeit.sb01otbooteam06.domain.user.repository.UserRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -22,6 +24,7 @@ public class NotificationEventListener {
 
   private final NotificationRepository notificationRepository;
   private final FollowRepository followRepository;
+  private final UserRepository userRepository;
   private final ApplicationEventPublisher eventPublisher;
 
   @EventListener
@@ -58,11 +61,15 @@ public class NotificationEventListener {
 
   @EventListener
   public void handleClothesAttributeAdded(ClothesAttributeAddedEvent event) {
-    Notification notification = NotificationCreator.ofClothesAttributeAdded(event.receiver(),
-        event.attributeSummary());
-    notificationRepository.save(notification);
-    eventPublisher.publishEvent(new NotificationCreateEvent(NotificationDto.from(notification)));
-  }
+    List<User> users = userRepository.findAll();
+
+    List<Notification> notifications = users.stream()
+        .map(user -> NotificationCreator.ofClothesAttributeAdded(user, event.attributeSummary()))
+        .toList();
+    notificationRepository.saveAll(notifications);
+    notifications.forEach(n ->
+        eventPublisher.publishEvent(new NotificationCreateEvent(NotificationDto.from(n)))
+    );  }
 
   @EventListener
   public void handleFolloweeFeedPosted(FolloweeFeedPostedEvent event) {

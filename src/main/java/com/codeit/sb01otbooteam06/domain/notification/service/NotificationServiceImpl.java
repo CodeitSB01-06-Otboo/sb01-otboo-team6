@@ -61,9 +61,9 @@ public class NotificationServiceImpl implements NotificationService {
   }
 
   @Override
-  public void notifyClothesAttributeAdded(User receiver, String attributeSummary) {
+  public void notifyClothesAttributeAdded(String attributeSummary) {
 
-    eventPublisher.publishEvent(new ClothesAttributeAddedEvent(receiver, attributeSummary));
+    eventPublisher.publishEvent(new ClothesAttributeAddedEvent(attributeSummary));
 
   }
 

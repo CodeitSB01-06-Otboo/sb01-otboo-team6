@@ -15,7 +15,7 @@ public interface NotificationService {
 
   void notifyFeedCommented(User sender, User receiver, String feedContent);
 
-  void notifyClothesAttributeAdded(User receiver, String attributeSummary);
+  void notifyClothesAttributeAdded(String attributeSummary);
 
   void notifyFolloweePostedFeed(User followee, String feedContent);
 
