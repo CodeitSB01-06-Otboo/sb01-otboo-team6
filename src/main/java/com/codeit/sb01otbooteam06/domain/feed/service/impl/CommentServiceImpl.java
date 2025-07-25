@@ -9,6 +9,7 @@ import com.codeit.sb01otbooteam06.domain.feed.entity.Feed;
 import com.codeit.sb01otbooteam06.domain.feed.repository.CommentRepository;
 import com.codeit.sb01otbooteam06.domain.feed.repository.FeedRepository;
 import com.codeit.sb01otbooteam06.domain.feed.service.CommentService;
+import com.codeit.sb01otbooteam06.domain.notification.service.NotificationService;
 import com.codeit.sb01otbooteam06.domain.user.entity.User;
 import com.codeit.sb01otbooteam06.domain.user.repository.UserRepository;
 import com.codeit.sb01otbooteam06.global.exception.ErrorCode;
@@ -32,6 +33,7 @@ public class CommentServiceImpl implements CommentService {
   private final FeedRepository feedRepository;
   private final UserRepository userRepository;
   private final AuthService authService;
+  private final NotificationService notificationService;
 
   @Transactional
   @Override
@@ -48,8 +50,8 @@ public class CommentServiceImpl implements CommentService {
     // 댓글을 레포지토리에 저장안한 이유? cascade = ALL 설정, 피드가 저장 되면 같이 저장.
     feed.addComment(comment);
     feedRepository.save(feed);
-    // todo : 이벤트 발행, 댓글 생성 시에 알림 가도록 나중에 추가 해야함.
 
+    notificationService.notifyFeedCommented(author, feed.getUser(), feed.getContent());
     return CommentDto.fromEntity(comment);
   }
 
@@ -61,9 +63,11 @@ public class CommentServiceImpl implements CommentService {
         Sort.by(Sort.Direction.DESC, "createdAt").and(Sort.by(Sort.Direction.DESC, "id")));
 
     List<Comment> comments = (cursor == null || idAfter == null)
-        ? Optional.ofNullable(commentRepository.findByFeedId(feedId, pageReq)).orElse(Collections.emptyList())
-        : Optional.ofNullable(commentRepository.findCommentsByCreatedAtCursor(feedId, cursor, idAfter, pageReq)).orElse(Collections.emptyList());
-
+        ? Optional.ofNullable(commentRepository.findByFeedId(feedId, pageReq))
+        .orElse(Collections.emptyList())
+        : Optional.ofNullable(
+                commentRepository.findCommentsByCreatedAtCursor(feedId, cursor, idAfter, pageReq))
+            .orElse(Collections.emptyList());
 
     List<CommentDto> data = Optional.of(comments)
         .orElse(Collections.emptyList())
