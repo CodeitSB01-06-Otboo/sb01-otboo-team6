@@ -66,9 +66,13 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserDto changeRole(UUID userId, UserRoleUpdateRequest request) {
         User user = findById(userId);
-        user.changeRole(request.getRole());
+        if (!user.getRole().equals(request.getRole())) {
+            user.changeRole(request.getRole());
+            user.setForceLogout(true); // 자동 로그아웃 유도
+        }
         return toDto(user);
     }
+
 
     @Override
     @Transactional
@@ -81,7 +85,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void changePassword(UUID userId, ChangePasswordRequest request) {
         User user = findById(userId);
-        user.changePassword(passwordEncoder.encode(request.getPassword()));
+        user.changePassword(passwordEncoder.encode(request.getNewPassword()));
     }
 
     @Override

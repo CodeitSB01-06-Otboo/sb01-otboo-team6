@@ -1,5 +1,7 @@
 package com.codeit.sb01otbooteam06.domain.auth.jwt;
 
+import com.codeit.sb01otbooteam06.domain.user.entity.User;
+import com.codeit.sb01otbooteam06.domain.user.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -10,56 +12,57 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.UUID;
 
-/**
- * JWT 인증 필터 - 요청마다 실행
- */
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final UserRepository userRepository;  //  추가
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-        String bearer = request.getHeader("Authorization");
-        System.out.println(">>> [JwtFilter] Authorization 헤더 원본 값: " + bearer);
-
         String token = resolveToken(request);
-        System.out.println(">>> [JwtFilter] resolveToken 결과: " + token);
 
         if (token != null && jwtTokenProvider.validateToken(token)) {
             UUID userId = jwtTokenProvider.getUserId(token);
-            System.out.println(">>> [JwtFilter] 토큰 유효, userId: " + userId);
+            System.out.println(">>> [JwtFilter] 유효한 토큰, userId: " + userId);
 
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(userId, null, null);
+            //  forceLogout 체크
+            Optional<User> userOpt = userRepository.findById(userId);
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                if (user.isForceLogout()) {
+                    System.out.println(">>> [JwtFilter] forceLogout == true, 인증 거부");
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType("application/json");
+                    response.getWriter().write("""
+                        {
+                          "code": "FORCE_LOGOUT",
+                          "message": "권한 변경 등으로 인해 자동 로그아웃되었습니다."
+                        }
+                        """);
+                    return; // 더 이상 필터 진행 X
+                }
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-        } else {
-            System.out.println(">>> [JwtFilter] 토큰 없음 또는 유효하지 않음");
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(userId, null, null);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
         }
 
         filterChain.doFilter(request, response);
     }
 
-
-    /**
-     * 요청 헤더에서 토큰 추출
-     */
     private String resolveToken(HttpServletRequest request) {
         String bearer = request.getHeader("Authorization");
-        System.out.println(">>> [JwtFilter] resolveToken 내부 - Authorization 헤더: " + bearer);
-
         if (bearer != null && bearer.startsWith("Bearer ")) {
-            String token = bearer.substring(7);
-            System.out.println(">>> [JwtFilter] Bearer 제거 후 토큰: " + token);
-            return token;
+            return bearer.substring(7);
         }
         return null;
     }
-
 }

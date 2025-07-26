@@ -1,5 +1,6 @@
 package com.codeit.sb01otbooteam06.domain.auth.controller;
 
+import com.codeit.sb01otbooteam06.domain.auth.dto.MeResponse;
 import com.codeit.sb01otbooteam06.domain.auth.dto.ResetPasswordRequest;
 import com.codeit.sb01otbooteam06.domain.auth.dto.SignInRequest;
 import com.codeit.sb01otbooteam06.domain.auth.dto.TokenResponse;

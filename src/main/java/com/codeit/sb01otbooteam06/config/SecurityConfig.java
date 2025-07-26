@@ -6,6 +6,7 @@ import com.codeit.sb01otbooteam06.domain.auth.oauth.CustomAuthorizationRequestRe
 import com.codeit.sb01otbooteam06.domain.auth.oauth.CustomOAuth2UserService;
 import com.codeit.sb01otbooteam06.domain.auth.oauth.DelegatingOAuth2UserService;
 import com.codeit.sb01otbooteam06.domain.auth.oauth.OAuth2AuthenticationSuccessHandler;
+import com.codeit.sb01otbooteam06.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,9 +25,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
-    private final DelegatingOAuth2UserService delegatingOAuth2UserService; //
+    private final DelegatingOAuth2UserService delegatingOAuth2UserService;
     private final OAuth2AuthenticationSuccessHandler oAuth2SuccessHandler;
     private final ClientRegistrationRepository clientRegistrationRepository;
+    private final UserRepository userRepository;  //  추가
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -49,8 +51,10 @@ public class SecurityConfig {
                         )
                         .successHandler(oAuth2SuccessHandler)
                 )
-                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider),
-                        UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(
+                        new JwtAuthenticationFilter(jwtTokenProvider, userRepository),
+                        UsernamePasswordAuthenticationFilter.class
+                )
                 .build();
     }
 
@@ -59,3 +63,4 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 }
+
