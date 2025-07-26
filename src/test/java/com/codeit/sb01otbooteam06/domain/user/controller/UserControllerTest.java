@@ -1,151 +1,165 @@
-/*package com.codeit.sb01otbooteam06.domain.user.controller;
+package com.codeit.sb01otbooteam06.domain.user.controller;
 
 import com.codeit.sb01otbooteam06.domain.user.dto.*;
 import com.codeit.sb01otbooteam06.domain.user.entity.Role;
-import com.codeit.sb01otbooteam06.domain.user.entity.User;
-import com.codeit.sb01otbooteam06.domain.user.repository.UserRepository;
+import com.codeit.sb01otbooteam06.domain.user.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.Resource;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import java.lang.reflect.Constructor;
+import java.util.List;
+import java.util.UUID;
+
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@TestPropertySource(properties = {
-        "spring.sql.init.mode=never",  // SQL 스크립트 무시
-        "spring.jpa.hibernate.ddl-auto=create-drop",  // Hibernate로 테이블 자동 생성
-        "spring.datasource.url=jdbc:h2:mem:test;MODE=PostgreSQL",  // H2를 PostgreSQL 호환 모드로 실행
-        "spring.datasource.driverClassName=org.h2.Driver",
-        "jwt.secret=oNBHrSfTnlrtuHEGLSnU3bdwtwJIGdsGNPWt0+MlQIA="  // Base64 인코딩된 JWT 시크릿 추가
-})
+@Import(UserControllerTest.TestConfig.class)
 class UserControllerTest {
 
-    @Autowired private MockMvc mockMvc;
-    @Autowired private UserRepository userRepository;
-    @Autowired private PasswordEncoder passwordEncoder;
-    @Autowired private ObjectMapper objectMapper;
+    @Resource
+    private MockMvc mockMvc;
+
+    @Resource
+    private ObjectMapper objectMapper;
+
+    @Resource
+    private UserService userService;
+
+    @TestConfiguration
+    static class TestConfig {
+        @Bean
+        public UserService userService() {
+            return org.mockito.Mockito.mock(UserService.class);
+        }
+    }
 
     @Test
-    @DisplayName("회원가입 테스트")
-    void testCreateUser() throws Exception {
-        UserCreateRequest request = UserCreateRequest.builder()
-                .name("테스트유저")
-                .email("testuser@example.com")
-                .password("TestPassword1!")
+    @DisplayName("회원가입 요청 성공")
+    void createUser() throws Exception {
+        UserCreateRequest request = new UserCreateRequest();
+        ReflectionTestUtils.setField(request, "name", "홍길동"); // 필수 필드 설정
+        ReflectionTestUtils.setField(request, "email", "test@example.com");
+        ReflectionTestUtils.setField(request, "password", "password123");
+
+        UserDto response = UserDto.builder()
+                .id(UUID.randomUUID())
+                .email("test@example.com")
+                .role(Role.USER)
+                .locked(false)
                 .build();
+
+        given(userService.create(any())).willReturn(response);
 
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.email").value("testuser@example.com"));
-
-        User saved = userRepository.findByEmail("testuser@example.com").orElseThrow();
-        assertThat(saved.getName()).isEqualTo("테스트유저");
+                .andExpect(jsonPath("$.email").value("test@example.com"));
     }
 
-    @Test
-    @DisplayName("비밀번호 변경 테스트")
-    void testChangePassword() throws Exception {
-        User user = userRepository.save(User.builder()
-                .email("changepw@example.com")
-                .password(passwordEncoder.encode("oldpass123"))
-                .name("비밀번호변경")
-                .role(Role.USER)
-                .build());
 
-        ChangePasswordRequest request = ChangePasswordRequest.builder()
-                .oldPassword("oldpass123")
-                .newPassword("newpass456")
+    @Test
+    @DisplayName("계정 목록 조회 성공")
+    void listUsers() throws Exception {
+        UserDto userDto = UserDto.builder()
+                .id(UUID.randomUUID())
+                .email("user1@example.com")
+                .role(Role.USER)
+                .locked(false)
                 .build();
 
-        mockMvc.perform(patch("/api/users/{userId}/password", user.getId())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isNoContent());
+        // UserListResponse 생성자 접근
+        Constructor<UserListResponse> constructor = UserListResponse.class.getDeclaredConstructor(
+                List.class, String.class, UUID.class, boolean.class,
+                long.class, String.class, String.class
+        );
+        constructor.setAccessible(true);
 
-        User updated = userRepository.findById(user.getId()).orElseThrow();
-        assertThat(passwordEncoder.matches("newpass456", updated.getPassword())).isTrue();
+        UserListResponse response = constructor.newInstance(
+                List.of(userDto), // data
+                null,             // nextCursor
+                null,             // nextIdAfter
+                false,            // hasNext
+                1L,               // totalCount
+                "email",          // sortBy
+                "asc"             // sortDirection
+        );
+
+        given(userService.list(any(), any(), anyInt(), anyString(), anyString(), any(), any(), any()))
+                .willReturn(response);
+
+        mockMvc.perform(get("/api/users")
+                        .param("limit", "10")
+                        .param("sortBy", "email")
+                        .param("sortDirection", "asc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[0].email").value("user1@example.com"));
     }
 
-    @Test
-    @DisplayName("사용자 권한 변경 테스트")
-    void testChangeRole() throws Exception {
-        User user = userRepository.save(User.builder()
-                .email("changerole@example.com")
-                .password("testpass")
-                .name("권한유저")
-                .role(Role.USER)
-                .build());
 
-        UserRoleUpdateRequest request = UserRoleUpdateRequest.builder()
+
+    @Test
+    @DisplayName("권한 변경 성공")
+    void changeRole() throws Exception {
+        UUID userId = UUID.randomUUID();
+        UserRoleUpdateRequest request = new UserRoleUpdateRequest(Role.ADMIN);
+        UserDto response = UserDto.builder()
+                .id(userId)
+                .email("admin@example.com")
                 .role(Role.ADMIN)
+                .locked(false)
                 .build();
 
-        mockMvc.perform(patch("/api/users/{userId}/role", user.getId())
+        given(userService.changeRole(eq(userId), any())).willReturn(response);
+
+        mockMvc.perform(patch("/api/users/{userId}/role", userId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.role").value("ADMIN"));
-
-        User updated = userRepository.findById(user.getId()).orElseThrow();
-        assertThat(updated.getRole()).isEqualTo(Role.ADMIN);
     }
 
     @Test
-    @DisplayName("사용자 잠금 상태 변경 테스트")
-    void testChangeLocked() throws Exception {
-        User user = userRepository.save(User.builder()
-                .email("locktest@example.com")
-                .password("pw")
-                .name("잠금유저")
-                .role(Role.USER)
-                .locked(false)
-                .build());
+    @DisplayName("잠금 상태 변경 성공")
+    void changeLocked() throws Exception {
+        UUID userId = UUID.randomUUID();
+        UserLockUpdateRequest request = new UserLockUpdateRequest(true);
 
-        UserLockUpdateRequest request = UserLockUpdateRequest.builder()
-                .locked(true)
-                .build();
+        doNothing().when(userService).changeLocked(eq(userId), any());
 
-        mockMvc.perform(patch("/api/users/{userId}/lock", user.getId())
+        mockMvc.perform(patch("/api/users/{userId}/lock", userId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(content().string(user.getId().toString()));
-
-        User updated = userRepository.findById(user.getId()).orElseThrow();
-        assertThat(updated.isLocked()).isTrue();
+                .andExpect(content().string(userId.toString()));
     }
 
     @Test
-    @DisplayName("계정 목록 조회 테스트")
-    void testListUsers() throws Exception {
-        for (int i = 0; i < 5; i++) {
-            userRepository.save(User.builder()
-                    .email("user" + i + "@example.com")
-                    .password("pw")
-                    .name("유저" + i)
-                    .role(Role.USER)
-                    .build());
-        }
+    @DisplayName("비밀번호 변경 성공")
+    void changePassword() throws Exception {
+        UUID userId = UUID.randomUUID();
+        ChangePasswordRequest request = new ChangePasswordRequest("oldPass", "newPass");
 
-        mockMvc.perform(get("/api/users")
-                        .param("limit", "3")
-                        .param("sortBy", "createdAt")
-                        .param("sortDirection", "ASC"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data").isArray())
-                .andExpect(jsonPath("$.data.length()").value(3))
-                .andExpect(jsonPath("$.hasNext").value(true));
+        doNothing().when(userService).changePassword(eq(userId), any());
+
+        mockMvc.perform(patch("/api/users/{userId}/password", userId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNoContent());
     }
-}*/
+}

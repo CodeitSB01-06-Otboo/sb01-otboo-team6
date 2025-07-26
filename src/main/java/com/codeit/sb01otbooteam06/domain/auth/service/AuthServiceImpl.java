@@ -1,5 +1,6 @@
 package com.codeit.sb01otbooteam06.domain.auth.service;
 
+import com.codeit.sb01otbooteam06.domain.auth.dto.MeResponse;
 import com.codeit.sb01otbooteam06.domain.auth.dto.ResetPasswordRequest;
 import com.codeit.sb01otbooteam06.domain.auth.dto.SignInRequest;
 import com.codeit.sb01otbooteam06.domain.auth.dto.TokenResponse;
@@ -8,11 +9,11 @@ import com.codeit.sb01otbooteam06.domain.user.entity.User;
 import com.codeit.sb01otbooteam06.domain.user.exception.UserNotFoundException;
 import com.codeit.sb01otbooteam06.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -57,12 +58,15 @@ public class AuthServiceImpl implements AuthService {
             user.clearTemporaryPassword();
         }
 
-        String accessToken = jwtTokenProvider.generateAccessToken(user.getId());
+        String accessToken = jwtTokenProvider.generateAccessToken(user); //  User 기반 accessToken
         String refreshToken = jwtTokenProvider.generateRefreshToken(user.getId());
 
         return new TokenResponse(accessToken, refreshToken, user.isMustChangePassword());
     }
 
+    /**
+     * 비밀번호 재설정 (임시 비밀번호 발급)
+     */
     @Override
     @Transactional
     public void resetPassword(ResetPasswordRequest request) {
@@ -79,21 +83,31 @@ public class AuthServiceImpl implements AuthService {
         System.out.println("임시 비밀번호 발급됨: " + tempPassword);
     }
 
+    /**
+     * 리프레시 토큰으로 accessToken 재발급
+     */
     @Override
     public String refreshAccessToken(String refreshToken) {
-        validateRefreshToken(refreshToken);
-        UUID userId = jwtTokenProvider.getUserId(refreshToken);
-        return jwtTokenProvider.generateAccessToken(userId);
+        return getAccessToken(refreshToken); //  공통 처리
     }
 
     /**
-     * 리프레시 토큰으로 현재 액세스 토큰 조회
+     * 리프레시 토큰 기반 accessToken 조회 (프론트 /api/auth/me에서 사용)
      */
     @Override
     public String getAccessToken(String refreshToken) {
-        return refreshAccessToken(refreshToken);
+        validateRefreshToken(refreshToken);
+
+        UUID userId = jwtTokenProvider.getUserId(refreshToken);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다."));
+
+        return jwtTokenProvider.generateAccessToken(user); //  role 포함된 JWT 발급
     }
 
+    /**
+     * 현재 로그인한 사용자 ID 조회
+     */
     @Override
     public UUID getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -105,6 +119,25 @@ public class AuthServiceImpl implements AuthService {
         return (UUID) authentication.getPrincipal();
     }
 
+    /**
+     * 사용자 정보 응답 (선택 API)
+     */
+    @Override
+    public MeResponse getMe(String refreshToken) {
+        if (!jwtTokenProvider.validateToken(refreshToken)) {
+            throw new IllegalArgumentException("유효하지 않은 리프레시 토큰입니다.");
+        }
+
+        UUID userId = jwtTokenProvider.getUserId(refreshToken);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다."));
+
+        return new MeResponse(user);
+    }
+
+    /**
+     * 리프레시 토큰 유효성 검증
+     */
     private void validateRefreshToken(String refreshToken) {
         if (!jwtTokenProvider.validateToken(refreshToken)) {
             throw new IllegalArgumentException("유효하지 않은 리프레시 토큰입니다.");

@@ -1,5 +1,6 @@
 package com.codeit.sb01otbooteam06.domain.auth.service;
 
+import com.codeit.sb01otbooteam06.domain.auth.dto.MeResponse;
 import com.codeit.sb01otbooteam06.domain.auth.dto.ResetPasswordRequest;
 import com.codeit.sb01otbooteam06.domain.auth.dto.SignInRequest;
 import com.codeit.sb01otbooteam06.domain.auth.dto.TokenResponse;
@@ -32,4 +33,5 @@ public interface AuthService {
      * @return UUID - 인증된 사용자 ID
      */
     UUID getCurrentUserId();
+    MeResponse getMe(String refreshToken);
 }

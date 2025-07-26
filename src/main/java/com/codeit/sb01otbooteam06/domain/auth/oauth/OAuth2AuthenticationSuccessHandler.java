@@ -39,7 +39,9 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
                         "User not found for provider: " + provider + ", id: " + providerId));
 
         UUID userId = user.getId();
-        String accessToken = jwtTokenProvider.generateAccessToken(userId);
+
+        //  User 객체 기반으로 accessToken 생성 (role, name, email 포함)
+        String accessToken = jwtTokenProvider.generateAccessToken(user);
         String refreshToken = jwtTokenProvider.generateRefreshToken(userId);
 
         // Access Token (일반 쿠키 - JavaScript 접근 가능)
@@ -70,7 +72,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
 
         return switch (provider) {
             case "google" -> (String) user.getAttribute("sub");
-            case "kakao" -> String.valueOf(rawId); //   Long → String 변환
+            case "kakao" -> String.valueOf(rawId); // Long → String 변환
             default -> throw new IllegalArgumentException("Unknown provider: " + provider);
         };
     }

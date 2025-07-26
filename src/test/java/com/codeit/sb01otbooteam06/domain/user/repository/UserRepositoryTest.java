@@ -112,4 +112,139 @@ class UserRepositoryTest {
             return new JPAQueryFactory(em);
         }
     }
+    @Test
+    @DisplayName("searchUsers - 잠금 여부로 사용자 필터링")
+    void searchUsers_withLockedCondition() {
+        userRepository.save(User.builder().email("lock1@example.com").password("p1").name("L1").role(Role.USER).locked(true).mustChangePassword(false).build());
+        userRepository.save(User.builder().email("lock2@example.com").password("p2").name("L2").role(Role.USER).locked(false).mustChangePassword(false).build());
+
+        List<User> result = userRepository.searchUsers(
+                null,
+                null,
+                null,
+                true,
+                "email",
+                "ASCENDING",
+                10
+        );
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).isLocked()).isTrue();
+    }
+
+    @Test
+    @DisplayName("searchUsers - 이메일 내림차순 정렬")
+    void searchUsers_sortedByEmailDescending() {
+        userRepository.save(User.builder()
+                .email("b@example.com")
+                .password("p1")
+                .name("B")
+                .role(Role.USER)
+                .locked(false)
+                .mustChangePassword(false)
+                .build());
+
+        userRepository.save(User.builder()
+                .email("a@example.com")
+                .password("p2")
+                .name("A")
+                .role(Role.USER)
+                .locked(false)
+                .mustChangePassword(false)
+                .build());
+
+        List<User> result = userRepository.searchUsers(
+                null,
+                null,
+                null,
+                null,  //  모든 locked 조건 제거
+                "email",
+                "DESCENDING",  //  내림차순
+                10
+        );
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getEmail()).isEqualTo("b@example.com");
+        assertThat(result.get(1).getEmail()).isEqualTo("a@example.com");
+    }
+
+    @Test
+    @DisplayName("searchUsers - 역할로 필터링")
+    void searchUsers_withRoleCondition() {
+        userRepository.save(User.builder().email("admin@example.com").password("p1").name("admin").role(Role.ADMIN).locked(false).mustChangePassword(false).build());
+        userRepository.save(User.builder().email("user@example.com").password("p2").name("user").role(Role.USER).locked(false).mustChangePassword(false).build());
+
+        List<User> result = userRepository.searchUsers(
+                null,
+                null,
+                Role.ADMIN.name(),
+                null,
+                "email",
+                "ASCENDING",
+                10
+        );
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getRole()).isEqualTo(Role.ADMIN);
+    }
+
+    @Test
+    @DisplayName("searchUsers - createdAt 기준 정렬")
+    void searchUsers_sortedByCreatedAt() {
+        User user1 = userRepository.save(User.builder()
+                .email("user1@example.com")
+                .password("p")
+                .name("a")
+                .role(Role.USER)
+                .locked(false)
+                .mustChangePassword(false)
+                .build());
+
+        try {
+            Thread.sleep(10); // createdAt 차이 유도
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt(); // 현재 스레드의 인터럽트 상태 복구
+            throw new RuntimeException(e);      // 테스트 실패로 처리
+        }
+
+        User user2 = userRepository.save(User.builder()
+                .email("user2@example.com")
+                .password("p")
+                .name("b")
+                .role(Role.USER)
+                .locked(false)
+                .mustChangePassword(false)
+                .build());
+
+        List<User> result = userRepository.searchUsers(
+                null,
+                null,
+                null,
+                null,
+                "createdAt",
+                "DESCENDING",
+                10
+        );
+
+        assertThat(result.get(0).getEmail()).isEqualTo("user2@example.com");
+    }
+
+    @Test
+    @DisplayName("searchUsers - role과 locked가 null이면 전체 반환")
+    void searchUsers_nullRoleAndLocked() {
+        userRepository.save(User.builder().email("user1@example.com").password("p").name("a").role(Role.ADMIN).locked(true).mustChangePassword(false).build());
+        userRepository.save(User.builder().email("user2@example.com").password("p").name("b").role(Role.USER).locked(false).mustChangePassword(false).build());
+
+        List<User> result = userRepository.searchUsers(
+                null,
+                null,
+                null,  // roleEqual = null
+                null,  // locked = null
+                "email",
+                "ASCENDING",
+                10
+        );
+
+        assertThat(result).hasSize(2);
+    }
 }
