@@ -90,7 +90,7 @@ class DirectMessageServiceTest {
             eq("/sub/direct-messages_" + DirectMessage.generateKey(senderId, receiverId)),
             any(DirectMessageDto.class)
         );
-        then(notificationService).should().notifyDirectMessage(sender, receiver, content); // ← 여기
+        then(notificationService).should().notifyDirectMessage(sender, receiver, content);
 
         assertThat(returnedId).isNotNull();
     }
