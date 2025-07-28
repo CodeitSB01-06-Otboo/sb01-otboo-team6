@@ -13,6 +13,7 @@ import com.codeit.sb01otbooteam06.domain.dm.dto.DirectMessageListResponse;
 import com.codeit.sb01otbooteam06.domain.dm.entity.DirectMessage;
 import com.codeit.sb01otbooteam06.domain.dm.repository.DirectMessageRepository;
 import com.codeit.sb01otbooteam06.domain.dm.service.DirectMessageService;
+import com.codeit.sb01otbooteam06.domain.notification.service.NotificationService;
 import com.codeit.sb01otbooteam06.domain.profile.entity.Gender;
 import com.codeit.sb01otbooteam06.domain.profile.entity.Profile;
 import com.codeit.sb01otbooteam06.domain.user.entity.Role;
@@ -46,6 +47,8 @@ class DirectMessageServiceTest {
     UserRepository userRepository;
     @Mock
     SimpMessagingTemplate messagingTemplate;
+    @Mock
+    NotificationService notificationService;
 
     @InjectMocks
     DirectMessageService dmService;
@@ -64,32 +67,33 @@ class DirectMessageServiceTest {
 
     }
 
-//    @Test
-//    @DisplayName("DM을 전송하면 저장되고 구독자에게 브로드캐스팅된다")
-//    void sendDmSavesAndBroadcasts() {
-//        // given
-//        given(userRepository.findById(senderId)).willReturn(Optional.of(sender));
-//        given(userRepository.findById(receiverId)).willReturn(Optional.of(receiver));
-//
-//        given(dmRepository.save(any(DirectMessage.class)))
-//            .willAnswer(inv -> {
-//                DirectMessage dm = inv.getArgument(0, DirectMessage.class);
-//                ReflectionTestUtils.setField(dm, "id", UUID.randomUUID());
-//                return dm;
-//            });
-//        String content = "hello";
-//
-//        // when
-//        UUID returnedId = dmService.send(senderId, receiverId, content);
-//
-//        // then
-//        then(dmRepository).should().save(any(DirectMessage.class));
-//        then(messagingTemplate).should().convertAndSend(
-//            eq("/sub/direct-messages_" + DirectMessage.generateKey(senderId, receiverId)),
-//            any(DirectMessageDto.class));
-//
-//        assertThat(returnedId).isNotNull();
-//    }
+    @Test
+    @DisplayName("DM을 전송하면 저장되고 브로드캐스팅되며 알림이 발행된다")
+    void sendDmSavesBroadcastsAndPublishesNotification() {
+        // given
+        given(userRepository.findById(senderId)).willReturn(Optional.of(sender));
+        given(userRepository.findById(receiverId)).willReturn(Optional.of(receiver));
+        given(dmRepository.save(any(DirectMessage.class)))
+            .willAnswer(inv -> {
+                DirectMessage dm = inv.getArgument(0, DirectMessage.class);
+                ReflectionTestUtils.setField(dm, "id", UUID.randomUUID());
+                return dm;
+            });
+        String content = "hello";
+
+        // when
+        UUID returnedId = dmService.send(senderId, receiverId, content);
+
+        // then
+        then(dmRepository).should().save(any(DirectMessage.class));
+        then(messagingTemplate).should().convertAndSend(
+            eq("/sub/direct-messages_" + DirectMessage.generateKey(senderId, receiverId)),
+            any(DirectMessageDto.class)
+        );
+        then(notificationService).should().notifyDirectMessage(sender, receiver, content); // ← 여기
+
+        assertThat(returnedId).isNotNull();
+    }
 
     @Test
     @DisplayName("DM 목록을 페이징 조회할 수 있다")
