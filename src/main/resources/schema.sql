@@ -188,8 +188,6 @@ ALTER TABLE feeds_likes
         ON DELETE CASCADE;
 
 
-CREATE TYPE notification_type AS ENUM ('INFO', 'WARNING', 'ERROR');
-
 
 CREATE TABLE notifications
 (
@@ -199,7 +197,7 @@ CREATE TABLE notifications
     content    TEXT              NOT NULL,
     created_at TIMESTAMP         NOT NULL,
     is_read    BOOLEAN           NOT NULL,
-    type       notification_type NOT NULL
+    type       VARCHAR(20)       NOT NULL
 );
 ALTER TABLE notifications
     ADD CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES users (id);

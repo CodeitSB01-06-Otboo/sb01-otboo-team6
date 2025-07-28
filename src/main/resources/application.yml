@@ -61,3 +61,7 @@ cloud:
 google:
   api:
     key: ${GOOGLE_API_KEY}
+
+sse:
+  timeout: ${SSE_TIMEOUT:1800000}
+  event-queue-capacity: ${SSE_EVENT_QUEUE_CAPACITY:100}

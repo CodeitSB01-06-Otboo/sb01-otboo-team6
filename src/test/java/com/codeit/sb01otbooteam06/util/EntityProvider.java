@@ -55,21 +55,13 @@ public class EntityProvider {
     return new ClothesAttribute(clothes, attributeDef, value);
   }
 
-  public static Weather createTestWeather(Location location, SkyStatus skyStatus,
+  public static Weather createTestWeatherWithTime(Location location, SkyStatus skyStatus,
       PrecipitationType type, Temperature temperature, Precipitation precipitation, Wind wind,
-      double humidity, double snow, double lightning) {
-    // 기준 시간 한 번만 호출
-    Instant base = Instant.now();
+      double humidity, double snow, double lighting,
+      Instant forecastedAt, Instant forecastAt) {
 
-    // 랜덤 오프셋을 줘서 forecastedAt/forecastAt이 중복되지 않도록
-    long offsetSeconds = ThreadLocalRandom.current().nextLong(1, 10_000);
-
-    Weather weather = Weather.from(base.minusSeconds(600), base.plusSeconds(offsetSeconds),
-        location);
-
-    weather.applyMetrics(skyStatus, type, temperature, precipitation, wind, humidity, snow,
-        lightning);
-
+    Weather weather = Weather.from(forecastedAt, forecastAt, location);
+    weather.applyMetrics(skyStatus, type, temperature, precipitation, wind, humidity, snow, lighting);
     return weather;
   }
 

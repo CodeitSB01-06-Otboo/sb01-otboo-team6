@@ -1,8 +1,12 @@
 package com.codeit.sb01otbooteam06.domain.feed.like.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
@@ -12,8 +16,10 @@ import com.codeit.sb01otbooteam06.domain.feed.entity.FeedLike;
 import com.codeit.sb01otbooteam06.domain.feed.repository.FeedLikeRepository;
 import com.codeit.sb01otbooteam06.domain.feed.repository.FeedRepository;
 import com.codeit.sb01otbooteam06.domain.feed.service.impl.FeedLikeServiceImpl;
+import com.codeit.sb01otbooteam06.domain.notification.service.NotificationService;
 import com.codeit.sb01otbooteam06.domain.user.entity.User;
 import com.codeit.sb01otbooteam06.domain.user.repository.UserRepository;
+import com.codeit.sb01otbooteam06.domain.weather.entity.Weather;
 import com.codeit.sb01otbooteam06.global.exception.OtbooException;
 import java.util.Optional;
 import java.util.UUID;
@@ -39,16 +45,22 @@ public class FeedLikeServiceImplTest {
   private UserRepository userRepository;
   @Mock
   private FeedLikeRepository feedLikeRepository;
+  @Mock
+  private NotificationService notificationService;
 
   private final UUID feedId = UUID.randomUUID();
   private final UUID userId = UUID.randomUUID();
   private final Feed mockFeed = mock(Feed.class);
   private final User mockUser = mock(User.class);
   private final FeedLike mockFeedLike = mock(FeedLike.class);
+  private final Weather mockWeather = mock(Weather.class);
 
   @Nested
   @DisplayName("likeFeed() 테스트")
   class LikeFeedTest {
+
+    Feed feed = Feed.of("테스트 피드 내용", mockUser, mockWeather);
+
 
     @Test
     @DisplayName("성공적으로 피드 좋아요를 등록한다.")
@@ -56,15 +68,18 @@ public class FeedLikeServiceImplTest {
       // given
       given(authService.getCurrentUserId()).willReturn(userId);
       given(userRepository.findById(userId)).willReturn(Optional.of(mockUser));
-      given(feedRepository.findById(feedId)).willReturn(Optional.of(mockFeed));
-      given(feedLikeRepository.existsByFeedAndUser(mockFeed, mockUser)).willReturn(false);
+      given(feedRepository.findById(feedId)).willReturn(Optional.of(feed));
+      given(feedLikeRepository.existsByFeedAndUser(feed, mockUser)).willReturn(false);
+      willDoNothing().given(notificationService).notifyFeedLiked(any(User.class), any(User.class), anyString());
 
       // when
       feedLikeService.likeFeed(feedId);
 
       // then
       verify(feedLikeRepository).save(any(FeedLike.class));
-      verify(mockFeed).like();
+      assertEquals(1, feed.getLikeCount());
+      // 알림 호출 여부 확인
+      verify(notificationService).notifyFeedLiked(eq(mockUser), eq(feed.getUser()), eq(feed.getContent()));
     }
 
     @Test

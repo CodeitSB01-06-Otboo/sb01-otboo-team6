@@ -5,6 +5,7 @@ import com.codeit.sb01otbooteam06.domain.follow.dto.FollowListResponse;
 import com.codeit.sb01otbooteam06.domain.follow.dto.FollowSummaryDto;
 import com.codeit.sb01otbooteam06.domain.follow.entity.Follow;
 import com.codeit.sb01otbooteam06.domain.follow.repository.FollowRepository;
+import com.codeit.sb01otbooteam06.domain.notification.service.NotificationService;
 import com.codeit.sb01otbooteam06.domain.user.entity.User;
 import com.codeit.sb01otbooteam06.domain.user.repository.UserRepository;
 import java.util.List;
@@ -29,6 +30,7 @@ public class FollowService {
 
     private final FollowRepository followRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     @Transactional
     public FollowDto follow(UUID followerId, UUID followeeId) {
@@ -39,6 +41,7 @@ public class FollowService {
             throw new IllegalStateException("이미 팔로우 중입니다.");
         }
         Follow follow = followRepository.save(Follow.from(follower, followee));
+        notificationService.notifyUserFollowed(follower, followee);
         return FollowDto.from(follow);
     }
 

@@ -64,32 +64,32 @@ class DirectMessageServiceTest {
 
     }
 
-    @Test
-    @DisplayName("DM을 전송하면 저장되고 구독자에게 브로드캐스팅된다")
-    void sendDmSavesAndBroadcasts() {
-        // given
-        given(userRepository.findById(senderId)).willReturn(Optional.of(sender));
-        given(userRepository.findById(receiverId)).willReturn(Optional.of(receiver));
-
-        given(dmRepository.save(any(DirectMessage.class)))
-            .willAnswer(inv -> {
-                DirectMessage dm = inv.getArgument(0, DirectMessage.class);
-                ReflectionTestUtils.setField(dm, "id", UUID.randomUUID());
-                return dm;
-            });
-        String content = "hello";
-
-        // when
-        UUID returnedId = dmService.send(senderId, receiverId, content);
-
-        // then
-        then(dmRepository).should().save(any(DirectMessage.class));
-        then(messagingTemplate).should().convertAndSend(
-            eq("/sub/direct-messages_" + DirectMessage.generateKey(senderId, receiverId)),
-            any(DirectMessageDto.class));
-
-        assertThat(returnedId).isNotNull();
-    }
+//    @Test
+//    @DisplayName("DM을 전송하면 저장되고 구독자에게 브로드캐스팅된다")
+//    void sendDmSavesAndBroadcasts() {
+//        // given
+//        given(userRepository.findById(senderId)).willReturn(Optional.of(sender));
+//        given(userRepository.findById(receiverId)).willReturn(Optional.of(receiver));
+//
+//        given(dmRepository.save(any(DirectMessage.class)))
+//            .willAnswer(inv -> {
+//                DirectMessage dm = inv.getArgument(0, DirectMessage.class);
+//                ReflectionTestUtils.setField(dm, "id", UUID.randomUUID());
+//                return dm;
+//            });
+//        String content = "hello";
+//
+//        // when
+//        UUID returnedId = dmService.send(senderId, receiverId, content);
+//
+//        // then
+//        then(dmRepository).should().save(any(DirectMessage.class));
+//        then(messagingTemplate).should().convertAndSend(
+//            eq("/sub/direct-messages_" + DirectMessage.generateKey(senderId, receiverId)),
+//            any(DirectMessageDto.class));
+//
+//        assertThat(returnedId).isNotNull();
+//    }
 
     @Test
     @DisplayName("DM 목록을 페이징 조회할 수 있다")

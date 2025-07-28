@@ -14,20 +14,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, UUID> {
 
-
-  @Query("""
-    SELECT n FROM Notification n
-    WHERE n.user.id = :userId
-      AND (:cursorCreatedAt IS NULL OR
-           (n.createdAt < :cursorCreatedAt OR 
-            (n.createdAt = :cursorCreatedAt AND n.id < :cursorId)))
-    ORDER BY n.createdAt DESC, n.id DESC
-""")
-  List<Notification> findByUserIdWithCursorPagination(
-      @Param("userId") UUID userId,
-      @Param("cursorCreatedAt") Instant cursorCreatedAt,
-      @Param("cursorId") UUID cursorId,
-      Pageable pageable
-  );
+  int countByUserIdAndIsReadFalse(UUID userId);
 
 }

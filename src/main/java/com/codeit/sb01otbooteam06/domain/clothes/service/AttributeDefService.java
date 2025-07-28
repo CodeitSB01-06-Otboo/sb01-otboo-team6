@@ -8,6 +8,7 @@ import com.codeit.sb01otbooteam06.domain.clothes.entity.dto.PageResponse;
 import com.codeit.sb01otbooteam06.domain.clothes.exception.AttributeDefNotFoundException;
 import com.codeit.sb01otbooteam06.domain.clothes.mapper.AttributeDefMapper;
 import com.codeit.sb01otbooteam06.domain.clothes.repository.AttributeDefRepository;
+import com.codeit.sb01otbooteam06.domain.notification.service.NotificationService;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,8 @@ public class AttributeDefService {
 
   private final AttributeDefMapper attributeDefMapper;
 
+  private final NotificationService notificationService;
+
 
   @PreAuthorize("hasRole('ADMIN')")
   @Transactional
@@ -37,6 +40,8 @@ public class AttributeDefService {
         clothesAttributeDefCreateRequest.name(),
         clothesAttributeDefCreateRequest.selectableValues()
     );
+
+    notificationService.notifyClothesAttributeAdded(clothesAttributeDefCreateRequest.name());
 
     return attributeDefMapper.toDto(attributeDefRepository.save(attributeDef));
 
