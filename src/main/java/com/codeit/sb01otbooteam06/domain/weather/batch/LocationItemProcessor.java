@@ -13,6 +13,9 @@ public class LocationItemProcessor
 
     @Override
     public Location process(Location item) {
-        return item;   // 그대로 Writer 로 전달
+        if (item == null || item.getLatitude() == null || item.getLongitude() == null) {
+            return null; // chunk에서 제외
+        }
+        return item;
     }
 }
