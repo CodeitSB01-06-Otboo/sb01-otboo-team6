@@ -74,24 +74,28 @@ CREATE TABLE weather_location_names
 -- 유저
 CREATE TABLE users
 (
-    id                          UUID PRIMARY KEY,
-    email                       VARCHAR NOT NULL UNIQUE,
-    password                    VARCHAR NOT NULL,
-    name                        VARCHAR NOT NULL,
-    role                        VARCHAR NOT NULL CHECK (role IN ('USER', 'ADMIN')),
-    locked                      BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at                  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    linked_oauth_providers      TEXT[],
+    id                             UUID PRIMARY KEY,
+    email                          VARCHAR NOT NULL UNIQUE,
+    password                       VARCHAR NOT NULL,
+    name                           VARCHAR NOT NULL,
+    role                           VARCHAR NOT NULL CHECK (role IN ('USER', 'ADMIN')),
+    locked                         BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at                     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    linked_oauth_providers         TEXT[],
 
     -- 임시 비밀번호 관련 필드 추가
-    temporary_password          VARCHAR,
+    temporary_password             VARCHAR,
     temporary_password_expiration TIMESTAMP,
-    must_change_password        BOOLEAN NOT NULL DEFAULT FALSE,
+    must_change_password           BOOLEAN NOT NULL DEFAULT FALSE,
 
     -- 소셜 로그인 관련 필드 추가
-    provider                    VARCHAR,
-    provider_id                 VARCHAR
+    provider                       VARCHAR,
+    provider_id                    VARCHAR,
+
+    -- 강제 로그아웃 여부 추가
+    force_logout                   BOOLEAN NOT NULL DEFAULT FALSE
 );
+
 
 -- 프로필
 CREATE TABLE profiles
@@ -227,7 +231,7 @@ CREATE TABLE clothes_attributes
     id           UUID PRIMARY KEY,
     clothes_id   UUID        NOT NULL,
     attribute_id UUID        NOT NULL,
-    att_value        VARCHAR(40) NOT NULL,
+    att_value        VARCHAR(255) NOT NULL,
     created_at   TIMESTAMP   NOT NULL,
     updated_at   TIMESTAMP NULL
 );

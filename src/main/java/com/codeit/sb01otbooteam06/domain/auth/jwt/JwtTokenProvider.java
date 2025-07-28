@@ -1,5 +1,6 @@
 package com.codeit.sb01otbooteam06.domain.auth.jwt;
 
+import com.codeit.sb01otbooteam06.domain.user.entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -29,28 +30,23 @@ public class JwtTokenProvider {
   @PostConstruct
   public void logSecretEnv() {
     String jwtSecret = System.getenv("JWT_SECRET");
-    log.info("🔐 JWT_SECRET from env: {}", jwtSecret != null ? "[REDACTED]" : "NULL (Not Set)");
+    log.info("JWT_SECRET from env: {}", jwtSecret != null ? "[REDACTED]" : "NULL (Not Set)");
   }
 
   public JwtTokenProvider(
-      @Value("${jwt.secret}") String secret,
-      @Value("${jwt.access-expiration}") long accessExpiration,
-      @Value("${jwt.refresh-expiration}") long refreshExpiration,
-      @Value("${spring.profiles.active:}") String activeProfile
+          @Value("${jwt.secret}") String secret,
+          @Value("${jwt.access-expiration}") long accessExpiration,
+          @Value("${jwt.refresh-expiration}") long refreshExpiration,
+          @Value("${spring.profiles.active:}") String activeProfile
   ) {
     try {
       log.info("JWT_SECRET: {}", secret);
-      if ("dev".equals(activeProfile)) {
-        this.key = Keys.hmacShaKeyFor(secret.getBytes());
-      } else if ("prod".equals(activeProfile)) {
-        this.key = Keys.hmacShaKeyFor(Base64.getUrlDecoder().decode(secret));
-      } else {
-        this.key = Keys.hmacShaKeyFor(secret.getBytes());
-        log.info("JwtToeknProcider 부분의 apring active Profile 부분 오류 발생.");
-      }
+      //  무조건 Base64 디코딩
+      byte[] keyBytes = Base64.getDecoder().decode(secret);
+      this.key = Keys.hmacShaKeyFor(keyBytes);
+
     } catch (IllegalArgumentException | WeakKeyException e) {
       log.info("JWT Secret Key 오류 발생 : {}", e.getMessage());
-      e.printStackTrace();
       throw e;
     }
 
@@ -58,20 +54,40 @@ public class JwtTokenProvider {
     this.refreshTokenValidityInMillis = refreshExpiration;
   }
 
+
   /**
-   * 액세스 토큰 생성
+   * 액세스 토큰 생성 (user 객체 전체 사용, role 포함)
+   */
+  public String generateAccessToken(User user) {
+    Date now = new Date();
+    Date expiryDate = new Date(now.getTime() + accessTokenValidityInMillis);
+
+    return Jwts.builder()
+            .claim("userId", user.getId().toString())
+            .claim("email", user.getEmail())
+            .claim("name", user.getName())
+            .claim("role", user.getRole().name()) //  role 포함
+            .setSubject(user.getId().toString())
+            .setIssuedAt(now)
+            .setExpiration(expiryDate)
+            .signWith(key, SignatureAlgorithm.HS256)
+            .compact();
+  }
+
+  /**
+   * 기존 UUID 기반 액세스 토큰 생성
    */
   public String generateAccessToken(UUID userId) {
     Date now = new Date();
     Date expiryDate = new Date(now.getTime() + accessTokenValidityInMillis);
 
     return Jwts.builder()
-        .claim("userId", userId.toString())
-        .setSubject(userId.toString())
-        .setIssuedAt(now)
-        .setExpiration(expiryDate)
-        .signWith(key, SignatureAlgorithm.HS256)
-        .compact();
+            .claim("userId", userId.toString())
+            .setSubject(userId.toString())
+            .setIssuedAt(now)
+            .setExpiration(expiryDate)
+            .signWith(key, SignatureAlgorithm.HS256)
+            .compact();
   }
 
   /**
@@ -82,11 +98,11 @@ public class JwtTokenProvider {
     Date expiryDate = new Date(now.getTime() + refreshTokenValidityInMillis);
 
     return Jwts.builder()
-        .setSubject(userId.toString())
-        .setIssuedAt(now)
-        .setExpiration(expiryDate)
-        .signWith(key, SignatureAlgorithm.HS256)
-        .compact();
+            .setSubject(userId.toString())
+            .setIssuedAt(now)
+            .setExpiration(expiryDate)
+            .signWith(key, SignatureAlgorithm.HS256)
+            .compact();
   }
 
   /**
@@ -114,9 +130,9 @@ public class JwtTokenProvider {
    */
   private Claims parseClaims(String token) {
     return Jwts.parserBuilder()
-        .setSigningKey(key)
-        .build()
-        .parseClaimsJws(token)
-        .getBody();
+            .setSigningKey(key)
+            .build()
+            .parseClaimsJws(token)
+            .getBody();
   }
 }

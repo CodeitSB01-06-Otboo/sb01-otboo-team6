@@ -86,6 +86,8 @@ public class AttributeDefCustomRepositoryImpl implements AttributeDefCustomRepos
 
   }
 
+  //todo: 불린빌더 프라이빗 메서드로 빼서 사용하기.
+
   @Override
   public int getTotalCounts(String sortBy, String keywordLike) {
     QAttributeDef qAttributeDef = QAttributeDef.attributeDef;

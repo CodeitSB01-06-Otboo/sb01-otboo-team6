@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Entity
 @Getter
@@ -52,6 +51,10 @@ public class User extends BaseEntity {
   @Column(nullable = false)
   private boolean locked = false;
 
+  @Builder.Default
+  @Column(nullable = false)
+  private boolean forceLogout = false; //  추가
+
   @ElementCollection
   @CollectionTable(name = "user_linked_oauth_providers", joinColumns = @JoinColumn(name = "user_id"))
   @Column(name = "provider")
@@ -63,7 +66,6 @@ public class User extends BaseEntity {
   @Column(nullable = true)
   private String providerId;
 
-
   // ------------------------- 메서드 ---------------------------
 
   public void setProfile(Profile profile) {
@@ -72,6 +74,10 @@ public class User extends BaseEntity {
 
   public void changeRole(Role role) {
     this.role = role;
+  }
+
+  public void setForceLogout(boolean forceLogout) {
+    this.forceLogout = forceLogout;
   }
 
   public void changeLocked(boolean locked) {
@@ -104,9 +110,6 @@ public class User extends BaseEntity {
             now.isBefore(this.temporaryPasswordExpiration);
   }
 
-  /**
-   * 소셜 로그인 회원가입용 생성자 (정적 팩토리 메서드)
-   */
   public static User createSocialUser(String provider, String providerId, String email, String name) {
     return User.builder()
             .email(email)
@@ -120,9 +123,6 @@ public class User extends BaseEntity {
             .build();
   }
 
-  /**
-   * 소셜 로그인 연동 provider 추가
-   */
   public void addOAuthProvider(String provider) {
     if (!this.linkedOAuthProviders.contains(provider)) {
       this.linkedOAuthProviders.add(provider);

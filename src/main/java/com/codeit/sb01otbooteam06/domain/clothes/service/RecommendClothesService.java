@@ -22,8 +22,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class RecommendClothesService {
 
   private final AttributeDefService attributeDefService;
@@ -40,6 +42,8 @@ public class RecommendClothesService {
       "HAT", "BAG",
       "SCARF", "ETC");
 
+  //todo: 주석 너무 많아도 X 메서드정도에 쓰는 게 좋음!
+  //todo :메서드 분리
   //todo 책임이 많아서 저장과 가져오기 분리하면 좋을듯.
 
   /**
@@ -145,10 +149,12 @@ public class RecommendClothesService {
    * @param targetList
    * @param id
    */
+  @Transactional
   private void addClothesIdIfNotNull(List<UUID> targetList, UUID id) {
-    if (id != null) {
-      targetList.add(id);
+    if (id == null) {
+      return;
     }
+    targetList.add(id);
   }
 
   /**
@@ -237,7 +243,7 @@ public class RecommendClothesService {
 
   }
 
-
+  @Transactional
   public RecommendClothes findRandomByUserAndWeather(UUID userId, UUID weatherId) {
     return recommendClothesRepository.findRandomByUserAndWeather(
         userId, weatherId);
