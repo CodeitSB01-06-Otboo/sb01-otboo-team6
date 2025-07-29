@@ -94,7 +94,7 @@ public class RecommendClothesService {
     List<String> styleValues = attributeDefService.getStyleValues();
 
     //의상 추천 셋 생성
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 12; i++) {
       recoClothesIds.clear();
 
       //매 세트마다 스타일을 랜덤 하나 선정
