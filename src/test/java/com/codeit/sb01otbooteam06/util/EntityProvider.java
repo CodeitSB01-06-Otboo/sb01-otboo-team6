@@ -1,5 +1,6 @@
 package com.codeit.sb01otbooteam06.util;
 
+import com.codeit.sb01otbooteam06.domain.base.BaseEntity;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.AttributeDef;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.Clothes;
 import com.codeit.sb01otbooteam06.domain.clothes.entity.ClothesAttribute;
@@ -14,9 +15,11 @@ import com.codeit.sb01otbooteam06.domain.weather.entity.SkyStatus;
 import com.codeit.sb01otbooteam06.domain.weather.entity.Temperature;
 import com.codeit.sb01otbooteam06.domain.weather.entity.Weather;
 import com.codeit.sb01otbooteam06.domain.weather.entity.Wind;
+import java.lang.reflect.Field;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class EntityProvider {
@@ -63,6 +66,30 @@ public class EntityProvider {
     Weather weather = Weather.from(forecastedAt, forecastAt, location);
     weather.applyMetrics(skyStatus, type, temperature, precipitation, wind, humidity, snow, lighting);
     return weather;
+  }
+
+  public static User createTestUser(String email, String name) {
+    User user = User.builder()
+        .email(email)
+        .password("test1234!")
+        .name(name)
+        .role(Role.USER)
+        .linkedOAuthProviders(List.of())
+        .locked(false)
+        .build();
+
+    setId(user, UUID.randomUUID());
+    return user;
+  }
+
+  private static void setId(Object entity, UUID id) {
+    try {
+      Field idField = BaseEntity.class.getDeclaredField("id");
+      idField.setAccessible(true);
+      idField.set(entity, id);
+    } catch (Exception e) {
+      throw new RuntimeException("ID 필드 설정 실패", e);
+    }
   }
 
 
