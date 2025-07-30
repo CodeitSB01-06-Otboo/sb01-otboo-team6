@@ -7,6 +7,8 @@
 //import com.codeit.sb01otbooteam06.domain.user.exception.UserNotFoundException;
 //import com.codeit.sb01otbooteam06.domain.user.repository.UserRepository;
 //import org.junit.jupiter.api.BeforeEach;
+
+//import org.junit.jupiter.api.Disabled;
 //import org.junit.jupiter.api.DisplayName;
 //import org.junit.jupiter.api.Test;
 //import org.mockito.ArgumentCaptor;

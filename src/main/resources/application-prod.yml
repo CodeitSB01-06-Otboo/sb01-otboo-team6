@@ -32,6 +32,11 @@ logging:
       hibernate:
         sql: warn
         type.descriptor.sql: trace
+      springframework:
+        boot:
+          actuate: Debug
+        web: Debug
+        security: Debug
 jwt:
   secret: ${JWT_SECRET}
   access-expiration: ${JWT_ACCESS_EXPIRATION:3600000}
