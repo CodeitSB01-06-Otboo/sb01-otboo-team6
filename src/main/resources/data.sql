@@ -33,7 +33,9 @@ VALUES ('6e54fc4a-f8f0-478d-a54e-ebe573316061', 'test@test.com',
         'hjhj', 'USER', FALSE, CURRENT_TIMESTAMP, NULL),
        ('58f44d21-a0f2-472f-b28f-196523667e86','xjvm7001@naver.com',
         '$2a$10$IBS4CzpgtwOy3iUckh/VV.7SN0AdylOJL0f5r08eM5G2OqUZUHi3a',
-        '병훈','USER',FALSE,CURRENT_TIMESTAMP,NULL);
+        '병훈','USER',FALSE,CURRENT_TIMESTAMP,NULL),
+       ('b67911f2-5d19-41aa-989a-aa97ad8c766d','test2345@naver.com','$2a$10$13yeIIwvs0T08Pcd2jmTVJKYRapjJAPKyrqyMa2k06Lms0p9kA0nu','기민민',
+        'USER',FALSE,'2025-07-28 02:14:30.311245',NULL);
 
 
 --Profiles
@@ -48,7 +50,10 @@ VALUES ('6e54fc4a-f8f0-478d-a54e-ebe573316061', '테스트유저', 'OTHER', '202
         CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
        ('58f44d21-a0f2-472f-b28f-196523667e86','병훈','OTHER','1990-01-01',
         33.51456376980993,126.53504948524795,53,38,
-        NULL,3,NULL,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+        NULL,3,NULL,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+       ('b67911f2-5d19-41aa-989a-aa97ad8c766d','기민민','OTHER','2025-07-28',
+        37.2965376,126.8547584,58,121,NULL,
+        NULL,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 
 ------------------------------------ 의상
 INSERT INTO clothes (id, owner_id, name, type, image_url, created_at, updated_at)
@@ -103,7 +108,11 @@ VALUES ('6e54fc4a-f8f0-478d-a54e-ebe573316061', '경기도'),
        ('58f44d21-a0f2-472f-b28f-196523667e86', '제주특별자치도'),
        ('58f44d21-a0f2-472f-b28f-196523667e86', '제주시'),
        ('58f44d21-a0f2-472f-b28f-196523667e86', '건입동'),
-       ('58f44d21-a0f2-472f-b28f-196523667e86', '');
+       ('58f44d21-a0f2-472f-b28f-196523667e86', ''),
+       ('b67911f2-5d19-41aa-989a-aa97ad8c766d', '경기도'),
+       ('b67911f2-5d19-41aa-989a-aa97ad8c766d', '안산시 상록구'),
+       ('b67911f2-5d19-41aa-989a-aa97ad8c766d', '사동'),
+       ('b67911f2-5d19-41aa-989a-aa97ad8c766d', '');
 
 /* ---------- weathers 더미 ---------- */
 INSERT INTO weathers (
