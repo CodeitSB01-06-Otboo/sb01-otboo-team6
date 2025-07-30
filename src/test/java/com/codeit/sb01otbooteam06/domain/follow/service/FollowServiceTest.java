@@ -8,12 +8,14 @@ import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 
 import com.codeit.sb01otbooteam06.domain.follow.dto.FollowDto;
 import com.codeit.sb01otbooteam06.domain.follow.dto.FollowListResponse;
 import com.codeit.sb01otbooteam06.domain.follow.dto.FollowSummaryDto;
 import com.codeit.sb01otbooteam06.domain.follow.entity.Follow;
 import com.codeit.sb01otbooteam06.domain.follow.repository.FollowRepository;
+import com.codeit.sb01otbooteam06.domain.notification.service.NotificationService;
 import com.codeit.sb01otbooteam06.domain.profile.entity.Gender;
 import com.codeit.sb01otbooteam06.domain.profile.entity.Profile;
 import com.codeit.sb01otbooteam06.domain.user.entity.Role;
@@ -46,6 +48,8 @@ class FollowServiceTest {
     FollowRepository followRepository;
     @Mock
     UserRepository userRepository;
+    @Mock
+    NotificationService notificationService;
 
     @InjectMocks
     FollowService followService;
@@ -64,23 +68,40 @@ class FollowServiceTest {
         followee = createUser(followeeId, "팔로이");
     }
 
-//    @Test
-//    @DisplayName("다른 사용자를 팔로우할 수 있다")
-//    void canFollowOtherUser() {
-//        // given
-//        given(userRepository.findById(followerId)).willReturn(Optional.of(follower));
-//        given(userRepository.findById(followeeId)).willReturn(Optional.of(followee));
-//        given(followRepository.existsByFollowerAndFollowee(follower, followee)).willReturn(false);
-//        given(followRepository.save(any(Follow.class))).willAnswer(inv -> inv.getArgument(0));
-//
-//        // when
-//        FollowDto dto = followService.follow(followerId, followeeId);
-//
-//        // then
-//        then(followRepository).should().save(any(Follow.class));
-//        assertThat(dto.follower().getUserId()).isEqualTo(followerId);
-//        assertThat(dto.followee().getUserId()).isEqualTo(followeeId);
-//    }
+    @Test
+    @DisplayName("다른 사용자를 팔로우하면 알림이 발행된다")
+    void canFollowOtherUser_andPublishNotification() {
+        // given
+        given(userRepository.findById(followerId)).willReturn(Optional.of(follower));
+        given(userRepository.findById(followeeId)).willReturn(Optional.of(followee));
+        given(followRepository.existsByFollowerAndFollowee(follower, followee)).willReturn(false);
+        given(followRepository.save(any(Follow.class))).willAnswer(inv -> inv.getArgument(0));
+
+        // when
+        FollowDto dto = followService.follow(followerId, followeeId);
+
+        // then
+        then(followRepository).should().save(any(Follow.class));
+        then(notificationService).should().notifyUserFollowed(follower, followee); // 호출 검증
+        assertThat(dto.follower().getUserId()).isEqualTo(followerId);
+        assertThat(dto.followee().getUserId()).isEqualTo(followeeId);
+    }
+
+    @Test
+    @DisplayName("이미 팔로우 중이면 예외가 발생하고 알림은 발행되지 않는다")
+    void cannotFollowTwice_andNoNotification() {
+        // given
+        given(userRepository.findById(followerId)).willReturn(Optional.of(follower));
+        given(userRepository.findById(followeeId)).willReturn(Optional.of(followee));
+        given(followRepository.existsByFollowerAndFollowee(follower, followee)).willReturn(true);
+
+        // when & then
+        assertThatThrownBy(() -> followService.follow(followerId, followeeId))
+            .isInstanceOf(IllegalStateException.class);
+
+        then(notificationService).shouldHaveNoInteractions();
+        then(followRepository).should(never()).save(any());
+    }
 
     @Test
     @DisplayName("이미 팔로우한 사용자에게 또 팔로우 요청하면 예외가 발생한다")

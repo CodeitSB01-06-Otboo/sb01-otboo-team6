@@ -22,9 +22,13 @@ public interface ProfileRepository extends JpaRepository<Profile, UUID> {
    * Location 객체로 바로 매핑한다.
    */
   @Query("""
-        select distinct new com.codeit.sb01otbooteam06.domain.weather.entity.Location(
-                              p.latitude, p.longitude, p.x, p.y)
-                          from Profile p
-    """)
+    select distinct new com.codeit.sb01otbooteam06.domain.weather.entity.Location(
+        p.latitude, p.longitude, p.x, p.y)
+    from Profile p
+    where p.latitude is not null
+      and p.longitude is not null
+      and p.x is not null
+      and p.y is not null
+""")
   List<Location> findDistinctLocations();
 }
