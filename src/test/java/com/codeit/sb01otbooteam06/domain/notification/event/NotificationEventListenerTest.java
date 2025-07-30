@@ -1,4 +1,4 @@
-package com.codeit.sb01otbooteam06.domain.notification;
+package com.codeit.sb01otbooteam06.domain.notification.event;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
@@ -14,15 +14,6 @@ import com.codeit.sb01otbooteam06.domain.follow.entity.Follow;
 import com.codeit.sb01otbooteam06.domain.follow.repository.FollowRepository;
 import com.codeit.sb01otbooteam06.domain.notification.entity.Notification;
 import com.codeit.sb01otbooteam06.domain.notification.entity.NotificationType;
-import com.codeit.sb01otbooteam06.domain.notification.event.ClothesAttributeAddedEvent;
-import com.codeit.sb01otbooteam06.domain.notification.event.DirectMessageReceivedEvent;
-import com.codeit.sb01otbooteam06.domain.notification.event.FeedCommentCreatedEvent;
-import com.codeit.sb01otbooteam06.domain.notification.event.FeedLikeCreatedEvent;
-import com.codeit.sb01otbooteam06.domain.notification.event.FolloweeFeedPostedEvent;
-import com.codeit.sb01otbooteam06.domain.notification.event.NotificationCreateEvent;
-import com.codeit.sb01otbooteam06.domain.notification.event.NotificationEventListener;
-import com.codeit.sb01otbooteam06.domain.notification.event.UserFollowMeEvent;
-import com.codeit.sb01otbooteam06.domain.notification.event.UserRoleChangeEvent;
 import com.codeit.sb01otbooteam06.domain.notification.repository.NotificationRepository;
 import com.codeit.sb01otbooteam06.domain.notification.util.NotificationCreator;
 import com.codeit.sb01otbooteam06.domain.user.entity.Role;
