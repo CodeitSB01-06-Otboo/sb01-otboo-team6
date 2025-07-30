@@ -52,8 +52,9 @@ VALUES ('6e54fc4a-f8f0-478d-a54e-ebe573316061', '테스트유저', 'OTHER', '202
         33.51456376980993,126.53504948524795,53,38,
         NULL,3,NULL,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
        ('b67911f2-5d19-41aa-989a-aa97ad8c766d','기민민','OTHER','2025-07-28',
-        37.2965376,126.8547584,58,121,NULL,
-        NULL,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+        37.2965376,126.8547584,58,121,
+        NULL,3,NULL,
+        CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 
 ------------------------------------ 의상
 INSERT INTO clothes (id, owner_id, name, type, image_url, created_at, updated_at)
