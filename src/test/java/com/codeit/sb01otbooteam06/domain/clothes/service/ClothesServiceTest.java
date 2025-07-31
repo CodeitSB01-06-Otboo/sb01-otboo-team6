@@ -2,6 +2,7 @@ package com.codeit.sb01otbooteam06.domain.clothes.service;
 
 import static org.hibernate.validator.internal.util.Contracts.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
@@ -22,6 +23,7 @@ import com.codeit.sb01otbooteam06.domain.clothes.repository.ClothesRepository;
 import com.codeit.sb01otbooteam06.domain.user.entity.User;
 import com.codeit.sb01otbooteam06.domain.user.repository.UserRepository;
 import com.codeit.sb01otbooteam06.global.s3.S3Service;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -122,6 +124,44 @@ class ClothesServiceTest {
     assertNotNull(response);
     assertEquals(dto, response.getData().get(0));
   }
+
+  @Test
+  void findAll_다음_페이지가_존재하는_상황에서_옷_데이터_전송_객체_목록을_반환한다() {
+    UUID ownerId = UUID.randomUUID();
+    Clothes mockClothes1 = mock(Clothes.class);
+    Clothes mockClothes2 = mock(Clothes.class);
+
+    when(clothesRepository.findAllByCursor(
+        any(), any(), eq(2), any(), eq(ownerId)
+    )).thenReturn(List.of(mockClothes1, mockClothes2));
+
+    ClothesAttribute attr1 = mock(ClothesAttribute.class);
+    when(clothesAttributeRepository.findByClothes(mockClothes1)).thenReturn(List.of(attr1));
+
+    ClothesDto dto1 = mock(ClothesDto.class);
+    when(customClothesUtils.makeClothesDto(mockClothes1, List.of(attr1))).thenReturn(dto1);
+
+    when(clothesCacheService.getPageUserClothesCountWithCache(any(), eq(ownerId))).thenReturn(2);
+
+    Instant now = Instant.now();
+    when(mockClothes1.getCreatedAt()).thenReturn(now.minusSeconds(60));
+    // ↓ 아래 두 줄 삭제 (불필요)
+    // when(mockClothes2.getCreatedAt()).thenReturn(now);
+    when(mockClothes1.getId()).thenReturn(UUID.randomUUID());
+    // when(mockClothes2.getId()).thenReturn(UUID.randomUUID());
+
+    // when
+    PageResponse<ClothesDto> response = clothesService.findAll(null, null, 1, null, ownerId);
+
+    // then
+    assertNotNull(response);
+    assertEquals(1, response.getData().size());
+    assertEquals(dto1, response.getData().get(0));
+    assertTrue(response.isHasNext());
+    assertEquals(mockClothes1.getCreatedAt().toString(), response.getNextCursor());
+    assertEquals(mockClothes1.getId().toString(), response.getNextIdAfter());
+  }
+
 
   @Test
   void update_옷을_수정하고_데이터_전송_객체를_반환한다() {

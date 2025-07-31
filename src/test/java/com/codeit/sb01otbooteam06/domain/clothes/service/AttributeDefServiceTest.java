@@ -3,6 +3,8 @@ package com.codeit.sb01otbooteam06.domain.clothes.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.codeit.sb01otbooteam06.domain.clothes.entity.AttributeDef;
@@ -13,6 +15,7 @@ import com.codeit.sb01otbooteam06.domain.clothes.entity.dto.PageResponse;
 import com.codeit.sb01otbooteam06.domain.clothes.exception.AttributeDefNotFoundException;
 import com.codeit.sb01otbooteam06.domain.clothes.mapper.AttributeDefMapper;
 import com.codeit.sb01otbooteam06.domain.clothes.repository.AttributeDefRepository;
+import com.codeit.sb01otbooteam06.domain.notification.service.NotificationService;
 import com.codeit.sb01otbooteam06.util.EntityProvider;
 import java.util.List;
 import java.util.Optional;
@@ -39,28 +42,33 @@ class AttributeDefServiceTest {
   @Mock
   private AttributeDefMapper attributeDefMapper;
 
+  @Mock
+  private NotificationService notificationService;
 
-//  @Test
-//  void createAttributeDef_정상적으로_Dto를_반환한다() {
-//    // given
-//    var createRequest = new ClothesAttributeDefCreateRequest("색상", List.of("빨강", "파랑", "초록"));
-//
-//    AttributeDef savedEntity = EntityProvider.createTestAttributeDef("색상",
-//        List.of("빨강", "파랑", "초록"));
-//    ClothesAttributeDefDto dto = new ClothesAttributeDefDto(savedEntity.getId(), "색상",
-//        savedEntity.getSelectableValues());
-//
-//    // 목 동작 정의
-//    when(attributeDefRepository.save(any(AttributeDef.class))).thenReturn(savedEntity);
-//    when(attributeDefMapper.toDto(savedEntity)).thenReturn(dto);
-//
-//    // when
-//    ClothesAttributeDefDto result = attributeDefService.create(createRequest);
-//
-//    // then
-//    assertThat(result.name()).isEqualTo("색상");
-//    assertThat(result.selectableValues()).contains("빨강", "파랑", "초록");
-//  }
+  @Test
+  void createAttributeDef_정상적으로_Dto를_반환하고_알림을_보낸다() {
+    // given
+    var createRequest = new ClothesAttributeDefCreateRequest("색상", List.of("빨강", "파랑", "초록"));
+
+    AttributeDef savedEntity = EntityProvider.createTestAttributeDef("색상",
+        List.of("빨강", "파랑", "초록"));
+    ClothesAttributeDefDto dto = new ClothesAttributeDefDto(savedEntity.getId(), "색상",
+        savedEntity.getSelectableValues());
+
+    // 목 동작 정의
+    when(attributeDefRepository.save(any(AttributeDef.class))).thenReturn(savedEntity);
+    when(attributeDefMapper.toDto(savedEntity)).thenReturn(dto);
+
+    // when
+    ClothesAttributeDefDto result = attributeDefService.create(createRequest);
+
+    // then
+    assertThat(result.name()).isEqualTo("색상");
+    assertThat(result.selectableValues()).contains("빨강", "파랑", "초록");
+
+    // 알림 서비스 호출 검증
+    verify(notificationService, times(1)).notifyClothesAttributeAdded("색상");
+  }
 
   @Test
   void updateAttributeDef_업데이트된_Dto를_반환한다() {
