@@ -45,8 +45,9 @@
 <img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white"/>
 <img src="https://img.shields.io/badge/AWS-232F3E?style=flat-square&logo=amazonaws&logoColor=white"/>
 <img src="https://img.shields.io/badge/RDS-527FFF?style=flat-square&logo=amazonrds&logoColor=white"/>
+<img src="https://img.shields.io/badge/EC2-FF073A?style=flat-square&logo=amazonecs&logoColor=white"/>
 <img src="https://img.shields.io/badge/ECS-FF9900?style=flat-square&logo=amazonecs&logoColor=white"/>
-<img src="https://img.shields.io/badge/ECR-FF9900?style=flat-square&logo=amazonaws&logoColor=white"/>
+<img src="https://img.shields.io/badge/ECR-FFFF33?style=flat-square&logo=amazonaws&logoColor=white"/>
 <img src="https://img.shields.io/badge/S3-569A31?style=flat-square&logo=amazons3&logoColor=white"/>
 </p>
 
@@ -74,8 +75,15 @@
 
 </div>
 
+## 🎦 시연영상 
+
+https://drive.google.com/file/d/1qxZYOEOVCTYwGoaUz2cmTYuqUbZTEAaO/view 
+
+
 ## 🗂 아키텍처 & ERD
 
+<h3>프로젝트 아키텍처</h3>
+<img width="936" height="542" alt="옷부_아키텍처" src="https://github.com/user-attachments/assets/f1265552-d6eb-4606-bb0a-7c90dd84ae8f" />
 
 <h3>ERD</h3>
 <img width="1899" height="1177" alt="Untitled (7)" src="https://github.com/user-attachments/assets/f082d66e-5594-4bab-9ab6-a99931ad14e6" />
