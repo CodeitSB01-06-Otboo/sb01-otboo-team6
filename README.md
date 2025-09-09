@@ -89,3 +89,24 @@ https://drive.google.com/file/d/1qxZYOEOVCTYwGoaUz2cmTYuqUbZTEAaO/view
 <img width="1899" height="1177" alt="Untitled (7)" src="https://github.com/user-attachments/assets/f082d66e-5594-4bab-9ab6-a99931ad14e6" />
 
 </div>
+
+## 발표 자료  
+
+![6팀_옷장을부탁해_발표자료_page-0003](https://github.com/user-attachments/assets/311f3a5b-622f-4d8f-8786-c49a5118039c)
+![6팀_옷장을부탁해_발표자료_page-0004](https://github.com/user-attachments/assets/bea85e8a-0f3d-4e88-9737-0aac00801df2)
+![6팀_옷장을부탁해_발표자료_page-0005](https://github.com/user-attachments/assets/40b030bf-bb9e-4434-b189-6125f4e9d9dd)
+![6팀_옷장을부탁해_발표자료_page-0006](https://github.com/user-attachments/assets/b9392ee7-7509-480f-8ae0-be9aabeec162)
+![6팀_옷장을부탁해_발표자료_page-0007](https://github.com/user-attachments/assets/fc3f34c7-f0df-4659-a6df-0bd70f5a7ee5)
+![6팀_옷장을부탁해_발표자료_page-0008](https://github.com/user-attachments/assets/589aa6a5-2b29-4a9c-b86f-5eef9878b070)
+![6팀_옷장을부탁해_발표자료_page-0009](https://github.com/user-attachments/assets/2d536665-3dd1-4795-bc80-6a0a512223f1)
+![6팀_옷장을부탁해_발표자료_page-0010](https://github.com/user-attachments/assets/373599d8-7a8a-48c5-9f14-3c032c6121cd)
+![6팀_옷장을부탁해_발표자료_page-0011](https://github.com/user-attachments/assets/932b5c86-344a-4e6a-84cd-245e45ade54d)
+![6팀_옷장을부탁해_발표자료_page-0012](https://github.com/user-attachments/assets/1f90997c-0904-427e-9ded-d21a012ea6ac)
+![6팀_옷장을부탁해_발표자료_page-0013](https://github.com/user-attachments/assets/800a100e-325c-4240-8e73-e4c6ca6b16b3)
+![6팀_옷장을부탁해_발표자료_page-0014](https://github.com/user-attachments/assets/755e7b07-1476-48e7-8d56-ad4ca71d7c0c)
+![6팀_옷장을부탁해_발표자료_page-0015](https://github.com/user-attachments/assets/56cba933-a24f-4bd0-9860-134400ee13ef)
+![6팀_옷장을부탁해_발표자료_page-0016](https://github.com/user-attachments/assets/7fd9c685-a948-4cad-96ae-12c7541a99ef)
+![6팀_옷장을부탁해_발표자료_page-0017](https://github.com/user-attachments/assets/a1ae357e-4098-4ad2-8ca7-d527a60aca8b)
+![6팀_옷장을부탁해_발표자료_page-0018](https://github.com/user-attachments/assets/7a15a480-e5a6-4f7a-b26e-9be05e524047)
+![6팀_옷장을부탁해_발표자료_page-0019](https://github.com/user-attachments/assets/bf6c58f1-90d4-4152-ad39-8e756b629cb5)
+![6팀_옷장을부탁해_발표자료_page-0020](https://github.com/user-attachments/assets/73e132b8-19e6-40e2-8541-2ddf461d5a7c)
