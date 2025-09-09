@@ -90,7 +90,7 @@ https://drive.google.com/file/d/1qxZYOEOVCTYwGoaUz2cmTYuqUbZTEAaO/view
 
 </div>
 
-## 발표 자료  
+## 🍀 발표 자료  
 
 ![6팀_옷장을부탁해_발표자료_page-0003](https://github.com/user-attachments/assets/311f3a5b-622f-4d8f-8786-c49a5118039c)
 ![6팀_옷장을부탁해_발표자료_page-0004](https://github.com/user-attachments/assets/bea85e8a-0f3d-4e88-9737-0aac00801df2)
